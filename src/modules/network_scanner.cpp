@@ -448,10 +448,15 @@ std::vector<NetworkDevice> NetworkScanner::getResults() const {
 
 String NetworkScanner::resultsToJson() const {
     uint32_t now = millis();
+    // Copie locale sous mutex (durée < 1 ms) pour libérer rapidement
+    std::vector<NetworkDevice> copy;
     xSemaphoreTake(_mutex, portMAX_DELAY);
+    copy = _results;
+    xSemaphoreGive(_mutex);
+
     JsonDocument doc;
     JsonArray arr = doc.to<JsonArray>();
-    for (const auto& d : _results) {
+    for (const auto& d : copy) {
         JsonObject obj = arr.add<JsonObject>();
         obj["ip"]           = d.ip;
         obj["mac"]          = d.mac;
@@ -475,7 +480,6 @@ String NetworkScanner::resultsToJson() const {
             if (!tmp.isEmpty()) svcArr.add(tmp);
         }
     }
-    xSemaphoreGive(_mutex);
     String json;
     serializeJson(doc, json);
     return json;
