@@ -78,7 +78,7 @@ body {
 }
 
 .site-ver {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: #06b6d4;
@@ -290,7 +290,7 @@ table {
 th {
   text-align: left;
   color: #94a3b8;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 0.5rem;
@@ -311,8 +311,8 @@ tr:hover td      { background: #ffffff06; }
 .ip-cell   { font-weight: 700; color: #f1f5f9; font-family: monospace; font-size: 0.87rem; white-space: nowrap; }
 .mac-cell  { font-family: monospace; font-size: 0.78rem; color: #94a3b8; white-space: nowrap; }
 .name-cell { color: #7dd3fc; }
-.mfr-model { font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem; }
-.mfr-os    { font-size: 0.7rem;  color: #64748b; margin-top: 0.1rem; font-style: italic; }
+.mfr-model { font-size: 0.78rem; color: #94a3b8; margin-top: 0.2rem; }
+.mfr-os    { font-size: 0.75rem; color: #64748b; margin-top: 0.1rem; font-style: italic; }
 .seen-cell { color: #94a3b8; white-space: nowrap; }
 
 .empty-msg { color: #94a3b8; font-size: 0.875rem; text-align: center; padding: 1.5rem 0; }
@@ -325,7 +325,7 @@ tr:hover td      { background: #ffffff06; }
 
 /* Fabricant */
 .vendor-badge {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   background: #1e3a5f;
   color: #93c5fd;
   border-radius: 4px;
@@ -335,7 +335,7 @@ tr:hover td      { background: #ffffff06; }
 
 /* Source de résolution (mDNS / DNS↩ / ESP32) */
 .source-badge {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   border-radius: 3px;
   padding: 0.1rem 0.35rem;
   margin-left: 0.3rem;
@@ -355,7 +355,7 @@ tr:hover td      { background: #ffffff06; }
 
 /* Catégorie (IoT, Mobile, Router…) */
 .type-badge {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   border-radius: 4px;
   padding: 0.15rem 0.45rem;
   white-space: nowrap;
@@ -395,11 +395,11 @@ tr:hover td      { background: #ffffff06; }
 }
 
 .svc-badge {
-  font-size: 0.58rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   border-radius: 3px;
-  padding: 0.1rem 0.3rem;
+  padding: 0.15rem 0.4rem;
   white-space: nowrap;
   cursor: default;
 }
@@ -422,11 +422,11 @@ tr:hover td      { background: #ffffff06; }
   gap: 0.15rem;
 }
 .port-badge {
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   border-radius: 3px;
-  padding: 0.08rem 0.28rem;
+  padding: 0.12rem 0.38rem;
   white-space: nowrap;
   cursor: default;
   border: 1px solid transparent;
@@ -541,7 +541,7 @@ input[type=file] {
 .hist-detail { font-size: 0.8rem; color: #94a3b8; margin-top: 0.15rem; }
 .hist-old     { color: #f87171; text-decoration: line-through; }
 .hist-new-val { color: #4ade80; }
-.hist-time { font-size: 0.72rem; color: #aeb9c9; margin-top: 0.2rem; }
+.hist-time { font-size: 0.75rem; color: #aeb9c9; margin-top: 0.2rem; }
 .hist-new     .hist-title { color: #7dd3fc; }
 .hist-online  .hist-title { color: #4ade80; }
 .hist-offline .hist-title { color: #f87171; }
@@ -552,7 +552,7 @@ input[type=file] {
    ════════════════════════════════════════════════════ */
 
 .alias-edit {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   color: #64748b;
   background: none;
   border: none;
@@ -567,7 +567,7 @@ input[type=file] {
   font-style: italic;
 }
 .seen-count {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: #64748b;
   margin-top: 0.1rem;
 }
@@ -578,7 +578,7 @@ input[type=file] {
 
 .conf-badge {
   display: inline-block;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 0.05rem 0.35rem;
   border-radius: 0.6rem;
@@ -589,6 +589,28 @@ input[type=file] {
 .conf-high   { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
 .conf-medium { background: rgba(250, 204, 21, 0.15); color: #facc15; }
 .conf-low    { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+
+/* ════════════════════════════════════════════════════
+   19. PAGE ÉQUIPEMENTS — Actions (Wake-on-LAN…)
+   ════════════════════════════════════════════════════ */
+
+.actions-cell { white-space: nowrap; display: flex; gap: 0.35rem; flex-wrap: wrap; }
+
+.action-btn {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  background: #0c4a6e;
+  color: #38bdf8;
+  border: 1px solid #1e3a5f;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.action-btn:hover    { background: #0891b2; color: #fff; }
+.action-btn:disabled { background: #1e293b; color: #64748b; cursor: default; }
 
 /* ════════════════════════════════════════════════════
    18. PAGE PARAMÈTRES — Réseau WiFi (/wifi)

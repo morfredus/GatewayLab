@@ -84,3 +84,4 @@ __pycache__/
 # Windows
 Thumbs.db
 ehthumbs.db
+termux/config.sh

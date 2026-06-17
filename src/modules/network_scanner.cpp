@@ -23,6 +23,7 @@
 #include "device_enricher.h"     // Enrichissement par pattern matching sur le hostname
 #include "device_history.h"      // Journal chronologique des evenements (nouveaux/changements)
 #include "time_sync.h"           // Epoch NTP pour firstSeen/lastSeen
+#include "wifi_manager.h"        // hostname() — nom mDNS actif (NVS ou defaut)
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include "../../include/app_config.h"   // MDNS_HOSTNAME, PROJECT_NAME
@@ -309,7 +310,7 @@ void NetworkScanner::_addSelfEntry() {
     NetworkDevice self;
     self.ip       = ip;
     self.mac      = mac;
-    self.hostname = MDNS_HOSTNAME;       // ex: "gateway-lab-v1"
+    self.hostname = wifiMgr.hostname();  // ex: "gateway-lab-v1"
     self.model    = PROJECT_NAME;        // ex: "GatewayLabV1"
     self.source   = "Self";
     self.category = "Gateway";
@@ -324,7 +325,7 @@ void NetworkScanner::_addSelfEntry() {
 
     _results.push_back(self);
     xSemaphoreGive(_mutex);
-    Log::i(TAG, "Auto-entrée : %s (%s) → %s", ip.c_str(), mac.c_str(), MDNS_HOSTNAME);
+    Log::i(TAG, "Auto-entrée : %s (%s) → %s", ip.c_str(), mac.c_str(), wifiMgr.hostname().c_str());
 }
 
 // ---------------------------------------------------------------------------
@@ -649,6 +650,32 @@ int NetworkScanner::_confidenceFor(const NetworkDevice& d, String& label) {
     }
     label = "Aucun signal";
     return 20;
+}
+
+// ---------------------------------------------------------------------------
+// Actions disponibles pour un equipement, deduites de category/openPorts/services
+//
+//   "ping" : toujours disponible si une IP est connue
+//   "web"  : interface web detectee (port HTTP/HTTPS ouvert ou service DNS-SD HTTP)
+//   "wol"  : Wake-on-LAN probable (categorie habituellement equipee d'une carte
+//            reseau qui le supporte + adresse MAC connue)
+// ---------------------------------------------------------------------------
+String NetworkScanner::_capabilitiesFor(const NetworkDevice& d) {
+    String caps;
+    auto add = [&caps](const char* cap) {
+        if (!caps.isEmpty()) caps += "|";
+        caps += cap;
+    };
+
+    if (!d.ip.isEmpty()) add("ping");
+
+    bool hasHttp = d.openPorts.indexOf("HTTP") >= 0 || d.services.indexOf("HTTP") >= 0;
+    if (hasHttp) add("web");
+
+    bool wolCategory = d.category == "Computer" || d.category == "NAS" || d.category == "SBC";
+    if (wolCategory && !d.mac.isEmpty()) add("wol");
+
+    return caps;
 }
 
 // ---------------------------------------------------------------------------
@@ -1078,6 +1105,17 @@ String NetworkScanner::resultsToJson() const {
         String confLabel;
         obj["confidence"]      = _confidenceFor(d, confLabel);
         obj["confidenceLabel"] = confLabel;
+        // capabilities : tableau JSON ["ping","web","wol"] - actions disponibles cote UI
+        JsonArray capArr = obj["capabilities"].to<JsonArray>();
+        String caps = _capabilitiesFor(d);
+        if (!caps.isEmpty()) {
+            int idx;
+            while ((idx = caps.indexOf('|')) >= 0) {
+                capArr.add(caps.substring(0, idx));
+                caps = caps.substring(idx + 1);
+            }
+            if (!caps.isEmpty()) capArr.add(caps);
+        }
         // services : tableau JSON ["HTTP","SSH","SMB"] depuis la chaîne pipe-séparée
         JsonArray svcArr = obj["services"].to<JsonArray>();
         if (!d.services.isEmpty()) {
@@ -1116,6 +1154,52 @@ bool NetworkScanner::setAlias(const String& macOrIp, const String& alias) {
         if ((!d.mac.isEmpty() && d.mac == macOrIp) || d.ip == macOrIp) {
             d.alias = alias;
             found = true;
+            break;
+        }
+    }
+    xSemaphoreGive(_mutex);
+    if (found) _saveToStore();
+    return found;
+}
+
+// ---------------------------------------------------------------------------
+// Fusionne une valeur pipe-separee dans un champ existant, sans doublon
+// ---------------------------------------------------------------------------
+static void _mergePipeField(String& field, const String& addition) {
+    if (addition.isEmpty()) return;
+    if (field.isEmpty()) { field = addition; return; }
+    String remaining = addition;
+    while (remaining.length()) {
+        int sep = remaining.indexOf('|');
+        String item = (sep < 0) ? remaining : remaining.substring(0, sep);
+        if (item.length() && field.indexOf(item) < 0) { field += "|"; field += item; }
+        if (sep < 0) break;
+        remaining = remaining.substring(sep + 1);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Enrichissement externe (Pixel/Termux) - identifie par mac ou ip
+// ---------------------------------------------------------------------------
+bool NetworkScanner::enrichFromJson(const String& json) {
+    JsonDocument doc;
+    if (deserializeJson(doc, json) != DeserializationError::Ok) return false;
+
+    String key = doc["mac"].as<String>();
+    if (key.isEmpty()) key = doc["ip"].as<String>();
+    if (key.isEmpty()) return false;
+
+    bool found = false;
+    xSemaphoreTake(_mutex, portMAX_DELAY);
+    for (auto& d : _results) {
+        if ((!d.mac.isEmpty() && d.mac == key) || d.ip == key) {
+            found = true;
+            if (!doc["os"].isNull())           d.os           = doc["os"].as<String>();
+            if (!doc["model"].isNull())         d.model        = doc["model"].as<String>();
+            if (!doc["manufacturer"].isNull())  d.manufacturer = doc["manufacturer"].as<String>();
+            if (!doc["category"].isNull())      d.category     = doc["category"].as<String>();
+            if (!doc["services"].isNull())      _mergePipeField(d.services,  doc["services"].as<String>());
+            if (!doc["openPorts"].isNull())     _mergePipeField(d.openPorts, doc["openPorts"].as<String>());
             break;
         }
     }

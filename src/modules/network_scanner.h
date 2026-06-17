@@ -81,6 +81,13 @@ public:
     // Retourne false si aucun equipement correspondant n'a ete trouve
     bool setAlias(const String& macOrIp, const String& alias);
 
+    // Enrichissement externe (ex: Pixel/Termux via ADB/SSH - scan que l'ESP32
+    // ne peut pas faire lui-meme). JSON attendu : {"mac" ou "ip", et tout
+    // sous-ensemble de os/model/manufacturer/category/services/openPorts}.
+    // os/model/manufacturer/category sont remplaces, services/openPorts sont fusionnes.
+    // Retourne false si l'equipement (mac ou ip) est introuvable ou le JSON invalide.
+    bool enrichFromJson(const String& json);
+
     // Sauvegarde JSON complete (devices + parametres) pour /api/backup
     String backupToJson() const;
 
@@ -145,6 +152,10 @@ private:
     // Calcule un score de confiance (0-100) et son libelle pour l'UI -
     // explique a l'utilisateur quelle source a permis l'identification
     static int _confidenceFor(const NetworkDevice& d, String& label);
+
+    // Deduit les actions disponibles ("wol", "web", "ping"...) depuis
+    // category/openPorts/services - liste pipe-separee, usage cote UI uniquement
+    static String _capabilitiesFor(const NetworkDevice& d);
 
     SemaphoreHandle_t           _mutex      = nullptr;
     TaskHandle_t                _taskHandle = nullptr;

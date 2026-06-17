@@ -50,7 +50,12 @@ public:
     String  ssid()        const;  // Nom du réseau connecté
     String  localIP()     const;  // Adresse IP locale (station ou point d'accès)
     int8_t  rssi()        const;  // Force du signal en dBm (négatif, proche de 0 = fort)
-    String  hostname()    const;  // Nom mDNS (depuis MDNS_HOSTNAME dans app_config.h)
+    String  hostname()    const;  // Nom mDNS actif (NVS si défini, sinon MDNS_HOSTNAME par défaut)
+
+    // Définit un nom mDNS personnalisé (persisté en NVS) — false si invalide
+    // (vide, > 32 caractères, ou caractères hors [a-z0-9-])
+    // Nécessite un redémarrage de l'ESP32 pour être appliqué (mDNS/OTA déjà démarrés au boot)
+    bool    setHostname(const String& name);
 
     // Réseaux enregistrés en NVS (mots de passe inclus — usage serveur uniquement)
     std::vector<WifiCredential> savedNetworks() const;

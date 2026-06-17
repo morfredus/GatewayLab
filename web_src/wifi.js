@@ -12,6 +12,7 @@ function refreshWifiStatus() {
     document.getElementById('wifi-ssid').textContent = d.ssid || '—';
     document.getElementById('wifi-ip').textContent   = d.ip   || '—';
     document.getElementById('wifi-rssi').textContent = d.rssi ? (d.rssi + ' dBm') : '—';
+    document.getElementById('wifi-hostname').textContent = d.hostname ? (d.hostname + '.local') : '—';
     document.getElementById('footer-ts').textContent =
       'Actualisé : ' + new Date().toLocaleTimeString();
 
@@ -76,6 +77,38 @@ document.getElementById('wifi-form').addEventListener('submit', function(e) {
         msg.style.color = '#10b981';
         msg.textContent = 'Réseau enregistré.';
         document.getElementById('wifi-form').reset();
+        refreshWifiStatus();
+      } else {
+        msg.style.color = '#ef4444';
+        msg.textContent = 'Erreur : ' + (d.error || 'inconnue');
+      }
+    })
+    .catch(function() {
+      msg.style.color = '#ef4444';
+      msg.textContent = 'Erreur réseau.';
+    });
+});
+
+document.getElementById('hostname-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var hostname = document.getElementById('hostname-new').value.trim().toLowerCase();
+  var msg = document.getElementById('hostname-msg');
+
+  if (!hostname) {
+    msg.textContent = 'Le nom est requis.';
+    return;
+  }
+
+  var fd = new FormData();
+  fd.append('hostname', hostname);
+
+  fetch('/api/hostname', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.status === 'ok') {
+        msg.style.color = '#10b981';
+        msg.textContent = 'Nom enregistré. Redémarrez l\'ESP32 pour l\'appliquer.';
+        document.getElementById('hostname-form').reset();
         refreshWifiStatus();
       } else {
         msg.style.color = '#ef4444';

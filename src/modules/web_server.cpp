@@ -13,6 +13,7 @@
 #include <WebServer.h>
 #include <ArduinoJson.h>
 #include <WiFi.h>
+#include <WiFiUdp.h>
 #include "app_config.h"          // MDNS_HOSTNAME, PROJECT_VERSION
 #include "../../include/web_interface.h"      // INDEX_HTML (page d'accueil en PROGMEM)
 #include "../../include/web_interface_scan.h" // SCAN_PAGE (page équipements en PROGMEM)
@@ -46,6 +47,8 @@ void WebServerModule::begin(uint16_t port) {
     _server.on("/api/devices",HTTP_GET,  [this]() { _handleApiDevices(); });
     _server.on("/api/scan",   HTTP_POST, [this]() { _handleApiScanTrigger(); });
     _server.on("/api/alias",  HTTP_POST, [this]() { _handleApiSetAlias(); });
+    _server.on("/api/wol",    HTTP_POST, [this]() { _handleApiWol(); });
+    _server.on("/api/enrich", HTTP_POST, [this]() { _handleApiEnrich(); });
     _server.on("/api/history",HTTP_GET,  [this]() { _handleApiHistory(); });
     _server.on("/api/backup", HTTP_GET,  [this]() { _handleApiBackup(); });
     _server.on("/api/restore",HTTP_POST, [this]() { _handleApiRestore(); });
@@ -53,6 +56,7 @@ void WebServerModule::begin(uint16_t port) {
     _server.on("/api/wifi",   HTTP_GET,  [this]() { _handleApiWifiGet(); });
     _server.on("/api/wifi",   HTTP_POST, [this]() { _handleApiWifiPost(); });
     _server.on("/api/wifi",   HTTP_DELETE, [this]() { _handleApiWifiDelete(); });
+    _server.on("/api/hostname", HTTP_POST, [this]() { _handleApiHostnamePost(); });
     _server.onNotFound(       [this]()  { _handleNotFound(); });
 
     // Délégation des routes OTA à OtaManager (/update GET + POST)
@@ -89,7 +93,7 @@ void WebServerModule::_handleApiStatus() {
     doc["rssi"]     = WiFi.RSSI();
     doc["uptime"]   = millis();               // Temps depuis le démarrage en ms
     doc["version"]  = PROJECT_VERSION;
-    doc["hostname"] = MDNS_HOSTNAME;
+    doc["hostname"] = wifiMgr.hostname();
     doc["scanning"] = (_hasScan && _scan.isScanning && _scan.isScanning());
 
     String json;
@@ -159,6 +163,47 @@ void WebServerModule::_handleApiSetAlias() {
 }
 
 // ---------------------------------------------------------------------------
+// Handler : envoie un paquet magique Wake-on-LAN
+// Corps attendu (form-urlencoded) : mac (ex: "B8:27:EB:AA:BB:CC")
+// Diffuse le paquet en UDP broadcast (255.255.255.255:9) sur le sous-reseau local
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiWol() {
+    String mac = _server.arg("mac");
+    if (mac.isEmpty()) {
+        _server.send(400, "application/json", "{\"error\":\"mac requis\"}");
+        return;
+    }
+
+    uint8_t macBytes[6];
+    int parsed = sscanf(mac.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+                         &macBytes[0], &macBytes[1], &macBytes[2],
+                         &macBytes[3], &macBytes[4], &macBytes[5]);
+    if (parsed != 6) {
+        _server.send(400, "application/json", "{\"error\":\"adresse MAC invalide\"}");
+        return;
+    }
+
+    // Paquet magique : 6 x 0xFF suivis de 16 repetitions de l'adresse MAC
+    uint8_t packet[102];
+    memset(packet, 0xFF, 6);
+    for (int i = 0; i < 16; i++) memcpy(packet + 6 + i * 6, macBytes, 6);
+
+    WiFiUDP udp;
+    udp.begin(0);
+    bool sent = udp.beginPacket(IPAddress(255, 255, 255, 255), 9) &&
+                udp.write(packet, sizeof(packet)) == sizeof(packet) &&
+                udp.endPacket();
+    udp.stop();
+
+    if (sent) {
+        Log::i(TAG, "Wake-on-LAN envoye a %s", mac.c_str());
+        _server.send(200, "application/json", "{\"status\":\"ok\"}");
+    } else {
+        _server.send(500, "application/json", "{\"error\":\"echec envoi paquet\"}");
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Handler : journal chronologique des evenements (nouveaux/changements)
 // ---------------------------------------------------------------------------
 void WebServerModule::_handleApiHistory() {
@@ -201,6 +246,29 @@ void WebServerModule::_handleApiRestore() {
 }
 
 // ---------------------------------------------------------------------------
+// Handler : recoit des donnees d'enrichissement externes (ex: Pixel/Termux via
+// ADB/SSH - identification que l'ESP32 ne peut pas faire lui-meme)
+// Corps attendu (JSON brut) : {"mac" ou "ip", et tout sous-ensemble de
+// os/model/manufacturer/category/services/openPorts}
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiEnrich() {
+    if (!_hasScan || !_scan.enrichFromJson) {
+        _server.send(503, "application/json", "{\"error\":\"non disponible\"}");
+        return;
+    }
+
+    String body = _server.arg("plain");
+    if (body.isEmpty()) {
+        _server.send(400, "application/json", "{\"error\":\"corps JSON requis\"}");
+        return;
+    }
+
+    bool ok = _scan.enrichFromJson(body);
+    _server.send(ok ? 200 : 404, "application/json",
+                 ok ? "{\"status\":\"ok\"}" : "{\"error\":\"equipement introuvable ou JSON invalide\"}");
+}
+
+// ---------------------------------------------------------------------------
 // Handler : etat WiFi + liste des reseaux enregistres (sans mots de passe)
 // Exemple de reponse :
 //   {"connected":true,"ssid":"Livebox","ip":"192.168.1.42","rssi":-55,
@@ -212,6 +280,7 @@ void WebServerModule::_handleApiWifiGet() {
     doc["ssid"]       = wifiMgr.ssid();
     doc["ip"]         = wifiMgr.localIP();
     doc["rssi"]       = wifiMgr.rssi();
+    doc["hostname"]   = wifiMgr.hostname();
     JsonArray arr = doc["networks"].to<JsonArray>();
     for (const auto& c : wifiMgr.savedNetworks()) {
         JsonObject o = arr.add<JsonObject>();
@@ -256,6 +325,26 @@ void WebServerModule::_handleApiWifiDelete() {
     bool ok = wifiMgr.removeNetwork(ssid);
     _server.send(ok ? 200 : 404, "application/json",
                  ok ? "{\"status\":\"ok\"}" : "{\"error\":\"reseau introuvable\"}");
+}
+
+// ---------------------------------------------------------------------------
+// Handler : definit le nom mDNS personnalise (persiste en NVS)
+// Parametre attendu : hostname (minuscules, chiffres, tirets, max 32 car.)
+// Necessite un redemarrage de l'ESP32 pour etre applique
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiHostnamePost() {
+    String hostname = _server.arg("hostname");
+    hostname.toLowerCase();
+
+    if (hostname.isEmpty()) {
+        _server.send(400, "application/json", "{\"error\":\"hostname requis\"}");
+        return;
+    }
+
+    bool ok = wifiMgr.setHostname(hostname);
+    _server.send(ok ? 200 : 400, "application/json",
+                 ok ? "{\"status\":\"ok\",\"restartRequired\":true}"
+                    : "{\"error\":\"hostname invalide (a-z, 0-9, - uniquement, max 32 caracteres)\"}");
 }
 
 // ---------------------------------------------------------------------------

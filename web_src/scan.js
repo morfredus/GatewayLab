@@ -98,7 +98,7 @@ function renderDevices(devices) {
   var tbody = document.getElementById('devices-body');
   var meta  = document.getElementById('scan-meta');
   if (!devices || devices.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Aucun équipement détecté</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Aucun équipement détecté</td></tr>';
     meta.textContent = '0 équipement';
     return;
   }
@@ -151,6 +151,15 @@ function renderDevices(devices) {
       : '<span class="none" title="Non vu lors du dernier scan">hors ligne</span>';
     if (d.seenCount > 0)
       seenHtml += '<div class="seen-count" title="Nombre de scans où cet équipement a été vu en ligne">vu ' + d.seenCount + 'x</div>';
+    var caps = d.capabilities || [];
+    var actionBtns = [];
+    if (caps.indexOf('web') >= 0 && d.ip) {
+      actionBtns.push('<a class="action-btn" href="http://' + esc(d.ip) + '" target="_blank" rel="noopener" title="Ouvrir l\'interface web">Ouvrir</a>');
+    }
+    if (caps.indexOf('wol') >= 0 && d.mac) {
+      actionBtns.push('<button class="action-btn" title="Reveiller via Wake-on-LAN" onclick="wakeOnLan(this, \'' + esc(d.mac) + '\')">Réveiller</button>');
+    }
+    var actionsHtml = actionBtns.length ? actionBtns.join(' ') : '<span class="none">—</span>';
     return '<tr' + (d.online ? '' : ' class="row-offline"') + '>' +
       '<td class="status-cell">' + statusHtml + '</td>' +
       '<td class="ip-cell">'     + esc(d.ip)  + '</td>' +
@@ -159,6 +168,7 @@ function renderDevices(devices) {
       '<td>'                     + catHtml     + '</td>' +
       '<td class="mac-cell">'    + esc(d.mac)  + '</td>' +
       '<td class="seen-cell">'   + seenHtml    + '</td>' +
+      '<td class="actions-cell">' + actionsHtml + '</td>' +
       '</tr>';
   }).join('');
 }
@@ -216,6 +226,22 @@ function editAlias(btn) {
   var body = 'mac=' + encodeURIComponent(key) + '&alias=' + encodeURIComponent(value);
   fetch('/api/alias', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body })
     .then(function() { fetchDevices(); });
+}
+
+function wakeOnLan(btn, mac) {
+  btn.disabled = true;
+  var original = btn.textContent;
+  btn.textContent = 'Envoi…';
+  fetch('/api/wol', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'mac=' + encodeURIComponent(mac) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      btn.textContent = d.status === 'ok' ? 'Envoyé ✓' : 'Échec';
+      setTimeout(function() { btn.textContent = original; btn.disabled = false; }, 2000);
+    })
+    .catch(function() {
+      btn.textContent = 'Échec';
+      setTimeout(function() { btn.textContent = original; btn.disabled = false; }, 2000);
+    });
 }
 
 function triggerScan() {

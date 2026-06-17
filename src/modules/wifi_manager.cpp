@@ -27,9 +27,10 @@
 #include "secrets.h"
 #endif
 
-static const char* TAG            = "WiFi";
-static const char* NVS_NAMESPACE  = "wifi";
-static const char* NVS_KEY        = "networks";
+static const char* TAG               = "WiFi";
+static const char* NVS_NAMESPACE     = "wifi";
+static const char* NVS_KEY           = "networks";
+static const char* NVS_HOSTNAME_KEY  = "hostname";
 static const char* AP_SSID        = "GatewayLab-Setup";
 static const IPAddress AP_IP(192, 168, 4, 1);
 
@@ -121,6 +122,37 @@ bool WiFiManager::removeNetwork(const String& ssid) {
         [&](const WifiCredential& c) { return c.ssid == ssid; }), list.end());
     if (list.size() == before) return false;   // SSID introuvable
     return _saveNetworks(list);
+}
+
+// ---------------------------------------------------------------------------
+// Persistance NVS — nom mDNS personnalisé (vide = utiliser MDNS_HOSTNAME)
+// ---------------------------------------------------------------------------
+static String _loadHostname() {
+    Preferences prefs;
+    prefs.begin(NVS_NAMESPACE, true);   // lecture seule
+    String name = prefs.getString(NVS_HOSTNAME_KEY, "");
+    prefs.end();
+    return name;
+}
+
+static bool _isValidHostname(const String& name) {
+    if (name.isEmpty() || name.length() > 32) return false;
+    for (size_t i = 0; i < name.length(); i++) {
+        char c = name[i];
+        bool ok = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-';
+        if (!ok) return false;
+    }
+    return true;
+}
+
+bool WiFiManager::setHostname(const String& name) {
+    if (!_isValidHostname(name)) return false;
+
+    Preferences prefs;
+    prefs.begin(NVS_NAMESPACE, false);  // lecture/écriture
+    size_t written = prefs.putString(NVS_HOSTNAME_KEY, name);
+    prefs.end();
+    return written == (size_t)name.length();
 }
 
 // ---------------------------------------------------------------------------
@@ -253,8 +285,9 @@ static void _startPortal() {
 // ---------------------------------------------------------------------------
 static void _startMdns() {
 #ifdef ENABLE_MDNS
-    if (MDNS.begin(MDNS_HOSTNAME)) {
-        Log::i(TAG, "mDNS actif : http://%s.local", MDNS_HOSTNAME);
+    String name = wifiMgr.hostname();
+    if (MDNS.begin(name.c_str())) {
+        Log::i(TAG, "mDNS actif : http://%s.local", name.c_str());
     }
 #endif
 }
@@ -345,4 +378,7 @@ String WiFiManager::localIP()     const {
     return _apMode ? WiFi.softAPIP().toString() : WiFi.localIP().toString();
 }
 int8_t WiFiManager::rssi()        const { return (int8_t)WiFi.RSSI(); }
-String WiFiManager::hostname()    const { return MDNS_HOSTNAME; }
+String WiFiManager::hostname()    const {
+    String custom = _loadHostname();
+    return custom.isEmpty() ? String(MDNS_HOSTNAME) : custom;
+}

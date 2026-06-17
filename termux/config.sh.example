@@ -1,0 +1,6 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Configuration commune aux scripts termux/*.sh
+# Copier ce fichier en "config.sh" (ignoré par git) et adapter les valeurs.
+
+# Nom mDNS ou IP de l'ESP32 (voir page Parametres > Reseau WiFi)
+ESP32_HOST="gateway-lab-v1.local"

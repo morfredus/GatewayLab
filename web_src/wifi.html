@@ -48,6 +48,22 @@
 
   <div class="card">
     <div class="card-header">
+      <p class="card-title">Nom mDNS (.local)</p>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Nom actuel</span>
+      <span class="info-value" id="wifi-hostname">—</span>
+    </div>
+    <form id="hostname-form">
+      <label for="hostname-new">Nouveau nom (lettres minuscules, chiffres, tirets)</label>
+      <input id="hostname-new" type="text" placeholder="gateway-lab-v1" autocomplete="off" maxlength="32" required>
+      <button class="btn" type="submit">Appliquer</button>
+    </form>
+    <p id="hostname-msg"></p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
       <p class="card-title">Réseaux enregistrés</p>
     </div>
     <div id="wifi-list"></div>

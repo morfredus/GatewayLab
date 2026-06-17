@@ -39,7 +39,7 @@ void setup() {
 #ifdef ENABLE_OTA
         // Mise à jour OTA disponible sur le réseau local (ArduinoOTA)
         // et via la page /update du serveur web
-        otaMgr.begin(MDNS_HOSTNAME);
+        otaMgr.begin(wifiMgr.hostname().c_str());
 #endif
 
         // Initialisation du scanner réseau (table ARP + tâche FreeRTOS)
@@ -65,6 +65,9 @@ void setup() {
             },
             .setAlias        = [](const String& macOrIp, const String& alias) {
                 return netScanner.setAlias(macOrIp, alias);
+            },
+            .enrichFromJson  = [](const String& json) {
+                return netScanner.enrichFromJson(json);
             },
             .getHistoryJson  = [] {
                 JsonDocument doc;
