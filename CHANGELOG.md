@@ -5,6 +5,127 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.7.4] - 2026-06-18
+
+### Modifie
+
+- **Largeur de page uniformisée** (`web_src/index.html`, `web_src/ota.html`,
+  `web_src/wifi.html`) : les pages Accueil, OTA et Paramètres utilisent
+  désormais la classe `page-scan` (max-width 960px), comme les pages
+  Équipements, Historique et Topologie. Seule la page Équipements conserve
+  une largeur réellement adaptable au contenu (tableau pouvant défiler
+  horizontalement) ; les autres pages affichent simplement leur carte sur
+  la même largeur fixe.
+
+---
+
+## [0.7.3] - 2026-06-18
+
+### Ajoute
+
+- **Filtre "Favoris uniquement" sur la page Historique** (`web_src/history.html`,
+  `web_src/history.js`) : permet de n'afficher que les événements concernant
+  des équipements actuellement marqués comme favoris. Le statut favori est
+  récupéré depuis `/api/devices` et croisé avec le champ `mac` de chaque
+  entrée d'historique (l'historique lui-même ne stocke pas le statut favori,
+  qui peut changer après l'événement).
+
+### Modifie
+
+- **Étoile favoris éclaircie sur la page Équipements** (`web_src/styles.css`) :
+  la couleur de l'étoile non favorite (`☆`) passe d'un gris foncé peu visible
+  (`#475569`) à un gris clair (`#94a3b8`) pour une meilleure lisibilité.
+
+---
+
+## [0.7.2] - 2026-06-18
+
+### Ajoute
+
+- **Sauvegarde/restauration des paramètres de fonctionnement**
+  (`GET /api/system/backup`, `POST /api/system/restore`,
+  `src/modules/web_server.cpp`) : distincte de la sauvegarde de l'inventaire
+  (`/api/backup`), cette nouvelle sauvegarde couvre les réseaux WiFi
+  enregistrés (SSID + mot de passe), la luminosité NeoPixel et le nom mDNS
+  (informatif uniquement — fixé à la compilation, non restaurable). Les
+  réseaux WiFi restaurés sont ajoutés/mis à jour, jamais supprimés
+  automatiquement.
+
+### Modifie
+
+- **Menu "Données ▾" réorganisé** (`web_src/scan.html`, `web_src/scan.js`) :
+  un séparateur distingue désormais "Export CSV"/"Export JSON" (export de
+  l'inventaire réseau, inchangé) de "Sauvegarde"/"Restauration" (nouveaux,
+  paramètres de fonctionnement du projet).
+- **Gestion des accents dans les exports** : l'export CSV
+  (`/api/devices/export.csv`) inclut désormais un BOM UTF-8 en tête de
+  fichier pour qu'Excel et les tableurs affichent correctement les
+  caractères accentués ; les réponses JSON (`/api/backup`,
+  `/api/system/backup`) déclarent explicitement `charset=utf-8`. La
+  restauration (`/api/restore`, `/api/system/restore`) lit le fichier en
+  UTF-8 côté navigateur.
+
+---
+
+## [0.7.1] - 2026-06-18
+
+### Modifie
+
+- **Menu "Données ▾" unifié sur la page Équipements** (`web_src/scan.html`,
+  `web_src/scan.js`) : le menu "Exporter ▾" (CSV/JSON) et la carte
+  "Sauvegarde des équipements" (alors sur la page Accueil) sont regroupés en
+  un seul menu déroulant "Données ▾" — Export CSV, Export JSON, Restaurer…
+  — pour éviter d'étaler les actions sur deux pages et deux menus différents.
+  La carte Sauvegarde/Restauration est retirée de `web_src/index.html`.
+- **Export CSV plus lisible** (`NetworkScanner::devicesToCsv()`,
+  `src/modules/network_scanner.cpp`) : les dates `firstSeen`/`lastSeenAt`
+  sont converties en date lisible (`AAAA-MM-JJ HH:MM:SS`) au lieu de l'epoch
+  brut, et les colonnes `online`/`favorite` affichent `Yes`/`No` au lieu de
+  `1`/`0`. L'export JSON (`/api/backup`) garde les epochs bruts pour rester
+  réutilisable par `/api/restore`.
+- **Notes et niveau de confiance dans les exports** : l'export CSV ajoute une
+  colonne `notes` (notes utilisateur concaténées) et `confidence` (score de
+  confiance 0-100). L'export/sauvegarde JSON (`backupToJson()`) ajoute
+  également `confidence`/`confidenceLabel` (les notes y étaient déjà
+  présentes).
+
+---
+
+## [0.7.0] - 2026-06-18
+
+### Ajoute
+
+- **Filtres sur la page Équipements** (`web_src/scan.html`, `web_src/scan.js`) :
+  une barre de filtres (type, fabricant, favoris uniquement, en ligne
+  uniquement) permet désormais de réduire la liste affichée sans relancer de
+  scan. Les listes déroulantes Type/Fabricant sont construites
+  automatiquement à partir des équipements actuellement connus. Filtrage
+  appliqué côté client (les données complètes restent disponibles via
+  `/api/devices`).
+- **Export CSV de l'inventaire** (`GET /api/devices/export.csv`,
+  `NetworkScanner::devicesToCsv()`) : en plus de la sauvegarde JSON complète
+  déjà existante (`/api/backup`), un export CSV (une ligne par équipement :
+  IP, MAC, hôte, alias, fabricant, modèle, catégorie, type, OS, services,
+  ports, en ligne, favori, dates, compteur de vues) facilite l'utilisation de
+  l'inventaire dans un tableur ou un autre outil. Un menu "Exporter ▾" sur la
+  page Équipements propose les deux formats (CSV et JSON).
+- **Page Topologie** (`GET /topology`, `web_src/topology.html/js`) : nouvelle
+  page (vue simplifiée, sans représentation graphique) qui prépare le terrain
+  pour la cartographie réseau prévue en roadmap (v0.4.x) — elle distingue
+  pour l'instant la ou les passerelles/routeurs détectés du reste des
+  équipements, à partir des données déjà collectées (`category`). Cette page
+  sera étoffée avec la détection des points d'accès/répéteurs WiFi et une
+  visualisation graphique des relations entre équipements.
+
+### Modifie
+
+- **Cartouche diagnostics déplacée vers la page Accueil** (`web_src/index.html`,
+  `web_src/index.js`) : l'affichage du heap libre, de la PSRAM, de l'usage
+  LittleFS et des temps moyens de scan/passe précise (`GET /api/diagnostics`)
+  quitte la page Équipements — où il n'avait d'intérêt que pour le
+  développement — pour rejoindre la page Accueil, sous le cartouche
+  "Informations réseau", dans une nouvelle carte "Diagnostics système".
+
 ## [0.6.2] - 2026-06-18
 
 ### Modifie

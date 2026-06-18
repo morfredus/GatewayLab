@@ -126,6 +126,7 @@ void setup() {
             .clearHistory    = [] { deviceHistory.clear(); },
             .getBackupJson   = [] { return netScanner.backupToJson(); },
             .restoreFromJson = [](const String& json) { return netScanner.restoreFromJson(json); },
+            .getDevicesCsv   = [] { return netScanner.devicesToCsv(); },
             .setFavorite     = [](const String& macOrIp, bool favorite) {
                 return netScanner.setFavorite(macOrIp, favorite);
             },

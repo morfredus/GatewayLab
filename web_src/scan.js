@@ -99,16 +99,56 @@ function updateStats(stats) {
   document.getElementById('stat-offline').textContent = stats.offline + ' hors ligne';
 }
 
-function renderDevices(devices) {
+var lastDevices = [];
+
+function populateFilterOptions(devices) {
+  var catSel = document.getElementById('filter-category');
+  var mfrSel = document.getElementById('filter-manufacturer');
+  var prevCat = catSel.value;
+  var prevMfr = mfrSel.value;
+  var cats = Array.from(new Set(devices.map(function(d) { return d.category; }).filter(Boolean))).sort();
+  var mfrs = Array.from(new Set(devices.map(function(d) { return d.manufacturer; }).filter(Boolean))).sort();
+  catSel.innerHTML = '<option value="">Tous</option>' +
+    cats.map(function(c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+  mfrSel.innerHTML = '<option value="">Tous</option>' +
+    mfrs.map(function(m) { return '<option value="' + esc(m) + '">' + esc(m) + '</option>'; }).join('');
+  catSel.value = prevCat;
+  mfrSel.value = prevMfr;
+}
+
+function applyFilters(devices) {
+  var cat = document.getElementById('filter-category').value;
+  var mfr = document.getElementById('filter-manufacturer').value;
+  var favOnly    = document.getElementById('filter-favorite').checked;
+  var onlineOnly = document.getElementById('filter-online').checked;
+  return devices.filter(function(d) {
+    if (cat && d.category !== cat) return false;
+    if (mfr && d.manufacturer !== mfr) return false;
+    if (favOnly && !d.favorite) return false;
+    if (onlineOnly && !d.online) return false;
+    return true;
+  });
+}
+
+function renderDevices(allDevices) {
+  lastDevices = allDevices || [];
+  populateFilterOptions(lastDevices);
   var tbody = document.getElementById('devices-body');
   var meta  = document.getElementById('scan-meta');
-  if (!devices || devices.length === 0) {
+  var devices = applyFilters(lastDevices);
+  if (!lastDevices.length) {
     tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Aucun équipement détecté</td></tr>';
     meta.textContent = '0 équipement';
     return;
   }
+  if (!devices.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Aucun équipement ne correspond aux filtres</td></tr>';
+    meta.textContent = '0 équipement affiché sur ' + lastDevices.length;
+    return;
+  }
   var onlineCount = devices.filter(function(d) { return d.online; }).length;
-  meta.textContent = onlineCount + ' équipement' + (onlineCount > 1 ? 's' : '') + ' en ligne';
+  meta.textContent = onlineCount + ' équipement' + (onlineCount > 1 ? 's' : '') + ' en ligne' +
+    (devices.length !== lastDevices.length ? ' (' + devices.length + '/' + lastDevices.length + ' affichés)' : '');
   // Tri : online d'abord, puis par IP
   devices.sort(function(a, b) {
     if (a.online !== b.online) return a.online ? -1 : 1;
@@ -309,35 +349,6 @@ function deleteNote(btn) {
     .then(function() { fetchDevices(); });
 }
 
-function fmtMs(ms) {
-  if (!ms) return '—';
-  if (ms < 1000) return ms + ' ms';
-  return (ms / 1000).toFixed(1) + ' s';
-}
-
-function fmtBytes(b) {
-  if (b === undefined || b === null) return '—';
-  if (b < 1024) return b + ' o';
-  return (b / 1024).toFixed(0) + ' Ko';
-}
-
-function fetchDiagnostics() {
-  fetch('/api/diagnostics')
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d.error) return;
-      var bar = document.getElementById('diag-bar');
-      if (!bar) return;
-      bar.style.display = 'flex';
-      document.getElementById('diag-heap').textContent  = 'Heap libre : '  + fmtBytes(d.freeHeap);
-      document.getElementById('diag-psram').textContent = 'PSRAM libre : ' + fmtBytes(d.freePsram);
-      document.getElementById('diag-fs').textContent     = 'LittleFS : '   + fmtBytes(d.fsUsedBytes) + ' / ' + fmtBytes(d.fsTotalBytes);
-      document.getElementById('diag-scan').textContent   = 'Scan moyen : ' + fmtMs(d.avgScanMs);
-      document.getElementById('diag-rescan').textContent = 'Passe précise moyenne : ' + fmtMs(d.avgRescanMs);
-    })
-    .catch(function() {});
-}
-
 var RESCAN_ROW_ID = 'rescan-progress-row';
 
 function showRescanRow(afterRow, ip, step, percent) {
@@ -428,11 +439,49 @@ function toggleResetMenu() {
   document.getElementById('reset-menu-list').classList.toggle('open');
 }
 
+function toggleDataMenu() {
+  document.getElementById('data-menu-list').classList.toggle('open');
+}
+
+function triggerRestore() {
+  document.getElementById('data-menu-list').classList.remove('open');
+  document.getElementById('restore-file').click();
+}
+
+document.getElementById('restore-file').addEventListener('change', function() {
+  var input = this;
+  var msg   = document.getElementById('restore-msg');
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    msg.style.display = 'block';
+    msg.textContent = 'Restauration des paramètres en cours...';
+    fetch('/api/system/restore', { method: 'POST', body: reader.result })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        msg.textContent = d.status === 'ok'
+          ? 'Paramètres restaurés (' + d.networksRestored + ' réseau(x) WiFi).'
+          : 'Erreur : ' + (d.error || 'inconnue');
+      })
+      .catch(function() { msg.textContent = 'Erreur de connexion.'; });
+  };
+  reader.readAsText(input.files[0], 'UTF-8');
+  input.value = '';
+});
+
 document.addEventListener('click', function(e) {
   var menu = document.getElementById('reset-menu-list');
   if (menu && menu.classList.contains('open') && !e.target.closest('.reset-menu')) {
     menu.classList.remove('open');
   }
+  var dataMenu = document.getElementById('data-menu-list');
+  if (dataMenu && dataMenu.classList.contains('open') && !e.target.closest('.reset-menu')) {
+    dataMenu.classList.remove('open');
+  }
+});
+
+['filter-category', 'filter-manufacturer', 'filter-favorite', 'filter-online'].forEach(function(id) {
+  document.getElementById(id).addEventListener('change', function() { renderDevices(lastDevices); });
 });
 
 function resetDevices(keepAlias, keepManufacturer) {
@@ -450,6 +499,4 @@ function resetDevices(keepAlias, keepManufacturer) {
 }
 
 fetchDevices();
-fetchDiagnostics();
 setInterval(function() { if (!pollTimer) fetchDevices(); }, 60000);
-setInterval(fetchDiagnostics, 30000);

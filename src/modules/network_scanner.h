@@ -142,6 +142,9 @@ public:
     // Restauration depuis un JSON produit par backupToJson() - remplace les resultats actuels
     bool restoreFromJson(const String& json);
 
+    // Export CSV de l'inventaire (un equipement par ligne) pour /api/devices/export.csv
+    String devicesToCsv() const;
+
     // Lance la passe precise (asynchrone, tache FreeRTOS dediee) sur un seul
     // equipement identifie par IP : ARP/ICMP, hostname, ports, NetBIOS,
     // SSDP/UPnP, DNS-SD, SNMP. Retourne immediatement (true si la tache a

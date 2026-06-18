@@ -19,6 +19,7 @@
 #include "../../include/web_interface_scan.h" // SCAN_PAGE (page équipements en PROGMEM)
 #include "../../include/web_interface_history.h" // HISTORY_PAGE (vue chronologique en PROGMEM)
 #include "../../include/web_interface_wifi.h" // WIFI_PAGE (parametres reseau WiFi en PROGMEM)
+#include "../../include/web_interface_topology.h" // TOPOLOGY_PAGE (topologie reseau en PROGMEM)
 #include "../utils/logger.h"
 
 static const char* TAG = "WebSrv";
@@ -46,6 +47,7 @@ void WebServerModule::begin(uint16_t port) {
         _server.send_P(200, "text/html", SCAN_PAGE);
     });
     _server.on("/history",    HTTP_GET,  [this]() { _server.send_P(200, "text/html", HISTORY_PAGE); });
+    _server.on("/topology",   HTTP_GET,  [this]() { _server.send_P(200, "text/html", TOPOLOGY_PAGE); });
     _server.on("/api/status", HTTP_GET,  [this]() { _handleApiStatus(); });
     _server.on("/api/devices",HTTP_GET,  [this]() { _handleApiDevices(); });
     _server.on("/api/scan",   HTTP_POST, [this]() { _handleApiScanTrigger(); });
@@ -57,6 +59,7 @@ void WebServerModule::begin(uint16_t port) {
     _server.on("/api/history",HTTP_DELETE, [this]() { _handleApiHistoryClear(); });
     _server.on("/api/backup", HTTP_GET,  [this]() { _handleApiBackup(); });
     _server.on("/api/restore",HTTP_POST, [this]() { _handleApiRestore(); });
+    _server.on("/api/devices/export.csv", HTTP_GET, [this]() { _handleApiDevicesExportCsv(); });
     _server.on("/api/favorite", HTTP_POST,   [this]() { _handleApiSetFavorite(); });
     _server.on("/api/notes",    HTTP_POST,   [this]() { _handleApiAddNote(); });
     _server.on("/api/notes",    HTTP_DELETE, [this]() { _handleApiDeleteNote(); });
@@ -65,6 +68,8 @@ void WebServerModule::begin(uint16_t port) {
     _server.on("/api/wifi",   HTTP_GET,  [this]() { _handleApiWifiGet(); });
     _server.on("/api/wifi",   HTTP_POST, [this]() { _handleApiWifiPost(); });
     _server.on("/api/wifi",   HTTP_DELETE, [this]() { _handleApiWifiDelete(); });
+    _server.on("/api/system/backup",  HTTP_GET,  [this]() { _handleApiSystemBackup(); });
+    _server.on("/api/system/restore", HTTP_POST, [this]() { _handleApiSystemRestore(); });
     _server.on("/api/led/brightness", HTTP_GET,  [this]() {
         String j = "{\"brightness\":";
         j += statusLed.getBrightness();
@@ -262,12 +267,27 @@ void WebServerModule::_handleApiHistoryClear() {
 // ---------------------------------------------------------------------------
 void WebServerModule::_handleApiBackup() {
     if (!_hasScan || !_scan.getBackupJson) {
-        _server.send(503, "application/json", "{\"error\":\"non disponible\"}");
+        _server.send(503, "application/json; charset=utf-8", "{\"error\":\"non disponible\"}");
         return;
     }
     String json = _scan.getBackupJson();
     _server.sendHeader("Content-Disposition", "attachment; filename=\"gateway-lab-backup.json\"");
-    _server.send(200, "application/json", json);
+    _server.send(200, "application/json; charset=utf-8", json);
+}
+
+// ---------------------------------------------------------------------------
+// Handler : telechargement de l'inventaire au format CSV (tableur, scripts externes)
+// Le BOM UTF-8 (EF BB BF) en tete de fichier permet a Excel de reconnaitre
+// l'encodage et d'afficher correctement les caracteres accentues.
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiDevicesExportCsv() {
+    if (!_hasScan || !_scan.getDevicesCsv) {
+        _server.send(503, "text/plain; charset=utf-8", "non disponible");
+        return;
+    }
+    String csv = "\xEF\xBB\xBF" + _scan.getDevicesCsv();
+    _server.sendHeader("Content-Disposition", "attachment; filename=\"gateway-lab-devices.csv\"");
+    _server.send(200, "text/csv; charset=utf-8", csv);
 }
 
 // ---------------------------------------------------------------------------
@@ -275,19 +295,80 @@ void WebServerModule::_handleApiBackup() {
 // ---------------------------------------------------------------------------
 void WebServerModule::_handleApiRestore() {
     if (!_hasScan || !_scan.restoreFromJson) {
-        _server.send(503, "application/json", "{\"error\":\"non disponible\"}");
+        _server.send(503, "application/json; charset=utf-8", "{\"error\":\"non disponible\"}");
         return;
     }
 
     String body = _server.arg("plain");
     if (body.isEmpty()) {
-        _server.send(400, "application/json", "{\"error\":\"corps JSON requis\"}");
+        _server.send(400, "application/json; charset=utf-8", "{\"error\":\"corps JSON requis\"}");
         return;
     }
 
     bool ok = _scan.restoreFromJson(body);
-    _server.send(ok ? 200 : 400, "application/json",
+    _server.send(ok ? 200 : 400, "application/json; charset=utf-8",
                  ok ? "{\"status\":\"ok\"}" : "{\"error\":\"JSON invalide\"}");
+}
+
+// ---------------------------------------------------------------------------
+// Handler : sauvegarde des parametres de fonctionnement du projet (distincte
+// de /api/backup, qui sauvegarde l'inventaire des equipements) — reseaux
+// WiFi enregistres (SSID + mot de passe), luminosite NeoPixel, nom mDNS
+// (informatif : fixe a la compilation via MDNS_HOSTNAME, non restaurable).
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiSystemBackup() {
+    JsonDocument doc;
+    doc["version"]       = PROJECT_VERSION;
+    doc["mdnsHostname"]  = wifiMgr.hostname();
+    doc["ledBrightness"] = statusLed.getBrightness();
+    JsonArray arr = doc["wifiNetworks"].to<JsonArray>();
+    for (const auto& c : wifiMgr.savedNetworks()) {
+        JsonObject o = arr.add<JsonObject>();
+        o["ssid"]     = c.ssid;
+        o["password"] = c.password;
+    }
+
+    String json;
+    serializeJson(doc, json);
+    _server.sendHeader("Content-Disposition", "attachment; filename=\"gateway-lab-settings.json\"");
+    _server.send(200, "application/json; charset=utf-8", json);
+}
+
+// ---------------------------------------------------------------------------
+// Handler : restauration des parametres de fonctionnement depuis une
+// sauvegarde generee par /api/system/backup. Le nom mDNS n'est pas restaure
+// (fixe a la compilation). Les reseaux WiFi sont ajoutes/mis a jour, jamais
+// supprimes automatiquement (pour ne pas perdre l'acces si le fichier est
+// incomplet ou perime).
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiSystemRestore() {
+    String body = _server.arg("plain");
+    if (body.isEmpty()) {
+        _server.send(400, "application/json; charset=utf-8", "{\"error\":\"corps JSON requis\"}");
+        return;
+    }
+
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, body);
+    if (err) {
+        _server.send(400, "application/json; charset=utf-8", "{\"error\":\"JSON invalide\"}");
+        return;
+    }
+
+    int brightness = doc["ledBrightness"] | -1;
+    if (brightness >= 0) statusLed.setBrightness(brightness);
+
+    int restored = 0;
+    JsonArray arr = doc["wifiNetworks"].as<JsonArray>();
+    for (JsonObject o : arr) {
+        String ssid     = o["ssid"]     | "";
+        String password = o["password"] | "";
+        if (ssid.isEmpty()) continue;
+        if (wifiMgr.addNetwork(ssid, password)) restored++;
+    }
+
+    String resp = "{\"status\":\"ok\",\"networksRestored\":" + String(restored) + "}";
+    _server.send(200, "application/json; charset=utf-8", resp);
 }
 
 // ---------------------------------------------------------------------------

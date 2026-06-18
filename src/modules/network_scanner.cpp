@@ -12,6 +12,7 @@
  */
 
 #include "network_scanner.h"
+#include <time.h>                // strftime() pour l'export CSV (dates lisibles)
 #include "hostname_resolver.h"   // mDNS passif + PTR DNS batch
 #include "isp_detector.h"        // Détection Free / Orange / SFR / Bouygues
 #include "ssdp_scanner.h"        // Découverte UPnP/SSDP
@@ -1711,6 +1712,9 @@ String NetworkScanner::backupToJson() const {
         obj["lastSeenAt"]   = d.lastSeenEpoch;
         obj["seenCount"]    = d.seenCount;
         obj["favorite"]     = d.favorite;
+        String confLabel;
+        obj["confidence"]      = _confidenceFor(d, confLabel);
+        obj["confidenceLabel"] = confLabel;
         JsonArray notesArr = obj["notes"].to<JsonArray>();
         for (const auto& n : d.notes) {
             JsonObject no = notesArr.add<JsonObject>();
@@ -1778,4 +1782,69 @@ bool NetworkScanner::restoreFromJson(const String& json) {
 
     Log::i(TAG, "Restauration : %u équipement(s) importés", (unsigned)restored.size());
     return true;
+}
+
+// ---------------------------------------------------------------------------
+// Export CSV - utilise par /api/devices/export.csv (tableur, scripts externes)
+// ---------------------------------------------------------------------------
+static String csvField(const String& s) {
+    bool needsQuotes = s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0;
+    if (!needsQuotes) return s;
+    String escaped = s;
+    escaped.replace("\"", "\"\"");
+    return "\"" + escaped + "\"";
+}
+
+// Date lisible (heure locale, synchronisee par NTP) pour l'export CSV uniquement
+// — le JSON garde les epochs bruts pour rester exploitable par /api/restore.
+static String csvDate(uint32_t epoch) {
+    if (epoch == 0) return "";
+    time_t t = (time_t)epoch;
+    struct tm tmInfo;
+    localtime_r(&t, &tmInfo);
+    char buf[20];
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tmInfo);
+    return String(buf);
+}
+
+static String csvNotes(const std::vector<DeviceNote>& notes) {
+    String joined;
+    for (size_t i = 0; i < notes.size(); i++) {
+        if (i) joined += " | ";
+        joined += notes[i].text;
+    }
+    return joined;
+}
+
+String NetworkScanner::devicesToCsv() const {
+    std::vector<NetworkDevice> copy;
+    xSemaphoreTake(_mutex, portMAX_DELAY);
+    copy = _results;
+    xSemaphoreGive(_mutex);
+
+    String csv = "ip,mac,hostname,alias,manufacturer,model,category,type,os,services,openPorts,online,favorite,confidence,notes,firstSeen,lastSeenAt,seenCount\n";
+    for (const auto& d : copy) {
+        if (d.ip.isEmpty() && d.mac.isEmpty()) continue;
+        String confLabel;
+        int confidence = _confidenceFor(d, confLabel);
+        csv += csvField(d.ip)           + ",";
+        csv += csvField(d.mac)          + ",";
+        csv += csvField(d.hostname)     + ",";
+        csv += csvField(d.alias)        + ",";
+        csv += csvField(d.manufacturer) + ",";
+        csv += csvField(d.model)        + ",";
+        csv += csvField(d.category)     + ",";
+        csv += csvField(d.type)         + ",";
+        csv += csvField(d.os)           + ",";
+        csv += csvField(d.services)     + ",";
+        csv += csvField(d.openPorts)    + ",";
+        csv += String(d.online   ? "Yes" : "No") + ",";
+        csv += String(d.favorite ? "Yes" : "No") + ",";
+        csv += String(confidence)             + ",";
+        csv += csvField(csvNotes(d.notes))    + ",";
+        csv += csvField(csvDate(d.firstSeenEpoch)) + ",";
+        csv += csvField(csvDate(d.lastSeenEpoch))  + ",";
+        csv += String(d.seenCount)      + "\n";
+    }
+    return csv;
 }
