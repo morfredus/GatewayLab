@@ -55,9 +55,35 @@ void setup() {
         },
     });
 
+    // NeoPixel d'etat — initialisee tot pour afficher le pulse bleu de demarrage
+    // pendant toute la phase de connexion WiFi
+    statusLed.begin();
+    statusLed.setState(LedState::Boot);
+
+    // Scanner reseau — le mutex doit exister avant que le bouton BOOT (qui
+    // peut declencher un scan) ne soit actif ; la tache de scan elle-meme
+    // n'est lancee qu'a la demande (startScan())
+    netScanner.begin();
+
+    // Bouton BOOT — appui court (scan) / maintien 3s (sauvegarde)
+    bootButton.begin({
+        .onShortPress = [] { netScanner.startScan(); },
+        .onHold       = [] {
+            statusLed.setState(LedState::Saving, 1500);
+            netScanner.saveNow();
+        },
+    });
+
     // Connexion WiFi — le callback est appelé une fois la connexion établie
     // (ou en cas d'échec après WIFI_CONNECT_TIMEOUT millisecondes)
     wifiMgr.begin([](bool connected) {
+        if (!connected) {
+            // Echec de connexion -> portail de configuration WiFi actif
+            statusLed.setState(LedState::WifiPortal);
+            return;
+        }
+
+        statusLed.setState(LedState::Ready);
         if (!connected) {
             // Echec de connexion -> portail de configuration WiFi actif
             statusLed.setState(LedState::WifiPortal);
@@ -75,6 +101,8 @@ void setup() {
         otaMgr.begin(MDNS_HOSTNAME);
 #endif
 
+        // Scan automatique a la connexion WiFi
+        netScanner.startScan();
         // Scan automatique a la connexion WiFi
         netScanner.startScan();
 
@@ -172,6 +200,22 @@ void loop() {
 #endif
 
     // NetworkScanner n'a pas de loop() : il tourne en tâche FreeRTOS sur Core 0
+    // — on suit ses transitions ici pour piloter la LED d'etat
+    bool scanning = netScanner.isScanRunning();
+    if (scanning && !_ledScanInProgress) {
+        statusLed.setState(LedState::Scanning);
+    } else if (!scanning && _ledScanInProgress) {
+        if (netScanner.hasNewDevices()) {
+            statusLed.setState(LedState::NewDevice);   // Reste en NewDevice jusqu'a l'acquittement
+        } else {
+            statusLed.setState(LedState::Ready);
+        }
+    }
+    _ledScanInProgress = scanning;
+
+    // Anime la NeoPixel et lit le bouton BOOT (non bloquant)
+    statusLed.loop();
+    bootButton.loop();
     // — on suit ses transitions ici pour piloter la LED d'etat
     bool scanning = netScanner.isScanRunning();
     if (scanning && !_ledScanInProgress) {
