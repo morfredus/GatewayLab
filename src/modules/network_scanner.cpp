@@ -32,6 +32,7 @@
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>            // Diagnostics : espace utilise/libre
+#include <LittleFS.h>            // Diagnostics : espace utilise/libre
 #include "../../include/app_config.h"   // MDNS_HOSTNAME, PROJECT_NAME
 #include "lwip/etharp.h"   // etharp_get_entry(), etharp_request()
 #include "lwip/netif.h"    // netif_default
@@ -475,6 +476,8 @@ void NetworkScanner::_task(void* self) {
 void NetworkScanner::_run() {
     uint32_t _t0 = millis();
 
+    uint32_t _t0 = millis();
+
     // Charger les devices connus depuis LittleFS (injectés offline)
     _mergePersistedDevices();
 
@@ -592,6 +595,25 @@ void NetworkScanner::_run() {
     // Sauvegarder en LittleFS pour le prochain boot
     _saveToStore();
 
+    uint32_t durMs = millis() - _t0;
+    xSemaphoreTake(_mutex, portMAX_DELAY);
+    _lastScanMs = durMs;
+    _scanMsTotal += durMs;
+    _scanCount++;
+
+    // Nouvel equipement = present en ligne maintenant mais absent (ou hors ligne) avant le scan
+    for (const auto& d : _results) {
+        if (!d.online) continue;
+        bool wasOnline = false;
+        for (const auto& p : previousState) {
+            bool sameDevice = (!d.mac.isEmpty() && d.mac == p.mac) || (d.mac.isEmpty() && d.ip == p.ip);
+            if (sameDevice && p.online) { wasOnline = true; break; }
+        }
+        if (!wasOnline) { _newDevicesPending = true; break; }
+    }
+    xSemaphoreGive(_mutex);
+
+    Log::i(TAG, "Scan complet — %u équipement(s) total (%u ms)", (unsigned)_results.size(), (unsigned)durMs);
     uint32_t durMs = millis() - _t0;
     xSemaphoreTake(_mutex, portMAX_DELAY);
     _lastScanMs = durMs;
@@ -1194,6 +1216,20 @@ void NetworkScanner::saveNow() {
     xSemaphoreGive(_mutex);
 }
 
+bool NetworkScanner::hasNewDevices() const {
+    return _newDevicesPending;
+}
+
+void NetworkScanner::acknowledgeNewDevices() {
+    _newDevicesPending = false;
+}
+
+void NetworkScanner::saveNow() {
+    xSemaphoreTake(_mutex, portMAX_DELAY);
+    _saveToStore();
+    xSemaphoreGive(_mutex);
+}
+
 bool NetworkScanner::isScanRunning() const { return _scanning; }
 
 std::vector<NetworkDevice> NetworkScanner::getResults() const {
@@ -1230,6 +1266,13 @@ String NetworkScanner::resultsToJson() const {
         obj["firstSeen"]    = d.firstSeenEpoch;
         obj["lastSeenAt"]   = d.lastSeenEpoch;
         obj["seenCount"]    = d.seenCount;
+        obj["favorite"]     = d.favorite;
+        JsonArray notesArr = obj["notes"].to<JsonArray>();
+        for (const auto& n : d.notes) {
+            JsonObject no = notesArr.add<JsonObject>();
+            no["ts"]   = n.ts;
+            no["text"] = n.text;
+        }
         obj["favorite"]     = d.favorite;
         JsonArray notesArr = obj["notes"].to<JsonArray>();
         for (const auto& n : d.notes) {
@@ -1472,6 +1515,7 @@ bool NetworkScanner::rescanDevice(const String& ip) {
 void NetworkScanner::_rescanTask(void* selfPtr) {
     NetworkScanner* self = static_cast<NetworkScanner*>(selfPtr);
 
+
     String ip;
     {
         xSemaphoreTake(self->_mutex, portMAX_DELAY);
@@ -1493,6 +1537,7 @@ void NetworkScanner::_rescanTask(void* selfPtr) {
 }
 
 void NetworkScanner::_runRescan(const String& ip) {
+    uint32_t _t0 = millis();
     uint32_t _t0 = millis();
     std::vector<NetworkDevice> previousState;
     {
@@ -1711,9 +1756,15 @@ void NetworkScanner::_runRescan(const String& ip) {
     uint32_t durMs = millis() - _t0;
 
     Log::i(TAG, "Rafraichissement cible terminé — %s (%s, %u ms)", ip.c_str(), isOnline ? "en ligne" : "hors ligne", (unsigned)durMs);
+    uint32_t durMs = millis() - _t0;
+
+    Log::i(TAG, "Rafraichissement cible terminé — %s (%s, %u ms)", ip.c_str(), isOnline ? "en ligne" : "hors ligne", (unsigned)durMs);
 
     xSemaphoreTake(_mutex, portMAX_DELAY);
     _rescanStatus.ok = isOnline;
+    _lastRescanMs = durMs;
+    _rescanMsTotal += durMs;
+    _rescanCount++;
     _lastRescanMs = durMs;
     _rescanMsTotal += durMs;
     _rescanCount++;
@@ -1770,6 +1821,16 @@ String NetworkScanner::backupToJson() const {
         obj["firstSeen"]    = d.firstSeenEpoch;
         obj["lastSeenAt"]   = d.lastSeenEpoch;
         obj["seenCount"]    = d.seenCount;
+        obj["favorite"]     = d.favorite;
+        String confLabel;
+        obj["confidence"]      = _confidenceFor(d, confLabel);
+        obj["confidenceLabel"] = confLabel;
+        JsonArray notesArr = obj["notes"].to<JsonArray>();
+        for (const auto& n : d.notes) {
+            JsonObject no = notesArr.add<JsonObject>();
+            no["ts"]   = n.ts;
+            no["text"] = n.text;
+        }
         obj["favorite"]     = d.favorite;
         String confLabel;
         obj["confidence"]      = _confidenceFor(d, confLabel);

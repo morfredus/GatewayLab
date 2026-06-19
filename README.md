@@ -146,6 +146,7 @@ Guide développeur : voir docs/DEVELOPMENT.md
 | API appareils multimédia | Cast, Sonos, Roku, Samsung Smart TV — sondées lors de la passe précise |
 | Découverte Matter (DNS-SD) | Détection des appareils Matter commissionnables (`_matterc._udp`) |
 | Filtrage de l'historique | Filtres par type d'événement (nouveau, reconnexion, déconnexion, changement) et par favoris uniquement |
+| Filtrage de l'historique | Filtres par type d'événement (nouveau, reconnexion, déconnexion, changement) et par favoris uniquement |
 | Effacement de l'historique | Vide le journal après téléchargement automatique d'une sauvegarde JSON |
 | OTA Web                  | Upload firmware depuis le navigateur                              |
 | ArduinoOTA               | Mise à jour réseau depuis PlatformIO                              |
@@ -323,6 +324,7 @@ include/web_interface_ota.h
 include/web_interface_history.h
 include/web_interface_wifi.h
 include/web_interface_topology.h
+include/web_interface_topology.h
 ```
 
 Ils sont reconstruits à partir de :
@@ -346,6 +348,7 @@ python tools/minify_web.py
 Chaque page web est découpée en trois sources, qui ont chacune un rôle unique :
 
 * `web_src/styles.css` → **tout** le CSS commun (une seule feuille pour les 6 pages)
+* `web_src/styles.css` → **tout** le CSS commun (une seule feuille pour les 6 pages)
 * `web_src/*.html` → uniquement du HTML/markup (aucun style, aucun script inline)
 * `web_src/*.js` → uniquement le JavaScript de la page correspondante
 
@@ -360,6 +363,9 @@ web_src/ota.js         ──┤
 web_src/history.html   ──┤
 web_src/history.js     ──┤
 web_src/wifi.html      ──┤
+web_src/wifi.js        ──┤
+web_src/topology.html  ──┤
+web_src/topology.js    ──┘
 web_src/wifi.js        ──┤
 web_src/topology.html  ──┤
 web_src/topology.js    ──┘
@@ -384,6 +390,7 @@ Les headers générés sont versionnés dans Git — aucun pre-script PlatformIO
 | Outil | Usage |
 |---|---|
 | `python tools/minify_web.py` | Génère les headers PROGMEM depuis `web_src/` et `data/oui.json` |
+| `python tools/validate_html.py` | Valide la structure HTML des 6 pages + gabarit |
 | `python tools/validate_html.py` | Valide la structure HTML des 6 pages + gabarit |
 | `python tools/extract_web_sources.py` | Prévisualise l'extraction des headers → `web_src/extracted/` (dry-run) |
 | `python tools/extract_web_sources.py --force` | Récupération d'urgence : écrit le HTML/JS extrait des headers dans `web_src/extracted/` (sans jamais toucher aux sources originales de `web_src/`) |
@@ -691,6 +698,10 @@ Pour les fonctionnalités prévues, consulter `ROADMAP.md`.
   (max-width 960px) pour une largeur uniforme ; seule la page Équipements
   exploite réellement cette largeur pour son tableau (les autres pages
   l'utilisent simplement pour aligner leur carte sur la même largeur)
+- Largeur de page : toutes les pages utilisent la classe `page-scan`
+  (max-width 960px) pour une largeur uniforme ; seule la page Équipements
+  exploite réellement cette largeur pour son tableau (les autres pages
+  l'utilisent simplement pour aligner leur carte sur la même largeur)
 - HTML modifiable uniquement dans `web_src/*.html` (jamais de `<style>` ou `<script>` inline)
 - JavaScript modifiable uniquement dans `web_src/*.js`
 - Versioning uniquement dans `platformio.ini` via `PROJECT_VERSION`
@@ -699,3 +710,4 @@ Pour les fonctionnalités prévues, consulter `ROADMAP.md`.
 ## Licence
 
 Projet personnel open source publié à des fins d'apprentissage, d'expérimentation et de partage de connaissances autour de l'ESP32, du réseau et des systèmes embarqués.
+

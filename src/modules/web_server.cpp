@@ -47,7 +47,12 @@ void WebServerModule::begin(uint16_t port) {
         if (_hasScan && _scan.acknowledgeNewDevices) _scan.acknowledgeNewDevices();
         _server.send_P(200, "text/html", SCAN_PAGE);
     });
+    _server.on("/scan",       HTTP_GET,  [this]() {
+        if (_hasScan && _scan.acknowledgeNewDevices) _scan.acknowledgeNewDevices();
+        _server.send_P(200, "text/html", SCAN_PAGE);
+    });
     _server.on("/history",    HTTP_GET,  [this]() { _server.send_P(200, "text/html", HISTORY_PAGE); });
+    _server.on("/topology",   HTTP_GET,  [this]() { _server.send_P(200, "text/html", TOPOLOGY_PAGE); });
     _server.on("/topology",   HTTP_GET,  [this]() { _server.send_P(200, "text/html", TOPOLOGY_PAGE); });
     _server.on("/api/status", HTTP_GET,  [this]() { _handleApiStatus(); });
     _server.on("/api/devices",HTTP_GET,  [this]() { _handleApiDevices(); });
@@ -60,6 +65,11 @@ void WebServerModule::begin(uint16_t port) {
     _server.on("/api/history",HTTP_DELETE, [this]() { _handleApiHistoryClear(); });
     _server.on("/api/backup", HTTP_GET,  [this]() { _handleApiBackup(); });
     _server.on("/api/restore",HTTP_POST, [this]() { _handleApiRestore(); });
+    _server.on("/api/devices/export.csv", HTTP_GET, [this]() { _handleApiDevicesExportCsv(); });
+    _server.on("/api/favorite", HTTP_POST,   [this]() { _handleApiSetFavorite(); });
+    _server.on("/api/notes",    HTTP_POST,   [this]() { _handleApiAddNote(); });
+    _server.on("/api/notes",    HTTP_DELETE, [this]() { _handleApiDeleteNote(); });
+    _server.on("/api/diagnostics", HTTP_GET, [this]() { _handleApiDiagnostics(); });
     _server.on("/api/devices/export.csv", HTTP_GET, [this]() { _handleApiDevicesExportCsv(); });
     _server.on("/api/favorite", HTTP_POST,   [this]() { _handleApiSetFavorite(); });
     _server.on("/api/notes",    HTTP_POST,   [this]() { _handleApiAddNote(); });
@@ -282,10 +292,27 @@ void WebServerModule::_handleApiHistoryClear() {
 void WebServerModule::_handleApiBackup() {
     if (!_hasScan || !_scan.getBackupJson) {
         _server.send(503, "application/json; charset=utf-8", "{\"error\":\"non disponible\"}");
+        _server.send(503, "application/json; charset=utf-8", "{\"error\":\"non disponible\"}");
         return;
     }
     String json = _scan.getBackupJson();
     _server.sendHeader("Content-Disposition", "attachment; filename=\"gateway-lab-backup.json\"");
+    _server.send(200, "application/json; charset=utf-8", json);
+}
+
+// ---------------------------------------------------------------------------
+// Handler : telechargement de l'inventaire au format CSV (tableur, scripts externes)
+// Le BOM UTF-8 (EF BB BF) en tete de fichier permet a Excel de reconnaitre
+// l'encodage et d'afficher correctement les caracteres accentues.
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiDevicesExportCsv() {
+    if (!_hasScan || !_scan.getDevicesCsv) {
+        _server.send(503, "text/plain; charset=utf-8", "non disponible");
+        return;
+    }
+    String csv = "\xEF\xBB\xBF" + _scan.getDevicesCsv();
+    _server.sendHeader("Content-Disposition", "attachment; filename=\"gateway-lab-devices.csv\"");
+    _server.send(200, "text/csv; charset=utf-8", csv);
     _server.send(200, "application/json; charset=utf-8", json);
 }
 
@@ -310,18 +337,165 @@ void WebServerModule::_handleApiDevicesExportCsv() {
 void WebServerModule::_handleApiRestore() {
     if (!_hasScan || !_scan.restoreFromJson) {
         _server.send(503, "application/json; charset=utf-8", "{\"error\":\"non disponible\"}");
+        _server.send(503, "application/json; charset=utf-8", "{\"error\":\"non disponible\"}");
         return;
     }
 
     String body = _server.arg("plain");
     if (body.isEmpty()) {
         _server.send(400, "application/json; charset=utf-8", "{\"error\":\"corps JSON requis\"}");
+        _server.send(400, "application/json; charset=utf-8", "{\"error\":\"corps JSON requis\"}");
         return;
     }
 
     bool ok = _scan.restoreFromJson(body);
     _server.send(ok ? 200 : 400, "application/json; charset=utf-8",
+    _server.send(ok ? 200 : 400, "application/json; charset=utf-8",
                  ok ? "{\"status\":\"ok\"}" : "{\"error\":\"JSON invalide\"}");
+}
+
+// ---------------------------------------------------------------------------
+// Handler : sauvegarde des parametres de fonctionnement du projet (distincte
+// de /api/backup, qui sauvegarde l'inventaire des equipements) — reseaux
+// WiFi enregistres (SSID + mot de passe), luminosite NeoPixel, nom mDNS
+// (informatif : fixe a la compilation via MDNS_HOSTNAME, non restaurable).
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiSystemBackup() {
+    JsonDocument doc;
+    doc["version"]       = PROJECT_VERSION;
+    doc["mdnsHostname"]  = wifiMgr.hostname();
+    doc["ledBrightness"] = statusLed.getBrightness();
+    JsonArray arr = doc["wifiNetworks"].to<JsonArray>();
+    for (const auto& c : wifiMgr.savedNetworks()) {
+        JsonObject o = arr.add<JsonObject>();
+        o["ssid"]     = c.ssid;
+        o["password"] = c.password;
+    }
+
+    String json;
+    serializeJson(doc, json);
+    _server.sendHeader("Content-Disposition", "attachment; filename=\"gateway-lab-settings.json\"");
+    _server.send(200, "application/json; charset=utf-8", json);
+}
+
+// ---------------------------------------------------------------------------
+// Handler : restauration des parametres de fonctionnement depuis une
+// sauvegarde generee par /api/system/backup. Le nom mDNS n'est pas restaure
+// (fixe a la compilation). Les reseaux WiFi sont ajoutes/mis a jour, jamais
+// supprimes automatiquement (pour ne pas perdre l'acces si le fichier est
+// incomplet ou perime).
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiSystemRestore() {
+    String body = _server.arg("plain");
+    if (body.isEmpty()) {
+        _server.send(400, "application/json; charset=utf-8", "{\"error\":\"corps JSON requis\"}");
+        return;
+    }
+
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, body);
+    if (err) {
+        _server.send(400, "application/json; charset=utf-8", "{\"error\":\"JSON invalide\"}");
+        return;
+    }
+
+    int brightness = doc["ledBrightness"] | -1;
+    if (brightness >= 0) statusLed.setBrightness(brightness);
+
+    int restored = 0;
+    JsonArray arr = doc["wifiNetworks"].as<JsonArray>();
+    for (JsonObject o : arr) {
+        String ssid     = o["ssid"]     | "";
+        String password = o["password"] | "";
+        if (ssid.isEmpty()) continue;
+        if (wifiMgr.addNetwork(ssid, password)) restored++;
+    }
+
+    String resp = "{\"status\":\"ok\",\"networksRestored\":" + String(restored) + "}";
+    _server.send(200, "application/json; charset=utf-8", resp);
+}
+
+// ---------------------------------------------------------------------------
+// Handler : marque/demarque un equipement comme favori
+// Parametres (form-urlencoded) : mac (ou ip) + favorite (1/0)
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiSetFavorite() {
+    if (!_hasScan || !_scan.setFavorite) {
+        _server.send(503, "application/json", "{\"error\":\"non disponible\"}");
+        return;
+    }
+
+    String key = _server.arg("mac");
+    if (key.isEmpty()) key = _server.arg("ip");
+    bool favorite = _server.arg("favorite") == "1";
+
+    if (key.isEmpty()) {
+        _server.send(400, "application/json", "{\"error\":\"mac ou ip requis\"}");
+        return;
+    }
+
+    bool ok = _scan.setFavorite(key, favorite);
+    _server.send(ok ? 200 : 404, "application/json",
+                 ok ? "{\"status\":\"ok\"}" : "{\"error\":\"equipement introuvable\"}");
+}
+
+// ---------------------------------------------------------------------------
+// Handler : ajoute une note datee a un equipement (inventaire utilisateur)
+// Parametres (form-urlencoded) : mac (ou ip) + text
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiAddNote() {
+    if (!_hasScan || !_scan.addNote) {
+        _server.send(503, "application/json", "{\"error\":\"non disponible\"}");
+        return;
+    }
+
+    String key  = _server.arg("mac");
+    if (key.isEmpty()) key = _server.arg("ip");
+    String text = _server.arg("text");
+
+    if (key.isEmpty() || text.isEmpty()) {
+        _server.send(400, "application/json", "{\"error\":\"mac/ip et text requis\"}");
+        return;
+    }
+
+    bool ok = _scan.addNote(key, text);
+    _server.send(ok ? 200 : 404, "application/json",
+                 ok ? "{\"status\":\"ok\"}" : "{\"error\":\"equipement introuvable\"}");
+}
+
+// ---------------------------------------------------------------------------
+// Handler : supprime une note d'un equipement par son timestamp
+// Parametres (form-urlencoded) : mac (ou ip) + ts
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiDeleteNote() {
+    if (!_hasScan || !_scan.deleteNote) {
+        _server.send(503, "application/json", "{\"error\":\"non disponible\"}");
+        return;
+    }
+
+    String key = _server.arg("mac");
+    if (key.isEmpty()) key = _server.arg("ip");
+    uint32_t ts = (uint32_t) _server.arg("ts").toInt();
+
+    if (key.isEmpty()) {
+        _server.send(400, "application/json", "{\"error\":\"mac ou ip requis\"}");
+        return;
+    }
+
+    bool ok = _scan.deleteNote(key, ts);
+    _server.send(ok ? 200 : 404, "application/json",
+                 ok ? "{\"status\":\"ok\"}" : "{\"error\":\"note introuvable\"}");
+}
+
+// ---------------------------------------------------------------------------
+// Handler : heap/PSRAM libres, espace LittleFS utilise, temps de scan moyens
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiDiagnostics() {
+    String json = (_hasScan && _scan.getDiagnosticsJson)
+        ? _scan.getDiagnosticsJson()
+        : "{\"error\":\"non disponible\"}";
+    _server.sendHeader("Cache-Control", "no-cache");
+    _server.send(200, "application/json", json);
 }
 
 // ---------------------------------------------------------------------------

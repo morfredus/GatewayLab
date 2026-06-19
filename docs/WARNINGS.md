@@ -253,6 +253,9 @@ Routes sensibles :
 * `GET /api/system/backup` — télécharge les mots de passe WiFi enregistrés
   en clair (sauvegarde des paramètres de fonctionnement)
 * `POST /api/system/restore` — peut enregistrer de nouveaux réseaux WiFi
+* `GET /api/system/backup` — télécharge les mots de passe WiFi enregistrés
+  en clair (sauvegarde des paramètres de fonctionnement)
+* `POST /api/system/restore` — peut enregistrer de nouveaux réseaux WiFi
 
 Ne jamais exposer Gateway Lab directement sur Internet.
 

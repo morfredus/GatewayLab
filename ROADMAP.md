@@ -12,6 +12,9 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 * Détection des points d'accès / répéteurs WiFi et visualisation graphique
   de la topologie réseau (la page `/topology` ajoutée en v0.7.0 n'en est que
   la première étape : liste texte passerelle/équipements)
+* Détection des points d'accès / répéteurs WiFi et visualisation graphique
+  de la topologie réseau (la page `/topology` ajoutée en v0.7.0 n'en est que
+  la première étape : liste texte passerelle/équipements)
 
 ---
 
@@ -24,7 +27,11 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 * ~~Compteur de détections~~
 * ~~Équipements favoris~~ (terminé en v0.6.0)
 * ~~Notes utilisateur sur un équipement~~ (alias + notes datées, v0.2.0 et v0.6.0)
+* ~~Équipements favoris~~ (terminé en v0.6.0)
+* ~~Notes utilisateur sur un équipement~~ (alias + notes datées, v0.2.0 et v0.6.0)
 * ~~Export JSON complet~~ (sauvegarde/restauration)
+* ~~Export CSV~~ (terminé en v0.7.0)
+* ~~Filtres sur la page Équipements (type, fabricant, favoris)~~ (terminé en v0.7.0)
 * ~~Export CSV~~ (terminé en v0.7.0)
 * ~~Filtres sur la page Équipements (type, fabricant, favoris)~~ (terminé en v0.7.0)
 
@@ -49,8 +56,14 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
   en v0.7.0 : page `/topology`, vue texte passerelle/équipements à partir des
   données déjà collectées)
 * Détection des points d'accès / répéteurs WiFi
+* ~~Page dédiée et détection automatique de la passerelle~~ (terrain préparé
+  en v0.7.0 : page `/topology`, vue texte passerelle/équipements à partir des
+  données déjà collectées)
+* Détection des points d'accès / répéteurs WiFi
 * Identification des switches connus
 * Cartographie logique du réseau
+* Relations entre équipements (qui est connecté à quel répéteur/AP)
+* Visualisation graphique du réseau (graphe interactif)
 * Relations entre équipements (qui est connecté à quel répéteur/AP)
 * Visualisation graphique du réseau (graphe interactif)
 

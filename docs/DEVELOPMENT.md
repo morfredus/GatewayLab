@@ -120,6 +120,7 @@ sortie comme :
 [history.html + history.js] → include/web_interface_history.h
 [wifi.html + wifi.js]    → include/web_interface_wifi.h
 [topology.html + topology.js] → include/web_interface_topology.h
+[topology.html + topology.js] → include/web_interface_topology.h
 [oui.json]    → include/oui_table.h
 OK
 ```
@@ -212,6 +213,11 @@ PSRAM libre, l'usage LittleFS et les temps moyens de scan/passe précise
 (`GET /api/diagnostics`) — utile pour suivre l'impact mémoire et performance
 du scan dans la durée.
 
+Une cartouche **Diagnostics système** affiche également le heap libre, la
+PSRAM libre, l'usage LittleFS et les temps moyens de scan/passe précise
+(`GET /api/diagnostics`) — utile pour suivre l'impact mémoire et performance
+du scan dans la durée.
+
 ### Page Équipements (`/scan`)
 
 C'est la page principale.
@@ -250,6 +256,28 @@ Le menu **Données** est divisé en deux groupes par un séparateur :
    restaurable). La restauration ajoute/met à jour les réseaux WiFi du
    fichier sans jamais supprimer les réseaux déjà enregistrés.
 
+Une barre de **filtres** (type, fabricant, favoris uniquement, en ligne
+uniquement) permet de réduire la liste affichée sans relancer de scan ; les
+listes déroulantes Type/Fabricant se remplissent automatiquement à partir
+des équipements connus.
+
+Le menu **Données** est divisé en deux groupes par un séparateur :
+
+1. **Export CSV** / **Export JSON** — export de l'inventaire des
+   équipements. Le CSV (`/api/devices/export.csv`, une ligne par équipement)
+   a des dates lisibles, des colonnes en ligne/favori en `Yes`/`No`, et
+   inclut les notes et le niveau de confiance ; le BOM UTF-8 en tête de
+   fichier garantit un affichage correct des accents dans Excel. Le JSON
+   (`/api/backup`) contient l'inventaire complet (alias, notes, historique,
+   confiance) avec les dates en epoch, pour une restauration fidèle via
+   `/api/restore`.
+2. **Sauvegarde** / **Restauration** — paramètres de fonctionnement du
+   projet (`/api/system/backup`, `/api/system/restore`), distincts de
+   l'inventaire : réseaux WiFi enregistrés (SSID + mot de passe), luminosité
+   NeoPixel, et nom mDNS à titre informatif (fixé à la compilation, non
+   restaurable). La restauration ajoute/met à jour les réseaux WiFi du
+   fichier sans jamais supprimer les réseaux déjà enregistrés.
+
 **Colonnes du tableau :**
 
 | Colonne | Description |
@@ -260,6 +288,10 @@ Le menu **Données** est divisé en deux groupes par un séparateur :
 | Catégorie | Type d'équipement (Router, NAS, TV…) |
 | MAC | Adresse MAC physique |
 | Vu il y a | Temps depuis la dernière détection |
+
+Chaque équipement peut être marqué comme **favori** (★) et annoté de notes
+libres datées (bouton 📝), utile pour le suivi d'inventaire personnel
+(ex : "cartouche changée le 12/05").
 
 Chaque équipement peut être marqué comme **favori** (★) et annoté de notes
 libres datées (bouton 📝), utile pour le suivi d'inventaire personnel
@@ -284,6 +316,11 @@ nouvel équipement, reconnexion, déconnexion, ou changement d'un champ
 (IP, fabricant, catégorie...). Les horodatages utilisent l'heure réelle
 (synchronisée par NTP au démarrage).
 
+Des cases à cocher permettent de filtrer l'affichage par type d'événement,
+ainsi que par **favoris uniquement** : ce filtre ne conserve que les
+événements concernant des équipements actuellement marqués comme favoris
+(statut récupéré en direct depuis `/api/devices`, indépendamment de l'état
+de l'équipement au moment de l'événement historique).
 Des cases à cocher permettent de filtrer l'affichage par type d'événement,
 ainsi que par **favoris uniquement** : ce filtre ne conserve que les
 événements concernant des équipements actuellement marqués comme favoris

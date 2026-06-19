@@ -41,6 +41,17 @@
           <input type="file" id="restore-file" accept="application/json" style="display:none">
         </div>
         <div class="reset-menu">
+          <button class="reset-btn" id="data-btn" onclick="toggleDataMenu()">Données ▾</button>
+          <div class="reset-menu-list" id="data-menu-list">
+            <a href="/api/devices/export.csv" download="gateway-lab-devices.csv">Export CSV</a>
+            <a href="/api/backup" download="gateway-lab-backup.json">Export JSON</a>
+            <div class="reset-menu-sep"></div>
+            <a href="/api/system/backup" download="gateway-lab-settings.json">Sauvegarde</a>
+            <button onclick="triggerRestore()">Restauration…</button>
+          </div>
+          <input type="file" id="restore-file" accept="application/json" style="display:none">
+        </div>
+        <div class="reset-menu">
           <button class="reset-btn" id="reset-btn" onclick="toggleResetMenu()">Réinitialiser ▾</button>
           <div class="reset-menu-list" id="reset-menu-list">
             <button onclick="resetDevices(false, false)">Tout effacer</button>
@@ -80,6 +91,17 @@
       <label><input type="checkbox" id="filter-online"> En ligne uniquement</label>
     </div>
 
+    <div class="hist-filters" id="device-filters">
+      <label>Type
+        <select id="filter-category"><option value="">Tous</option></select>
+      </label>
+      <label>Fabricant
+        <select id="filter-manufacturer"><option value="">Tous</option></select>
+      </label>
+      <label><input type="checkbox" id="filter-favorite"> Favoris uniquement</label>
+      <label><input type="checkbox" id="filter-online"> En ligne uniquement</label>
+    </div>
+
     <div class="progress-wrap" id="progress-wrap">
       <div class="progress-bar" id="progress-bar"></div>
     </div>
@@ -98,9 +120,11 @@
             <th>MAC</th>
             <th>Vu il y a</th>
             <th></th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="devices-body">
+          <tr><td colspan="8" class="empty-msg">Cliquez sur "Scanner" pour détecter les équipements</td></tr>
           <tr><td colspan="8" class="empty-msg">Cliquez sur "Scanner" pour détecter les équipements</td></tr>
         </tbody>
       </table>
