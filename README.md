@@ -1,6 +1,6 @@
 # Gateway Lab V1
 
-![Version](https://img.shields.io/badge/version-0.8.8-blue)
+![Version](https://img.shields.io/badge/version-0.9.2-blue)
 ![Platform](https://img.shields.io/badge/platform-ESP32--S3-orange)
 ![Framework](https://img.shields.io/badge/framework-Arduino%20%2F%20PlatformIO-00979D)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -128,6 +128,7 @@ Guide développeur : voir docs/DEVELOPMENT.md
 | Découverte NetBIOS       | Node Status (UDP 137) - hostnames PC Windows / Samba              |
 | Scan de ports TCP        | 14 ports, bannières HTTP/SSH/FTP, détection API IoT (Shelly/Tasmota/FritzBox) |
 | Inventaire réseau        | IP, nom, fabricant, modèle, catégorie, OS, services, ports, MAC, source |
+| Nom humain du matériel   | Intitulé déduit (modèle/fabricant/catégorie) affiché au-dessus du hostname brut quand celui-ci reste générique, repris dans l'export JSON (`hostnameDisplay`) — l'export CSV garde le hostname brut sur une seule ligne |
 | Auto-détection ESP32     | Le Gateway apparaît dans sa propre liste                          |
 | Identification OUI       | Base externalisée générée automatiquement                         |
 | Persistance LittleFS     | Statistiques online/offline, état conservé entre redémarrages     |
@@ -138,12 +139,11 @@ Guide développeur : voir docs/DEVELOPMENT.md
 | Détection des changements | Comparaison automatique entre deux scans (IP, fabricant, catégorie, ports...) |
 | Sauvegarde / restauration | Export et import JSON complet de l'inventaire et de l'historique |
 | Réinitialisation des équipements | RAZ de l'inventaire, avec options de conservation (alias, fabricant connu) |
-| Réinterrogation ciblée   | Rafraîchit un seul équipement (IP) sans relancer un scan complet, tâche asynchrone avec barre de progression affichée sous la ligne de l'équipement |
+| Réinterrogation ciblée   | Rafraîchit un seul équipement (IP) sans relancer un scan complet, en deux passes au choix — rapide (1-3s, ARP/ICMP + PTR DNS) ou approfondie (<3s si rien d'exploitable, sinon quelques secondes) — qui n'interrogent jamais que l'IP visée (aucun SSDP, DNS-SD ou WS-Discovery global) ; tâche asynchrone avec barre de progression et journal d'enrichissement affichés sous la ligne de l'équipement |
 | Sous-catégorie (`type`)  | Précision du type d'équipement au sein d'une catégorie (ex: Caméra, Imprimante) |
 | Score de confiance unique | Calcul prudent (minimum des signaux fabricant/catégorie), avec détail par champ au survol |
-| Sondage SNMP             | `sysDescr` (UDP 161) lors de la passe précise — fabricant/modèle en texte clair |
-| Découverte WS-Discovery/ONVIF | Probe SOAP multicast lors de la passe précise — caméras, imprimantes, NAS |
-| API appareils multimédia | Cast, Sonos, Roku, Samsung Smart TV — sondées lors de la passe précise |
+| Sondage SNMP             | `sysDescr` (UDP 161) en requête unicast ciblée, lors de la passe précise approfondie (profil Imprimante/Inconnu avec service exploitable) — fabricant/modèle en texte clair |
+| API appareils multimédia | Cast, Sonos, Roku, Samsung Smart TV — sondées en requête unicast ciblée, lors de la passe précise approfondie (profil Streaming/Domotique avec service exploitable) |
 | Découverte Matter (DNS-SD) | Détection des appareils Matter commissionnables (`_matterc._udp`) |
 | Filtrage de l'historique | Filtres par type d'événement (nouveau, reconnexion, déconnexion, changement) et par favoris uniquement |
 | Effacement de l'historique | Vide le journal après téléchargement automatique d'une sauvegarde JSON |
@@ -460,12 +460,26 @@ disposant d'un alias et/ou d'un fabricant identifié.
 ### POST /api/devices/rescan
 
 Réinterroge un seul équipement (paramètre `ip`) sans relancer un scan
-complet : sonde ARP/ICMP ciblée, puis résolution de nom, scan de ports,
-NetBIOS, SNMP, WS-Discovery/ONVIF et API multimédia (Cast/Sonos/Roku/Samsung)
-si l'équipement répond. Exécuté de façon asynchrone sur une tâche FreeRTOS
-dédiée — voir `GET /api/devices/rescan/status` pour suivre la progression.
-Retourne une erreur 409 si un scan complet ou une autre passe précise est
-déjà en cours, ou 400 si l'IP est inconnue.
+complet, et sans jamais relancer de découverte multicast réseau (aucun
+SSDP, DNS-SD ou WS-Discovery global n'est lancé depuis cette route — ce
+sont des protocoles qui sondent tout le sous-réseau et ne peuvent pas être
+restreints à une IP). Sonde ARP/ICMP ciblée, puis résolution de nom ;
+paramètre `mode` optionnel :
+- `quick` (par défaut, 1-3s) : ARP/ICMP, PTR DNS, mise à jour du
+  hostname, vérification de présence — rien d'autre.
+- `deep` (<3s si rien d'exploitable, sinon quelques secondes) : scan TCP
+  unicast des ports de la cible (`kRescanTargetPorts`). Si aucun
+  port/service exploitable n'est trouvé, la passe s'arrête immédiatement.
+  Sinon, le profil d'équipement (Computer, NAS, Printer, Streaming,
+  SmartHome, Mobile, Unknown) est déduit des ports découverts et seuls les
+  modules pertinents pour ce profil sont lancés, toujours en requête
+  unicast directe sur l'IP visée : NetBIOS, API multimédia
+  (Cast/Sonos/Roku/Samsung) et SNMP.
+
+Exécuté de façon asynchrone sur une tâche FreeRTOS dédiée — voir
+`GET /api/devices/rescan/status` pour suivre la progression. Retourne une
+erreur 409 si un scan complet ou une autre passe précise est déjà en
+cours, ou 400 si l'IP est inconnue.
 
 ### GET /api/devices/rescan/status
 
@@ -477,13 +491,20 @@ les 500 ms par l'interface) :
   "running": true,
   "ok": false,
   "ip": "192.168.1.42",
-  "step": "WS-Discovery",
-  "percent": 72
+  "step": "Services multimédia",
+  "percent": 70,
+  "mode": "deep",
+  "profile": "Streaming",
+  "log": ["Modèle détecté : Google Nest Hub", "Confiance : 30% → 70%"]
 }
 ```
 
 `running` repasse à `false` une fois la passe terminée ; `ok` indique si
-l'équipement a répondu.
+l'équipement a répondu. `mode` et `profile` indiquent la passe et le
+profil déduit pour cette réinterrogation. `log` contient le journal
+d'enrichissement de la dernière passe terminée (ou
+`["Aucune information supplémentaire détectée"]` si rien de nouveau n'a
+été trouvé).
 
 ### POST /api/favorite
 
@@ -547,7 +568,11 @@ Télécharge l'inventaire au format CSV (une ligne par équipement : IP, MAC,
 hôte, alias, fabricant, modèle, catégorie, type, OS, services, ports
 ouverts, en ligne (`Yes`/`No`), favori (`Yes`/`No`), niveau de confiance,
 notes utilisateur, première/dernière apparition (date lisible
-`AAAA-MM-JJ HH:MM:SS`), compteur de vues). Utile pour une exploitation dans
+`AAAA-MM-JJ HH:MM:SS`), compteur de vues). Chaque équipement occupe
+exactement une ligne physique : tout retour à la ligne présent dans une
+valeur (note libre saisie par l'utilisateur, hostname...) est aplati en
+espace avant export, pour rester lisible même par un tableur ou un script
+qui ne respecte pas les guillemets RFC4180. Utile pour une exploitation dans
 un tableur ou un script externe — pour une sauvegarde/restauration complète
 (format JSON, dates en epoch), utiliser `/api/backup`. Le fichier contient un
 BOM UTF-8 en tête pour un affichage correct des accents dans Excel.
@@ -643,12 +668,11 @@ Les informations affichées peuvent provenir de plusieurs mécanismes :
 | SynologyAPI  | `DSM`     | API Synology DSM `/webapi/query.cgi`                            |
 | FreeboxAPI   | `Freebox` | API Freebox `/api_version`                                      |
 | NetBIOS      | `NetBIOS` | Node Status NetBIOS (UDP 137) - PC Windows / Samba              |
-| SNMP         | `SNMP`    | `sysDescr` SNMP (UDP 161) — fabricant/modèle en texte clair (passe précise) |
-| WS-Discovery | `UPnP`    | Probe SOAP/ONVIF multicast — caméras, imprimantes, NAS (passe précise) |
-| Cast         | `Cast`    | API Google Cast `/setup/eureka_info` (passe précise)            |
-| Sonos        | `Sonos`   | API Sonos `/xml/device_description.xml` (passe précise)         |
-| Roku         | `Roku`    | API Roku `/query/device-info` (passe précise)                   |
-| SamsungTV    | `Samsung` | API Samsung Smart TV `/api/v2/` (passe précise)                 |
+| SNMP         | `SNMP`    | `sysDescr` SNMP (UDP 161), requête unicast ciblée (passe précise approfondie) |
+| Cast         | `Cast`    | API Google Cast `/setup/eureka_info`, requête unicast ciblée (passe précise approfondie) |
+| Sonos        | `Sonos`   | API Sonos `/xml/device_description.xml`, requête unicast ciblée (passe précise approfondie) |
+| Roku         | `Roku`    | API Roku `/query/device-info`, requête unicast ciblée (passe précise approfondie) |
+| SamsungTV    | `Samsung` | API Samsung Smart TV `/api/v2/`, requête unicast ciblée (passe précise approfondie) |
 | Self         | `ESP32`   | Informations de l'ESP32 lui-même                                |
 
 ---

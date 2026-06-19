@@ -42,6 +42,9 @@ struct RescanStatus {
     String ip;                // IP visee par la passe en cours/terminee
     String step;               // Etape courante, ex: "SSDP/UPnP"
     int    percent = 0;       // Avancement estime (0-100)
+    String mode;               // "quick" ou "deep" - passe en cours/terminee
+    String profile;            // Profil d'equipement deduit, ex: "NAS", "Printer"
+    std::vector<String> log;   // Journal des enrichissements de la derniere passe
 };
 
 // Note libre datee, ajoutee par l'utilisateur sur un equipement de son
@@ -146,11 +149,26 @@ public:
     String devicesToCsv() const;
 
     // Lance la passe precise (asynchrone, tache FreeRTOS dediee) sur un seul
-    // equipement identifie par IP : ARP/ICMP, hostname, ports, NetBIOS,
-    // SSDP/UPnP, DNS-SD, SNMP. Retourne immediatement (true si la tache a
-    // demarre) - suivre l'avancement via getRescanStatus().
+    // equipement identifie par IP — pose des questions ciblees a CET
+    // equipement, jamais une decouverte reseau globale : aucun module SSDP,
+    // DNS-SD ou WS-Discovery (multicast, non ciblable par IP) n'est jamais
+    // lance depuis une passe precise.
+    //   - deep=false (scan rapide, 1-3s)  : ARP/ICMP, PTR DNS, mise a jour du
+    //     hostname, verification de presence. Rien d'autre.
+    //   - deep=true  (scan approfondi, vise <3s si rien d'exploitable, sinon
+    //     quelques secondes) : scan rapide, puis scan des ports de la cible
+    //     uniquement (22,53,80,135,139,443,445,515,554,631,8080,8443,9100,5000).
+    //     Si aucun port/service exploitable n'est trouve, la passe s'arrete
+    //     immediatement. Sinon, un profil d'equipement (Computer, NAS,
+    //     Printer, Streaming, SmartHome, Mobile, Unknown) est deduit des
+    //     ports ouverts + informations deja connues, et seuls les modules
+    //     cibles pertinents pour ce profil sont lances (NetBIOS, API
+    //     multimedia Cast/Sonos/Roku/Samsung, SNMP) — toujours en requete
+    //     unicast directe sur l'IP visee.
+    // Retourne immediatement (true si la tache a demarre) - suivre
+    // l'avancement via getRescanStatus().
     // Retourne false si l'IP est inconnue ou si un scan/rescan est deja en cours.
-    bool rescanDevice(const String& ip);
+    bool rescanDevice(const String& ip, bool deep = false);
 
     // Avancement courant de la passe precise (thread-safe) - pour le polling UI
     RescanStatus getRescanStatus() const;
@@ -178,8 +196,16 @@ private:
     static void _rescanTask(void* self);
 
     // Corps de la passe precise sur _rescanStatus.ip - met a jour _rescanStatus
-    // a chaque etape pour que l'UI puisse afficher un avancement reel
-    void _runRescan(const String& ip);
+    // a chaque etape pour que l'UI puisse afficher un avancement reel.
+    // deep=false : modules limites au profil deduit (scan rapide).
+    // deep=true  : tous les modules pertinents pour le profil (scan approfondi).
+    void _runRescan(const String& ip, bool deep);
+
+    // Deduit un profil d'equipement probable a partir des informations deja
+    // connues (fabricant, hostname, modele, categorie, services, ports) -
+    // simple hypothese servant a choisir les modules de decouverte les plus
+    // pertinents pour la passe precise. Ne modifie jamais le NetworkDevice.
+    static String _profileFor(const NetworkDevice& d);
 
     // Met a jour l'etape/pourcentage courant de la passe precise (thread-safe)
     void _setRescanProgress(const String& step, int percent);
@@ -260,6 +286,7 @@ private:
     std::vector<NetworkDevice>  _results;
     volatile bool               _scanning   = false;
     RescanStatus                _rescanStatus;   // Protege par _mutex (lecture/ecriture)
+    bool                         _rescanDeep  = false;   // Mode de la passe en cours, lu une seule fois par _rescanTask
     volatile bool               _newDevicesPending = false;   // true si le dernier scan a revele un nouvel equipement
 
     // Cumuls pour le calcul des temps moyens (cartouche diagnostics) - proteges par _mutex
