@@ -14,7 +14,14 @@
 
 static const char* TAG = "BootLog";
 
-static const uint32_t kMagic = 0xB007106Au;
+// IMPORTANT : ce magic doit etre incremente a chaque fois que la structure
+// BootLogRtcData change de layout (champs ajoutes/retires/reordonnes ou
+// dimensions kLines/kLineLen modifiees). RTC_NOINIT_ATTR survit a un flash
+// de firmware (la RAM RTC n'est pas touchee par l'ecriture de la partition
+// app) : si le magic reste identique apres une mise a jour qui change le
+// layout, begin() relira les anciens octets bruts a travers le nouveau
+// layout et produira des donnees corrompues (cf. incident Patch 7 -> 8).
+static const uint32_t kMagic = 0xB007106Bu;  // v2 (Patch 8 : layout RuntimeStats/lastTask/wifiIp)
 
 // Taille du buffer circulaire de logs — configurable via app_config.h
 static const int kLines   = LOG_BUFFER_SIZE;
@@ -85,6 +92,9 @@ static uint32_t _largestFreeBlock() {
 
 void BootLog::begin() {
     _mounted = LittleFS.begin(true);
+    if (!_mounted) {
+        Log::e(TAG, "Echec de montage LittleFS — journal de redemarrage indisponible (rien ne sera ecrit dans /bootlog.json)");
+    }
 
     esp_reset_reason_t reason = esp_reset_reason();
     bool hadPreviousLines = (_rtc.magic == kMagic);   // count peut etre 0 si rien capture
