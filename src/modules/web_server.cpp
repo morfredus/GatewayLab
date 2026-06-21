@@ -120,7 +120,13 @@ void WebServerModule::begin(uint16_t port) {
     // [DEBOGAGE TEMPORAIRE] Page et API du journal de redemarrage — voir boot_log.h.
     // A retirer (ce bloc + la page web_src/debug.html/.js + le lien menu.html)
     // une fois le debogage termine.
-    _on("/debug",        HTTP_GET, [this]() { _server.send_P(200, "text/html", DEBUG_PAGE); });
+    _on("/debug",        HTTP_GET, [this]() {
+        // Evite qu'un navigateur garde en cache une ancienne version de la
+        // page pendant les tests successifs de ce module (Patch 8) — la
+        // page elle-meme change peu mais c'est gratuit a desactiver.
+        _server.sendHeader("Cache-Control", "no-cache");
+        _server.send_P(200, "text/html", DEBUG_PAGE);
+    });
     _on("/api/bootlog",  HTTP_GET, [this]() {
         _server.sendHeader("Cache-Control", "no-cache");
         _server.send(200, "application/json", bootLog.getLogJson());
