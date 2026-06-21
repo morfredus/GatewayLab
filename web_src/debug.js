@@ -40,8 +40,18 @@ function renderEntry(e, index, total) {
 
 function loadBootLog() {
   fetch('/api/bootlog')
-    .then(function(r) { return r.json(); })
-    .then(function(list) {
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function(text) {
+      var list;
+      try {
+        list = JSON.parse(text);
+      } catch (parseErr) {
+        console.error('BootLog: reponse non-JSON :', text);
+        throw parseErr;
+      }
       list = list || [];
       list.reverse(); // plus récent en premier
       var container = document.getElementById('bootlog-list');
@@ -49,6 +59,7 @@ function loadBootLog() {
       if (!list.length) {
         container.innerHTML = '';
         empty.style.display = 'block';
+        document.getElementById('footer-ts').textContent = 'Actualisé : ' + new Date().toLocaleTimeString('fr-FR');
         return;
       }
       empty.style.display = 'none';
@@ -56,7 +67,10 @@ function loadBootLog() {
       container.innerHTML = list.map(function(e, i) { return renderEntry(e, i, total); }).join('');
       document.getElementById('footer-ts').textContent = 'Actualisé : ' + new Date().toLocaleTimeString('fr-FR');
     })
-    .catch(function() {});
+    .catch(function(err) {
+      console.error('BootLog: echec du chargement /api/bootlog :', err);
+      document.getElementById('footer-ts').textContent = 'Erreur de chargement (voir console)';
+    });
 }
 
 function clearBootLog() {
