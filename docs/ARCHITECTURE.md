@@ -231,6 +231,10 @@ protocoles plus coûteux, non utilisés lors du scan complet, et qui peuvent
 - `SnmpScanner` : GetRequest SNMP v1 (ASN.1 BER manuel) sur `sysDescr` (UDP 161)
 - `MediaApiScanner` : sondes HTTP séquentielles Cast (`:8008`), Sonos (`:1400`),
   Roku (`:8060`), Samsung Smart TV (`:8001`)
+- `MqttScanner` : connexion TCP unicast à un broker MQTT (`:1883`), CONNECT
+  anonyme + souscription `$SYS/broker/version` et `$SYS/broker/clients/connected`
+  — déclenché uniquement si le profil déduit (`SmartHome`/`Unknown`) a le
+  port MQTT ouvert
 
 Ces deux scanners sont appelés uniquement depuis `_runRescan(ip, deep)` dans
 `network_scanner.cpp`, exécuté dans une tâche FreeRTOS dédiée

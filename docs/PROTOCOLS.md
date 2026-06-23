@@ -435,6 +435,54 @@ fabricant (HP, Cisco, Synology, Ubiquiti…) quand l'OUI MAC est ambigu.
 
 ---
 
+## MQTT — broker (passe précise approfondie)
+
+### C'est quoi ?
+
+MQTT est un protocole de messagerie publish/subscribe très utilisé en
+domotique (Home Assistant, Zigbee2MQTT, Tasmota, ESPHome…). Un **broker**
+centralise les messages : les appareils publient sur des topics, d'autres
+s'y abonnent. Le broker écoute en général sur le port TCP 1883.
+
+Le scan de ports (Phase complète et passe précise) détecte déjà le port
+1883 ouvert (libellé `MQTT`). La passe précise approfondie va plus loin en
+s'y connectant brièvement comme client.
+
+### Comment ça marche ?
+
+```
+Gateway Lab → IP cible:1883 :
+  CONNECT (anonyme, client id "GatewayLab-<millis>")
+Broker     → Gateway Lab :
+  CONNACK (code 0 = accepté sans authentification, sinon refusé)
+
+Si accepté :
+Gateway Lab → Broker :
+  SUBSCRIBE "$SYS/broker/version", "$SYS/broker/clients/connected"
+Broker     → Gateway Lab :
+  PUBLISH "$SYS/broker/version"           → "mosquitto version 2.0.18"
+  PUBLISH "$SYS/broker/clients/connected" → "4"
+```
+
+`$SYS/#` est l'espace de topics standard que la plupart des brokers
+(Mosquitto en tête) publient sur eux-mêmes. Gateway Lab se limite
+volontairement à ces deux topics : il n'interroge jamais les topics
+applicatifs des appareils (`#`), qui relèveraient de l'inventaire des
+données du foyer plutôt que de l'identification du broker.
+
+### Comment Gateway Lab l'utilise ?
+
+`MqttScanner` (`src/modules/mqtt_scanner.*`) est appelé uniquement depuis
+`_runRescan(ip, deep)`, lors de la passe précise approfondie, et seulement
+si le profil déduit est `SmartHome` ou `Unknown` **et** que le port 1883 a
+été trouvé ouvert par le scan de ports ciblé. Jamais de diffusion
+multicast, jamais de scan systématique — une seule connexion TCP unicast
+vers l'IP visée. Le résultat (version du broker, nombre de clients
+connectés) enrichit le modèle et la catégorie (`Smart Hub`) de
+l'équipement, avec la source `MQTT`.
+
+---
+
 ## WS-Discovery (ONVIF)
 
 ### C'est quoi ?
@@ -520,6 +568,7 @@ juste deux entrées de plus dans la table des services interrogés.
 | API Sonos | 1400 | TCP | `/xml/device_description.xml` — passe précise approfondie, unicast |
 | API Roku | 8060 | TCP | `/query/device-info` — passe précise approfondie, unicast |
 | API Samsung TV | 8001 | TCP | `/api/v2/` — passe précise approfondie, unicast |
+| MQTT (broker) | 1883 | TCP | CONNECT + `$SYS/broker/version`/`clients/connected` — passe précise approfondie, unicast |
 | HTTP | 80/443/49000/… | TCP | Descripteurs XML + APIs spécifiques |
 | ArduinoOTA | 3232 | UDP | Mise à jour firmware réseau |
 | HTTP (OTA web) | 80 | TCP | Mise à jour firmware navigateur |

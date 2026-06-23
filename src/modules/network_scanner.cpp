@@ -24,6 +24,7 @@
 #include "netbios_scanner.h"     // Node Status NetBIOS (UDP 137) - hostnames Windows/Samba
 #include "snmp_scanner.h"        // SNMP sysDescr (UDP 161) - fabricant/modele en texte clair
 #include "media_api_scanner.h"   // API HTTP proprietaires : Cast, Sonos, Roku, Samsung TV
+#include "mqtt_scanner.h"        // Broker MQTT (TCP 1883) - version/clients via $SYS
 #include "device_enricher.h"     // Enrichissement par pattern matching sur le hostname
 #include "device_history.h"      // Journal chronologique des evenements (nouveaux/changements)
 #include "time_sync.h"           // Epoch NTP pour firstSeen/lastSeen
@@ -1830,6 +1831,8 @@ void NetworkScanner::_runRescan(const String& ip, bool deep) {
                                      updated.hostname.isEmpty());
                 bool wantMedia   = (profile == "Streaming" || profile == "SmartHome");
                 bool wantSnmp    = (profile == "Printer" || profile == "Unknown");
+                bool wantMqtt    = (profile == "SmartHome" || profile == "Unknown") &&
+                                    updated.openPorts.indexOf("MQTT") >= 0;
 
                 if (wantNetBios) {
                     _setRescanProgress("APIs constructeur", 55);
@@ -1862,6 +1865,31 @@ void NetworkScanner::_runRescan(const String& ip, bool deep) {
                             if (!mediaRes.category.isEmpty() && d.category.isEmpty()) d.category = mediaRes.category;
                             if (!mediaRes.friendlyName.isEmpty() && d.hostname.isEmpty()) d.hostname = mediaRes.friendlyName;
                             d.source = mediaRes.apiType;
+                            break;
+                        }
+                        xSemaphoreGive(_mutex);
+                    }
+                }
+
+                // Broker MQTT - connexion TCP unicast directe sur l'IP visee,
+                // CONNECT anonyme + souscription aux topics $SYS/broker/*.
+                if (wantMqtt) {
+                    _setRescanProgress("Broker MQTT", 80);
+                    MqttProbeResult mqttRes = mqttScanner.probe(ip, 1883, 600);
+                    if (mqttRes.reachable) {
+                        xSemaphoreTake(_mutex, portMAX_DELAY);
+                        for (auto& d : _results) {
+                            if (d.ip != ip) continue;
+                            if (!mqttRes.brokerVersion.isEmpty()) {
+                                String label = "MQTT broker " + mqttRes.brokerVersion;
+                                if (!mqttRes.clientsConnected.isEmpty())
+                                    label += " (" + mqttRes.clientsConnected + " clients)";
+                                if (d.model.isEmpty()) d.model = label;
+                                if (d.category.isEmpty()) d.category = "Smart Hub";
+                                if (d.source.isEmpty() || d.source == "MAC") d.source = "MQTT";
+                            } else if (mqttRes.authRequired) {
+                                Log::d(TAG, "%s — broker MQTT authentifie, aucune info $SYS", ip.c_str());
+                            }
                             break;
                         }
                         xSemaphoreGive(_mutex);

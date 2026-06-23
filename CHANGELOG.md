@@ -5,6 +5,23 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.0.9] - 2026-06-23
+
+### Ajoute
+
+- **Sondage de broker MQTT lors de la passe précise approfondie**
+  (`src/modules/mqtt_scanner.h/.cpp`) : déclenché uniquement quand le profil
+  déduit (`SmartHome`/`Unknown`) a le port 1883 ouvert. Connexion TCP
+  unicast directe vers l'IP visée — CONNECT MQTT v3.1.1 anonyme, puis,
+  si accepté sans authentification, souscription aux topics standards
+  `$SYS/broker/version` et `$SYS/broker/clients/connected` (jamais aux
+  topics applicatifs des appareils). Le modèle/catégorie de l'équipement
+  sont enrichis avec la version du broker et son nombre de clients
+  connectés, source `MQTT`. Aucun impact sur le scan complet ni sur la
+  surveillance continue.
+
+---
+
 ## [1.0.8] - Patch 8 - 2026-06-21
 
 ### Ajoute

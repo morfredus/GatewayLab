@@ -147,6 +147,7 @@ Guide développeur : voir docs/DEVELOPMENT.md
 | Score de confiance unique | Calcul prudent (minimum des signaux fabricant/catégorie), avec détail par champ au survol |
 | Sondage SNMP             | `sysDescr` (UDP 161) en requête unicast ciblée, lors de la passe précise approfondie (profil Imprimante/Inconnu avec service exploitable) — fabricant/modèle en texte clair |
 | API appareils multimédia | Cast, Sonos, Roku, Samsung Smart TV — sondées en requête unicast ciblée, lors de la passe précise approfondie (profil Streaming/Domotique avec service exploitable) |
+| Sondage broker MQTT      | CONNECT anonyme + topics `$SYS/broker/version`/`clients/connected`, requête TCP unicast ciblée, lors de la passe précise approfondie (profil Domotique/Inconnu avec port 1883 ouvert) |
 | Découverte Matter (DNS-SD) | Détection des appareils Matter commissionnables (`_matterc._udp`) |
 | Filtrage de l'historique | Filtres par type d'événement (nouveau, reconnexion, déconnexion, changement) et par favoris uniquement |
 | Effacement de l'historique | Vide le journal après téléchargement automatique d'une sauvegarde JSON |
@@ -713,6 +714,7 @@ Les informations affichées peuvent provenir de plusieurs mécanismes :
 | Sonos        | `Sonos`   | API Sonos `/xml/device_description.xml`, requête unicast ciblée (passe précise approfondie) |
 | Roku         | `Roku`    | API Roku `/query/device-info`, requête unicast ciblée (passe précise approfondie) |
 | SamsungTV    | `Samsung` | API Samsung Smart TV `/api/v2/`, requête unicast ciblée (passe précise approfondie) |
+| MQTT         | `MQTT`    | Broker MQTT (port 1883), CONNECT + topics `$SYS/broker/*`, requête unicast ciblée (passe précise approfondie) |
 | Self         | `ESP32`   | Informations de l'ESP32 lui-même                                |
 
 ---
