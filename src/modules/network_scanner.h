@@ -233,6 +233,13 @@ public:
     // (quand non vide) est introuvable, ou si parentMac == macOrIp.
     bool setTopologyParent(const String& macOrIp, const String& parentMac);
 
+    // Definit la racine de l'arbre de topologie (MAC d'un equipement connu) -
+    // persiste en NVS. "" = automatique : la box operateur (categorie
+    // "Router") plutot que l'ESP32 lui-meme (categorie "Gateway", qui n'est
+    // qu'un equipement parmi d'autres sur le reseau de l'utilisateur).
+    void setTopologyRoot(const String& mac);
+    String getTopologyRoot() const;
+
     // Donnees de sante reseau pour le tableau de bord (compteurs 24h,
     // equipements presents/connus, equipements les moins stables)
     String networkHealthToJson() const;
@@ -390,6 +397,9 @@ private:
     uint32_t _lastMonitorTickMs      = 0;     // millis() du dernier tick execute (0 = jamais)
     std::vector<String>          _pendingQuickScan;   // File d'attente differee (IP), dedupliquee
     std::vector<String>          _pendingDeepScan;    // File d'attente differee (IP), dedupliquee
+
+    // Topologie reseau (v0.4.x) - lu/ecrit via NVS, hors mutex (idem _monitorEnabled)
+    String _topologyRootMac;   // "" = automatique (box operateur)
 };
 
 // Instance globale

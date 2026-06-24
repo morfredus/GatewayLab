@@ -45,6 +45,8 @@ static const char* TAG = "Scanner";
 static const char* MONITOR_NVS_NAMESPACE = "monitor";
 static const char* MONITOR_NVS_KEY       = "intervalMin";
 static const char* MONITOR_NVS_ENABLED_KEY = "enabled";
+static const char* TOPOLOGY_NVS_NAMESPACE = "topology";
+static const char* TOPOLOGY_NVS_ROOT_KEY  = "rootMac";
 
 // Instance globale exportée
 NetworkScanner netScanner;
@@ -1338,6 +1340,12 @@ void NetworkScanner::begin() {
     _monitorIntervalMinutes = storedMinutes;
     _monitorEnabled         = storedEnabled;
 
+    // Restauration de la racine de topologie (NVS, namespace "topology")
+    Preferences topoPrefs;
+    topoPrefs.begin(TOPOLOGY_NVS_NAMESPACE, true);
+    _topologyRootMac = topoPrefs.getString(TOPOLOGY_NVS_ROOT_KEY, "");
+    topoPrefs.end();
+
     Log::i(TAG, "Module initialisé — surveillance continue : %s, %u min",
            _monitorEnabled ? "activee" : "desactivee", (unsigned)_monitorIntervalMinutes);
 }
@@ -2611,6 +2619,30 @@ bool NetworkScanner::setTopologyParent(const String& macOrIp, const String& pare
     xSemaphoreGive(_mutex);
     if (found) _saveToStore();
     return found;
+}
+
+// ---------------------------------------------------------------------------
+// Racine de l'arbre de topologie (v0.4.x)
+//
+// Par defaut (mac=""), la racine affichee est la box operateur (categorie
+// "Router", deduite par IspDetector/SSDP/OUI) et non l'ESP32 lui-meme
+// (categorie "Gateway" — c'est un equipement du reseau comme un autre du
+// point de vue de la topologie, pas la racine). L'utilisateur peut forcer
+// n'importe quel autre equipement comme racine (ex. son propre routeur si
+// la box est en mode bridge derriere un routeur tiers).
+// ---------------------------------------------------------------------------
+void NetworkScanner::setTopologyRoot(const String& mac) {
+    _topologyRootMac = mac;
+
+    Preferences prefs;
+    prefs.begin(TOPOLOGY_NVS_NAMESPACE, false);
+    prefs.putString(TOPOLOGY_NVS_ROOT_KEY, mac);
+    prefs.end();
+    Log::i(TAG, "Racine de topologie : %s", mac.isEmpty() ? "automatique (box operateur)" : mac.c_str());
+}
+
+String NetworkScanner::getTopologyRoot() const {
+    return _topologyRootMac;
 }
 
 // ---------------------------------------------------------------------------

@@ -88,6 +88,8 @@ void WebServerModule::begin(uint16_t port) {
     _on("/api/system/restore", HTTP_POST, [this]() { _handleApiSystemRestore(); });
     _on("/api/mobility",       HTTP_POST, [this]() { _handleApiSetMobility(); });
     _on("/api/topology/parent", HTTP_POST, [this]() { _handleApiSetTopologyParent(); });
+    _on("/api/topology/root",   HTTP_GET,  [this]() { _handleApiTopologyRootGet(); });
+    _on("/api/topology/root",   HTTP_POST, [this]() { _handleApiTopologyRootPost(); });
     _on("/api/network/health", HTTP_GET,  [this]() { _handleApiNetworkHealth(); });
     _on("/api/monitor",        HTTP_GET,  [this]() { _handleApiMonitorGet(); });
     _on("/api/monitor",        HTTP_POST, [this]() { _handleApiMonitorPost(); });
@@ -199,7 +201,9 @@ void WebServerModule::_handleApiDevices() {
     }
     json += ",\"devices\":";
     json += (_hasScan && _scan.getJson) ? _scan.getJson() : "[]";
-    json += "}";
+    json += ",\"topologyRoot\":\"";
+    json += (_hasScan && _scan.getTopologyRoot) ? _scan.getTopologyRoot() : "";
+    json += "\"}";
 
     _server.sendHeader("Cache-Control", "no-cache");
     _server.send(200, "application/json", json);
@@ -628,6 +632,29 @@ void WebServerModule::_handleApiSetTopologyParent() {
     bool ok = _scan.setTopologyParent(key, parentMac);
     _server.send(ok ? 200 : 404, "application/json",
                  ok ? "{\"status\":\"ok\"}" : "{\"error\":\"equipement ou parent introuvable\"}");
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/topology/root — MAC de la racine forcee de l'arbre de topologie
+// ("" si automatique : box operateur).
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiTopologyRootGet() {
+    String mac = (_hasScan && _scan.getTopologyRoot) ? _scan.getTopologyRoot() : "";
+    _server.send(200, "application/json", "{\"root\":\"" + mac + "\"}");
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/topology/root — force la racine de l'arbre de topologie a un
+// equipement identifie par sa MAC, ou l'efface (parametre "mac" vide) pour
+// revenir a l'automatique (box operateur, categorie "Router").
+// ---------------------------------------------------------------------------
+void WebServerModule::_handleApiTopologyRootPost() {
+    if (!_hasScan || !_scan.setTopologyRoot) {
+        _server.send(503, "application/json", "{\"error\":\"non disponible\"}");
+        return;
+    }
+    _scan.setTopologyRoot(_server.arg("mac"));
+    _server.send(200, "application/json", "{\"status\":\"ok\"}");
 }
 
 // ---------------------------------------------------------------------------
