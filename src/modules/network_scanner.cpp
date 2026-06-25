@@ -22,7 +22,7 @@
 #include "icmp_scanner.h"        // Sonde ICMP pour IPs non trouvées par ARP
 #include "port_scanner.h"        // Scan TCP ports communs + banner HTTP/SSH/FTP + API IoT
 #include "netbios_scanner.h"     // Node Status NetBIOS (UDP 137) - hostnames Windows/Samba
-#include "snmp_scanner.h"        // SNMP sysDescr (UDP 161) - fabricant/modele en texte clair
+#include "snmp_scanner.h"        // SNMP sysDescr (UDP 161) + table de pontage (decouverte topologie)
 #include "media_api_scanner.h"   // API HTTP proprietaires : Cast, Sonos, Roku, Samsung TV
 #include "mqtt_scanner.h"        // Broker MQTT (TCP 1883) - version/clients via $SYS
 #include "dhcp_sniffer.h"        // Fingerprinting passif DHCP (UDP 67) - hostname/OS
@@ -1454,6 +1454,7 @@ String NetworkScanner::resultsToJson() const {
         obj["reconnectionCount"] = d.reconnectionCount;
         obj["mobilityOverride"]  = d.mobilityOverride;
         obj["topologyParent"]    = d.topologyParent;
+        obj["topologyParentAuto"] = d.topologyParentAuto;
         obj["isMobile"]          = _isMobileDevice(d);
         obj["stabilityScore"]    = _stabilityScoreFor(d);
         // services : tableau JSON ["HTTP","SSH","SMB"] depuis la chaîne pipe-séparée
@@ -2314,6 +2315,65 @@ void NetworkScanner::_sweepUnidentified() {
     xSemaphoreGive(_mutex);
 }
 
+// ---------------------------------------------------------------------------
+// Decouverte automatique de la topologie par SNMP (v1.4.0)
+//
+// Le scan ARP/SSDP seul ne peut pas determiner a quel point d'acces/repeteur
+// WiFi un equipement est rattache : la decision se prend en mode 2 (routeur)
+// ou en mode point d'acces transparent, information privee au firmware du
+// mesh. De nombreux routeurs/points d'acces/repeteurs "entreprise" ou semi-pro
+// exposent neanmoins un agent SNMP en lecture publique avec la Bridge MIB
+// standard (dot1dTpFdbTable) : sa table de pontage liste justement les MAC
+// qu'il relaie, donc rattachees a lui. On exploite cette source quand elle
+// est disponible pour completer automatiquement topologyParent, sans jamais
+// ecraser un rattachement choisi manuellement par l'utilisateur (glisser-
+// depose sur la carte) - seules les entrees encore vides ou deja deduites
+// automatiquement (topologyParentAuto) sont mises a jour. Best-effort total :
+// silencieux et sans effet si aucun equipement ne repond (cas frequent des
+// repeteurs mesh grand public type Deco/Orbi/eero, qui n'exposent pas SNMP).
+// ---------------------------------------------------------------------------
+void NetworkScanner::_discoverTopologyViaSnmp() {
+    uint32_t nowMs = millis();
+    uint32_t intervalMs = TOPOLOGY_SNMP_SWEEP_INTERVAL_MINUTES * 60UL * 1000UL;
+    if (_lastTopologySnmpSweepMs != 0 && (nowMs - _lastTopologySnmpSweepMs) < intervalMs) return;
+    _lastTopologySnmpSweepMs = nowMs;
+
+    std::vector<std::pair<String, String>> candidates;   // {ip, mac} des routeurs/AP/repeteurs
+    xSemaphoreTake(_mutex, portMAX_DELAY);
+    for (const auto& d : _results) {
+        if (d.ip.isEmpty() || d.mac.isEmpty() || !d.online) continue;
+        bool apLike = d.category == "Router" ||
+                      d.type.indexOf("épéteur") >= 0 ||      // "Répéteur"/"répéteur" - insensible a la casse de l'initiale
+                      d.type.indexOf("oint d'accès") >= 0;    // "Point d'accès"/"point d'accès"
+        if (apLike) candidates.push_back({ d.ip, d.mac });
+    }
+    xSemaphoreGive(_mutex);
+    if (candidates.empty()) return;
+
+    bool changed = false;
+    for (const auto& ap : candidates) {
+        std::vector<String> macs = snmpScanner.walkBridgeMacTable(ap.first, 300, 64);
+        if (macs.empty()) continue;   // Pas d'agent SNMP / MIB non supportee sur cet equipement
+
+        xSemaphoreTake(_mutex, portMAX_DELAY);
+        for (const auto& mac : macs) {
+            if (mac == ap.second) continue;   // L'AP se voit lui-meme dans sa propre table de pontage
+            for (auto& d : _results) {
+                if (d.mac != mac || d.mac == ap.second) continue;
+                if (d.topologyParent.isEmpty() || d.topologyParentAuto) {
+                    d.topologyParent     = ap.second;
+                    d.topologyParentAuto = true;
+                    changed = true;
+                }
+                break;
+            }
+        }
+        xSemaphoreGive(_mutex);
+    }
+
+    if (changed) _saveToStore();
+}
+
 void NetworkScanner::_drainPendingScans() {
     if (_scanning) return;   // Mutuelle exclusion avec scan complet/rescan
 
@@ -2541,6 +2601,10 @@ void NetworkScanner::serviceMonitor() {
     // en file, sans jamais lancer de scan directement (drainage ci-dessous).
     if (!_scanning) _sweepUnidentified();
 
+    // Decouverte automatique de la topologie par SNMP — requetes UDP/161
+    // unicast directes, independantes du sweep ARP et de la file differee.
+    if (!_scanning) _discoverTopologyViaSnmp();
+
     // Drainage de la file d'attente differee — une seule entree par appel
     _drainPendingScans();
 }
@@ -2629,7 +2693,8 @@ bool NetworkScanner::setTopologyParent(const String& macOrIp, const String& pare
     if (parentOk) {
         for (auto& d : _results) {
             if ((!d.mac.isEmpty() && d.mac == macOrIp) || d.ip == macOrIp) {
-                d.topologyParent = parentMac;
+                d.topologyParent     = parentMac;
+                d.topologyParentAuto = false;   // Choix manuel - ne sera plus jamais ecrase par la decouverte SNMP
                 found = true;
                 break;
             }

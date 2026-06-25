@@ -505,6 +505,27 @@ Equipement  → Gateway Lab :
 Le texte est analysé par des heuristiques de mots-clés pour en déduire le
 fabricant (HP, Cisco, Synology, Ubiquiti…) quand l'OUI MAC est ambigu.
 
+Depuis la v1.4.0, SNMP est également utilisé pour la **découverte automatique
+de la topologie réseau** : les équipements détectés comme routeur/point
+d'accès/répéteur sont interrogés à intervalle régulier (30 min par défaut)
+via une marche (`GetNextRequest` successifs) de la Bridge MIB standard,
+table de pontage `dot1dTpFdbTable` (OID `1.3.6.1.2.1.17.4.3.1.1`) :
+
+```
+Gateway Lab → AP/routeur:161 :
+  GetNextRequest community="public" OID=1.3.6.1.2.1.17.4.3.1.1
+AP/routeur  → Gateway Lab :
+  OID=1.3.6.1.2.1.17.4.3.1.1.<6 octets MAC> = <MAC pontée, 6 octets>
+  (repeter avec l'OID retourne jusqu'a sortir de la table ou timeout)
+```
+
+Chaque MAC ainsi retournée est rattachée automatiquement à l'équipement
+interrogé (`topologyParent`), sans jamais écraser un rattachement déclaré
+manuellement par l'utilisateur. Entièrement best-effort : la plupart des
+répéteurs mesh grand public (TP-Link Deco, Orbi, eero…) n'exposent pas
+d'agent SNMP et ne sont simplement jamais source de cette découverte — le
+rattachement manuel par glisser-déposer reste alors la seule option.
+
 ---
 
 ## MQTT — broker (passe précise approfondie)
@@ -634,7 +655,7 @@ juste deux entrées de plus dans la table des services interrogés.
 | SSDP | 1900 | UDP multicast 239.255.255.250 | Découverte UPnP |
 | WS-Discovery | 3702 | UDP multicast 239.255.255.250 | Découverte ONVIF — non invoqué actuellement (cf. ci-dessus) |
 | NetBIOS | 137 | UDP | Node Status — nom de machine Windows/Samba |
-| SNMP | 161 | UDP | `sysDescr` (fabricant/modèle) — passe précise approfondie, unicast |
+| SNMP | 161 | UDP | `sysDescr` (fabricant/modèle, passe précise approfondie) + table de pontage (`dot1dTpFdbTable`, découverte automatique de topologie) — unicast |
 | TCP ports (scan) | 21/22/23/80/443/445/554/1883/3389/5000/8080/8123/8443/9100 | TCP | Bannières + API IoT (Shelly, Tasmota, FritzBox, Synology, Hue) |
 | TCP ports (passe précise) | 22/53/80/135/139/443/445/515/554/631/8080/8443/9100/5000 | TCP | `kRescanTargetPorts` — scan ciblé d'une seule IP, passe précise approfondie |
 | API Cast | 8008 | TCP | `/setup/eureka_info` — passe précise approfondie, unicast |

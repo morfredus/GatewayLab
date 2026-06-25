@@ -101,7 +101,8 @@ struct NetworkDevice {
     bool     mobileAwayNotified  = false; // true si l'evenement "mobile_left" a deja ete journalise pour l'absence en cours
 
     // Topologie reseau (v0.4.x) -----------------------------------------
-    String   topologyParent;            // MAC de l'equipement en amont (AP/repeteur/switch) declare par l'utilisateur - "" = inconnu/direct sur la passerelle
+    String   topologyParent;            // MAC de l'equipement en amont (AP/repeteur/switch) - declare par l'utilisateur OU deduit par decouverte SNMP - "" = inconnu/direct sur la passerelle
+    bool     topologyParentAuto = false; // true si topologyParent vient de la decouverte SNMP (table de pontage) plutot que d'un glisser-depose manuel - permet de le rafraichir/corriger automatiquement sans jamais ecraser un choix manuel
 
     uint32_t lastSeen;      // millis() du dernier scan — converti en elapsed côté client
     bool     online;        // true si détecté lors du dernier scan
@@ -388,6 +389,17 @@ private:
     // (isGenericCategory) corrige. Appele depuis serviceMonitor().
     void _sweepUnidentified();
 
+    // Decouverte automatique de la topologie par SNMP (table de pontage,
+    // dot1dTpFdbTable) — v1.4.0. Interroge chaque equipement de type
+    // routeur/point d'acces/repeteur qui expose un agent SNMP en lecture
+    // publique, recupere la liste des MAC qu'il pontage (donc rattachees a
+    // lui), et complete topologyParent pour ces equipements quand il n'a pas
+    // ete fixe manuellement (topologyParentAuto). Best-effort : ne fait rien
+    // si l'equipement ne repond pas (agent SNMP absent ou desactive — le cas
+    // de la plupart des repeteurs mesh grand public type Deco/Orbi/eero).
+    // Appele depuis serviceMonitor(), independamment de _sweepUnidentified().
+    void _discoverTopologyViaSnmp();
+
     // Draine une seule entree de la file d'attente differee (scan rapide en
     // priorite, puis approfondi) - ne fait rien si un scan est deja en cours.
     void _drainPendingScans();
@@ -414,6 +426,7 @@ private:
     bool     _monitorEnabled         = true;  // Lu/ecrit via NVS, hors mutex (idem status_led)
     uint32_t _lastMonitorTickMs      = 0;     // millis() du dernier tick execute (0 = jamais)
     uint32_t _lastUnidentifiedSweepMs = 0;    // millis() du dernier sweep "non identifies" execute (0 = jamais)
+    uint32_t _lastTopologySnmpSweepMs = 0;    // millis() de la derniere decouverte de topologie par SNMP (0 = jamais)
     std::vector<String>          _pendingQuickScan;   // File d'attente differee (IP), dedupliquee
     std::vector<String>          _pendingDeepScan;    // File d'attente differee (IP), dedupliquee
 

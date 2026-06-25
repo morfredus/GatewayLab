@@ -5,6 +5,32 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.4.0] - 2026-06-25
+
+### Ajoute
+
+- **Découverte automatique de la topologie réseau par SNMP** : les
+  équipements détectés comme routeur/point d'accès/répéteur sont interrogés
+  via la Bridge MIB standard (`dot1dTpFdbTable`, table de pontage, OID
+  `1.3.6.1.2.1.17.4.3.1.1`) par une marche SNMP (`GetNextRequest` successifs,
+  `SnmpScanner::walkBridgeMacTable`). Quand un équipement en amont expose un
+  agent SNMP en lecture publique, chaque MAC trouvée dans sa table de
+  pontage lui est automatiquement rattachée (`topologyParent`), affranchissant
+  l'utilisateur du glisser-déposer manuel pour ces équipements — qu'ils
+  soient en mode routeur ou en mode point d'accès transparent. Un nouveau
+  drapeau `topologyParentAuto` distingue un rattachement déduit
+  automatiquement d'un rattachement déclaré manuellement : ce dernier n'est
+  jamais écrasé par la découverte SNMP, qui ne complète/rafraîchit que les
+  entrées encore vides ou elles-même automatiques. Sweep périodique (30 min
+  par défaut, `TOPOLOGY_SNMP_SWEEP_INTERVAL_MINUTES`), entièrement best-effort
+  et silencieux si aucun équipement ne répond — c'est le cas de la plupart
+  des répéteurs mesh grand public (TP-Link Deco, Orbi, eero…) qui n'exposent
+  pas d'agent SNMP. Sur la carte de topologie, un rattachement déduit par
+  SNMP est désormais affiché avec un trait pointillé (trait plein = manuel ou
+  racine).
+
+---
+
 ## [1.3.0] - 2026-06-25
 
 ### Corrige

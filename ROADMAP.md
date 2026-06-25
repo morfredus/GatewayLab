@@ -12,7 +12,9 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 * Identification des switches connus
 * Intégration optionnelle de l'API locale des mesh WiFi propriétaires
   (ex. TP-Link Deco) pour déduire automatiquement le rattachement exact
-  d'un appareil à un répéteur, en complément du rattachement manuel
+  d'un appareil à un répéteur, en complément du rattachement manuel et de
+  la découverte SNMP (v1.4.0) — utile pour les répéteurs mesh grand public
+  qui n'exposent pas d'agent SNMP
 
 ---
 
@@ -149,3 +151,4 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 | v1.1.1 (Patch 9) | Correction de la page Historique : les absences courtes (<30 min) d'un équipement mobile ne journalisaient aucune déconnexion, faisant apparaître des chaînes de "Reconnecté" sans cause visible — nouvel évènement discret `offline_brief`, symétrique au `reconnected` qui suit ; côté UI, les reconnexions consécutives sans déconnexion explicite entre elles sont désormais regroupées en une seule entrée "Connexion instable détectée" plutôt que d'être empilées |
 | v1.2.0  | Renommage du projet « Gateway Lab V1 » → « Gateway Lab » (mDNS `gateway-lab.local`, `PROJECT_NAME`, titres et en-têtes web, `User-Agent` HTTP, documentation) ; cartographie graphique de la topologie réseau (arbre SVG fait maison) ; détection automatique des répéteurs mesh (TP-Link Deco, Orbi, eero, Velop…) ; rattachement manuel des équipements WiFi par glisser-déposer sur la carte ; racine de l'arbre configurable, par défaut la box opérateur plutôt que l'ESP32 lui-même |
 | v1.3.0  | Correction des équipements bloqués indéfiniment en « Identification en cours » (catégorie non reconnue comme générique par le pipeline d'identification, même un rescan manuel ne pouvait pas en sortir — centralisé dans `isGenericCategory()`) ; re-identification automatique périodique des équipements restés génériques (« IoT »/« Identification en cours »), toutes les heures par défaut ; bouton « Rescan non identifiés » sur la page Équipements pour forcer ce rescan en un clic |
+| v1.4.0  | Découverte automatique de la topologie réseau par SNMP : interrogation de la table de pontage (Bridge MIB, `dot1dTpFdbTable`) des routeurs/points d'accès/répéteurs qui exposent un agent SNMP en lecture publique, pour rattacher automatiquement les équipements qu'ils relaient (`topologyParent`/`topologyParentAuto`), sans jamais écraser un rattachement manuel ; affichage distinct (trait pointillé) des rattachements déduits par SNMP sur la carte de topologie |

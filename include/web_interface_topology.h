@@ -10,7 +10,10 @@ static const char TOPOLOGY_PAGE[] PROGMEM = R"HTML(
  répéteurs WiFi détectés et équipements rattachés. Un scan ARP/SSDP ne
  peut pas déterminer automatiquement à quel répéteur un appareil WiFi est
  relié — faites glisser un équipement sur la carte et déposez-le sur un
- autre pour déclarer ce rattachement.
+ autre pour déclarer ce rattachement. Trait plein = rattachement déclaré
+ manuellement ou racine ; trait pointillé = déduit automatiquement par
+ interrogation SNMP (table de pontage) de l'équipement en amont, quand
+ celui-ci expose un agent SNMP en lecture publique.
  </p><div class="topo-root-row"><label for="topo-root-select">Racine de l'arbre (base du réseau)</label><select id="topo-root-select"></select><span class="card-meta" id="topo-root-current"></span></div><div class="topo-wrap"><svg id="topology-svg" class="topo-svg"></svg></div><p class="empty-msg" id="topology-empty" style="display:none">
  Aucune information de topologie disponible pour le moment — lancez un scan
  depuis la page Équipements.
@@ -26,7 +29,7 @@ walk(node);return out;}
 function nodeColor(d,isRoot){if(isRoot)return{fill:'#0c4a6e',stroke:'#38bdf8',text:'#e0f2fe'};if(isAccessPointLike(d))return{fill:'#1c2a1a',stroke:'#86efac',text:'#dcfce7'};return{fill:'#1e293b',stroke:'#334155',text:'#e2e8f0'};}
 var ROW_H=50,COL_W=230,BOX_W=200,BOX_H=34;function renderSvg(tree){var svg=document.getElementById('topology-svg');var rows=[];var rowIndex={};function visit(node,depth){var idx=rows.length;rows.push({node:node,depth:depth});rowIndex[node.device.mac||node.device.ip]=idx;node.children.forEach(function(c){visit(c,depth+1);});}
 tree.roots.forEach(function(r){visit(r,0);});var width=(rows.reduce(function(m,r){return Math.max(m,r.depth);},0)+1)*COL_W+20;var height=rows.length*ROW_H+20;svg.setAttribute('viewBox','0 0 '+width+' '+height);svg.setAttribute('width',width);svg.setAttribute('height',height);var html='';var layout=[];rows.forEach(function(r,i){var x=r.depth*COL_W+10;var y=i*ROW_H+10;var d=r.node.device;var key=d.mac||d.ip;var isRoot=key===tree.rootKey;var c=nodeColor(d,isRoot);var label=esc(deviceLabel(d));var sub=esc(d.type||d.category||d.manufacturer||'');if(r.depth>0){var pIdx=null;for(var k=i-1;k>=0;k--){if(rows[k].depth===r.depth-1){pIdx=k;break;}}
-if(pIdx!==null){var px=rows[pIdx].depth*COL_W+10+BOX_W;var py=pIdx*ROW_H+10+BOX_H/2;var cx=x;var cy=y+BOX_H/2;var midX=px+16;html+='<path d="M'+px+' '+py+' L'+midX+' '+py+' L'+midX+' '+cy+' L'+cx+' '+cy+'" fill="none" stroke="#334155" stroke-width="1.5"/>';}}
+if(pIdx!==null){var px=rows[pIdx].depth*COL_W+10+BOX_W;var py=pIdx*ROW_H+10+BOX_H/2;var cx=x;var cy=y+BOX_H/2;var midX=px+16;var auto=!!d.topologyParentAuto;var dash=auto?' stroke-dasharray="4 3"':'';html+='<path d="M'+px+' '+py+' L'+midX+' '+py+' L'+midX+' '+cy+' L'+cx+' '+cy+'" fill="none" stroke="#334155" stroke-width="1.5"'+dash+'/>';}}
 html+='<g class="topo-node'+(isRoot?' topo-root-node':'')+'" data-mac="'+esc(d.mac||'')+'">'+'<rect x="'+x+'" y="'+y+'" width="'+BOX_W+'" height="'+BOX_H+'" rx="7" fill="'+c.fill+'" stroke="'+c.stroke+'"/>'+'<text x="'+(x+10)+'" y="'+(y+14)+'" fill="'+c.text+'" font-size="12" font-weight="700">'+
 (label.length>24?label.slice(0,23)+'…':label)+'</text>'+'<text x="'+(x+10)+'" y="'+(y+27)+'" fill="#9aacc2" font-size="10">'+
 (sub.length>28?sub.slice(0,27)+'…':sub)+(d.ip?' · '+esc(d.ip):'')+'</text>'+'</g>';layout.push({mac:d.mac,x:x,y:y,w:BOX_W,h:BOX_H,isRoot:isRoot});});svg.innerHTML=html;return layout;}

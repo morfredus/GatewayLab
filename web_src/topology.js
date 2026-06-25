@@ -131,7 +131,9 @@ function renderSvg(tree) {
         var cx = x;
         var cy = y + BOX_H / 2;
         var midX = px + 16;
-        html += '<path d="M' + px + ' ' + py + ' L' + midX + ' ' + py + ' L' + midX + ' ' + cy + ' L' + cx + ' ' + cy + '" fill="none" stroke="#334155" stroke-width="1.5"/>';
+        var auto = !!d.topologyParentAuto;
+        var dash = auto ? ' stroke-dasharray="4 3"' : '';
+        html += '<path d="M' + px + ' ' + py + ' L' + midX + ' ' + py + ' L' + midX + ' ' + cy + ' L' + cx + ' ' + cy + '" fill="none" stroke="#334155" stroke-width="1.5"' + dash + '/>';
       }
     }
 

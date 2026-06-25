@@ -33,6 +33,11 @@
 // avec un scan complet/rescan deja en cours.
 #define RESCAN_SWEEP_INTERVAL_MINUTES 60   // Frequence du sweep (non configurable par l'utilisateur pour l'instant)
 
+// Decouverte automatique de la topologie reseau par SNMP (table de pontage
+// des routeurs/points d'acces/repeteurs qui exposent un agent SNMP en
+// lecture publique) — v1.4.0. Independant du sweep ci-dessus.
+#define TOPOLOGY_SNMP_SWEEP_INTERVAL_MINUTES 30
+
 // Features
 #define ENABLE_OTA
 #define ENABLE_WEB_SERVER
