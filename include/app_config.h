@@ -9,6 +9,12 @@
 #define WEB_SERVER_PORT  80
 #define MDNS_HOSTNAME    "gateway-lab"
 
+// Miroir TCP du moniteur série (src/modules/telnet_log.h) — permet de
+// connecter un terminal (YAT, etc.) en WiFi plutôt qu'en USB. Lecture seule,
+// un seul client à la fois, aucune commande interprétée.
+#define TELNET_LOG_ENABLED
+#define TELNET_LOG_PORT  2323
+
 // Mémoire — protections contre l'épuisement du heap
 #define MAX_TRACKED_DEVICES   300     // Borne haute du nombre d'équipements suivis/persistés
 #define MAX_HISTORY_EVENTS    1000    // Borne haute du journal d'événements (FIFO, /history.json)

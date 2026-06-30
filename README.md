@@ -1,6 +1,6 @@
 # Gateway Lab
 
-![Version](https://img.shields.io/badge/version-1.4.12-blue)
+![Version](https://img.shields.io/badge/version-1.5.0-blue)
 ![Platform](https://img.shields.io/badge/platform-ESP32--S3-orange)
 ![Framework](https://img.shields.io/badge/framework-Arduino%20%2F%20PlatformIO-00979D)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -232,6 +232,16 @@ http://gateway-lab.local
 ```
 
 ou via l'adresse IP affichée sur la page d'accueil ou la page Système.
+
+### 5. Moniteur série sans câble USB (TCP)
+
+Une fois le WiFi connecté, le journal normalement affiché sur le port série
+USB est également diffusé en clair sur **TCP port 2323** (configurable via
+`TELNET_LOG_PORT` dans `include/app_config.h`). Connectez un terminal comme
+[YAT](https://sourceforge.net/projects/y-a-terminal/) en mode "Socket / TCP
+Client" sur `<IP de l'ESP32>:2323` pour voir exactement le même flux que le
+moniteur série — lecture seule, un seul client à la fois, aucune commande
+interprétée côté ESP32.
 
 ---
 

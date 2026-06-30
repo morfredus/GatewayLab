@@ -26,6 +26,9 @@
 #ifdef BOOT_LOG_ENABLED
 #include "modules/boot_log.h"          // [DEBOGAGE TEMPORAIRE] Journal de redemarrage — voir boot_log.h
 #endif
+#ifdef TELNET_LOG_ENABLED
+#include "modules/telnet_log.h"        // Miroir TCP du moniteur série (YAT, etc.)
+#endif
 
 // Suit les transitions du scan en cours pour piloter la LED (Scanning -> Ready)
 static bool _ledScanInProgress = false;
@@ -92,6 +95,14 @@ void setup() {
         // Ecoute passive DHCP (UDP/67) - fingerprinting hostname/OS, sans
         // aucune requete active ; tourne en continu independamment du scan
         dhcpSniffer.begin();
+
+#ifdef TELNET_LOG_ENABLED
+        // Miroir TCP du moniteur série — connecter YAT sur <IP>:2323 au lieu
+        // de l'USB. Doit demarrer apres la connexion WiFi (WiFiServer a besoin
+        // du reseau actif).
+        telnetLog.begin(TELNET_LOG_PORT);
+        Log::i("Main", "Miroir série TCP actif sur le port %d", TELNET_LOG_PORT);
+#endif
 
 #ifdef ENABLE_OTA
         // Mise à jour OTA disponible sur le réseau local (ArduinoOTA)
@@ -222,6 +233,11 @@ void loop() {
 
     // Drainage non bloquant des paquets DHCP captes passivement (UDP/67)
     dhcpSniffer.loop();
+
+#ifdef TELNET_LOG_ENABLED
+    // Accepte les connexions TCP entrantes du miroir série (YAT, etc.)
+    telnetLog.loop();
+#endif
 
     // NetworkScanner n'a pas de loop() : il tourne en tâche FreeRTOS sur Core 0
     // — on suit ses transitions ici pour piloter la LED d'etat

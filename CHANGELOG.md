@@ -5,6 +5,23 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.5.0] - 2026-06-30
+
+### Ajouté
+
+- **Miroir TCP du moniteur série** (`src/modules/telnet_log.h/.cpp`) :
+  tout ce qui est envoyé sur `Serial` (via `Log::i/w/e/d`) est désormais
+  aussi diffusé en clair sur TCP, port `2323` par défaut (`TELNET_LOG_PORT`,
+  `include/app_config.h`, activable/désactivable via `TELNET_LOG_ENABLED`).
+  Permet de connecter un terminal comme YAT en mode "Socket / TCP Client"
+  sur `<IP>:2323` à la place du câble USB, en conservant exactement le même
+  format de ligne que le moniteur série. Lecture seule (aucune commande
+  envoyée par le client n'est interprétée par l'ESP32), un seul client à la
+  fois — une nouvelle connexion remplace silencieusement l'ancienne pour
+  éviter de garder un socket mort si le terminal a été fermé brutalement.
+  Démarre après la connexion WiFi (`main.cpp`), n'affecte pas le port série
+  USB qui reste actif en parallèle.
+
 ## [1.4.12] - 2026-06-30
 
 ### Corrigé
