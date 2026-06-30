@@ -26,7 +26,7 @@
 #endif
 
 #ifdef TELNET_LOG_ENABLED
-#include "../modules/telnet_log.h"   // Miroir TCP du moniteur série (YAT, etc.)
+#include "../modules/telnet_log.h"   // Miroir UDP broadcast du moniteur série (YAT, etc.)
 #endif
 
 namespace Log {
@@ -41,8 +41,8 @@ namespace detail {
         bootLog.capture(level, tag, buf);
 #endif
 #ifdef TELNET_LOG_ENABLED
-        // Même format que Serial — un client YAT connecté en TCP voit
-        // exactement ce qu'affiche le moniteur série USB.
+        // Même format que Serial — un client YAT en écoute UDP sur le port
+        // voit exactement ce qu'affiche le moniteur série USB.
         char line[280];
         int n = snprintf(line, sizeof(line), "[%s][%s] %s\r\n", level, tag, buf);
         if (n > 0) telnetLog.write(line, (size_t)(n < (int)sizeof(line) ? n : (int)sizeof(line) - 1));

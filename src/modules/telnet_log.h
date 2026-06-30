@@ -1,15 +1,17 @@
 /**
- * TelnetLog — Miroir du moniteur série sur TCP brut (port TELNET_LOG_PORT)
+ * TelnetLog — Miroir du moniteur série en UDP broadcast (port TELNET_LOG_PORT)
  *
- * Permet de connecter un terminal comme YAT en TCP plutôt qu'en USB série :
- * un seul client à la fois, écho passif (aucune commande interprétée, c'est
- * un miroir en lecture seule de ce que Serial.print* aurait affiché).
- * Le port série reste actif en parallèle, sans modification de comportement.
+ * Permet de connecter un terminal comme YAT en UDP plutôt qu'en USB série :
+ * diffusion en broadcast sur le sous-réseau local, sans connexion ni état —
+ * aucun cycle accept/déconnexion/reconnexion pouvant perturber l'affichage
+ * côté client. Écho passif (aucune commande interprétée, c'est un miroir en
+ * lecture seule de ce que Serial.print* aurait affiché). Le port série reste
+ * actif en parallèle, sans modification de comportement.
  */
 #pragma once
 #include <Arduino.h>
-#include <WiFiServer.h>
-#include <WiFiClient.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
@@ -17,21 +19,23 @@ class TelnetLog {
 public:
     void begin(uint16_t port);
 
-    // Diffuse une ligne au client connecté (no-op si personne n'est connecté).
-    // Non bloquant : un client lent ne doit jamais ralentir le scan ni le log série.
+    // Diffuse une ligne en broadcast UDP sur le sous-réseau local (no-op si
+    // begin() n'a pas été appelé). Non bloquant : un récepteur absent ou
+    // lent ne ralentit jamais le scan ni le log série (l'UDP est sans accusé
+    // de réception).
     // Thread-safe : Log::* est appelé depuis la boucle principale (core 1) ET
-    // depuis les tâches de scan (core 0) — sans le mutex, des écritures
-    // concurrentes sur le même socket corrompent le flux vu par YAT.
+    // depuis les tâches de scan (core 0) — le mutex protège l'unique socket
+    // WiFiUDP partagé contre des envois concurrents.
     void write(const char* data, size_t len);
 
-    // Accepte une nouvelle connexion entrante si aucun client n'est déjà connecté
-    // — à appeler depuis loop().
+    // Sans état en UDP — conservé pour l'API uniforme avec les autres
+    // modules (appelé depuis loop() dans main.cpp, no-op ici).
     void loop();
 
 private:
-    WiFiServer _server{0};
-    WiFiClient _client;
-    bool       _started = false;
+    WiFiUDP  _udp;
+    uint16_t _port    = 0;
+    bool     _started = false;
     SemaphoreHandle_t _mutex = nullptr;
 };
 

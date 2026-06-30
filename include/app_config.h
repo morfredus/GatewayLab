@@ -9,9 +9,10 @@
 #define WEB_SERVER_PORT  80
 #define MDNS_HOSTNAME    "gateway-lab"
 
-// Miroir TCP du moniteur série (src/modules/telnet_log.h) — permet de
-// connecter un terminal (YAT, etc.) en WiFi plutôt qu'en USB. Lecture seule,
-// un seul client à la fois, aucune commande interprétée.
+// Miroir du moniteur série en UDP broadcast (src/modules/telnet_log.h) —
+// permet de recevoir le log dans un terminal (YAT, etc.) en WiFi plutôt
+// qu'en USB. Lecture seule, sans connexion ni état, aucune commande
+// interprétée.
 #define TELNET_LOG_ENABLED
 #define TELNET_LOG_PORT  2323
 

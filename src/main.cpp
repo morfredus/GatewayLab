@@ -27,7 +27,7 @@
 #include "modules/boot_log.h"          // [DEBOGAGE TEMPORAIRE] Journal de redemarrage — voir boot_log.h
 #endif
 #ifdef TELNET_LOG_ENABLED
-#include "modules/telnet_log.h"        // Miroir TCP du moniteur série (YAT, etc.)
+#include "modules/telnet_log.h"        // Miroir UDP broadcast du moniteur série (YAT, etc.)
 #endif
 
 // Suit les transitions du scan en cours pour piloter la LED (Scanning -> Ready)
@@ -97,11 +97,11 @@ void setup() {
         dhcpSniffer.begin();
 
 #ifdef TELNET_LOG_ENABLED
-        // Miroir TCP du moniteur série — connecter YAT sur <IP>:2323 au lieu
-        // de l'USB. Doit demarrer apres la connexion WiFi (WiFiServer a besoin
-        // du reseau actif).
+        // Miroir UDP broadcast du moniteur série — ouvrir un socket UDP sur
+        // le port 2323 dans YAT pour recevoir le log au lieu de l'USB. Doit
+        // demarrer apres la connexion WiFi (necessite l'IP locale).
         telnetLog.begin(TELNET_LOG_PORT);
-        Log::i("Main", "Miroir série TCP actif sur le port %d", TELNET_LOG_PORT);
+        Log::i("Main", "Miroir série UDP (broadcast) actif sur le port %d", TELNET_LOG_PORT);
 #endif
 
 #ifdef ENABLE_OTA
@@ -235,7 +235,7 @@ void loop() {
     dhcpSniffer.loop();
 
 #ifdef TELNET_LOG_ENABLED
-    // Accepte les connexions TCP entrantes du miroir série (YAT, etc.)
+    // Sans état en UDP — conservé pour l'API uniforme (no-op)
     telnetLog.loop();
 #endif
 

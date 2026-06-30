@@ -5,6 +5,26 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.6.0] - 2026-06-30
+
+### Modifié
+
+- **Miroir du moniteur série : TCP remplacé par UDP broadcast**
+  (`src/modules/telnet_log.h/.cpp`) : malgré le correctif de course du
+  patch précédent, le texte restait invisible sous YAT (apparition brève
+  puis effacement) — comportement lié au cycle de connexion/déconnexion
+  TCP du serveur (`WiFiServer`/`WiFiClient`, accept/stop à chaque
+  reconnexion de YAT). Le module diffuse désormais chaque ligne de log en
+  **broadcast UDP** sur le sous-réseau local, port `2323` inchangé
+  (`TELNET_LOG_PORT`) : aucune connexion à établir ni à maintenir, aucun
+  état à suivre, donc plus aucun cycle de reconnexion pouvant perturber
+  l'affichage. Toujours protégé par un mutex FreeRTOS contre les envois
+  concurrents (boucle principale core 1 / tâches de scan core 0). Côté
+  YAT, ouvrir un "UDP Socket" en écoute sur le port 2323 au lieu d'un
+  "TCP Client".
+
+---
+
 ## [1.5.1] - 2026-06-30
 
 ### Corrigé
