@@ -2551,7 +2551,12 @@ void NetworkScanner::_monitorTick() {
             if (d.online) {
                 if (epoch > 0) d.firstSeenEpoch = epoch;
                 d.lastSeenEpoch = epoch;
-                d.seenCount     = 1;
+                // seenCount reste a 0 ici : ce tick de surveillance n'est pas
+                // un "scan" du point de vue utilisateur (cf. _updateHistory).
+                // Le premier vrai scan complet/rescan le fera passer a 1 via
+                // sa propre branche "jamais vu" - sinon le premier scan
+                // affiche deja "vu 2x" (1 ici + 1 dans _updateHistory).
+                d.seenCount     = 0;
                 d.presenceCount = 1;
                 if (d.category.isEmpty()) d.category = "Identification en cours";
                 deviceHistory.addEvent(d.mac, d.ip, label, "new");

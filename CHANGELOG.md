@@ -5,6 +5,24 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.4.12] - 2026-06-30
+
+### Corrigé
+
+- **"vu 2x" dès le tout premier scan** (`network_scanner.cpp`, `_monitorTick()`) :
+  la surveillance continue en arrière-plan (sweep ARP périodique) initialisait
+  déjà `seenCount` à 1 dès qu'elle détectait un équipement jamais vu, avant
+  même qu'un scan complet ou une passe précise n'ait eu lieu. Le premier
+  scan réellement déclenché par l'utilisateur (`_updateHistory()`)
+  incrémentait ensuite ce 1 à 2, donnant l'impression incohérente de
+  « 2 vues » après un seul scan. `_monitorTick()` initialise désormais
+  `seenCount` à 0 pour un équipement jamais vu (seul `presenceCount`, qui
+  suit la présence brute en continu, reste à 1) ; c'est uniquement le
+  premier vrai scan/passe précise qui fait passer `seenCount` à 1, comme
+  attendu. Complète les correctifs 1.4.8 (suppression de l'incrément
+  pendant la surveillance continue) et 1.4.10 (anti-doublon sur les passes
+  rapprochées).
+
 ## [1.4.11] - 2026-06-30
 
 ### Ajouté
