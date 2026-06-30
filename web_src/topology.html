@@ -27,19 +27,25 @@
     </div>
     <p class="info-label" style="margin-bottom:0.9rem">
       Arbre du réseau : racine (box opérateur par défaut), points d'accès /
-      répéteurs WiFi détectés et équipements rattachés. Un scan ARP/SSDP ne
-      peut pas déterminer automatiquement à quel répéteur un appareil WiFi est
-      relié — faites glisser un équipement sur la carte et déposez-le sur un
-      autre pour déclarer ce rattachement. Trait plein = rattachement déclaré
-      manuellement ou racine ; trait pointillé = déduit automatiquement par
-      interrogation SNMP (table de pontage) de l'équipement en amont, quand
-      celui-ci expose un agent SNMP en lecture publique. Couleurs : bleu marine
-      = racine, vert = box WiFi / répéteur / point d'accès, sarcelle = équipement
-      rattaché directement à la racine ou à un point d'accès / répéteur, bleu =
-      rattachement automatique fiable (≥ 60% de confiance), orange = rattachement
-      automatique incertain (MAC vue dans plusieurs tables de pontage pendant le
-      même sweep), gris = rattachement indirect par défaut (sous un autre
-      équipement, non déterminé). Le pourcentage de confiance s'affiche sous le
+      répéteurs WiFi détectés et équipements rattachés. Un scan ARP/SSDP seul
+      ne peut pas déterminer à quel répéteur un appareil WiFi est relié, et la
+      plupart des répéteurs mesh grand public (Deco, Orbi, eero, Velop…)
+      n'exposent aucun agent SNMP permettant de le déduire automatiquement —
+      dans ce cas, l'attachement par défaut à la racine reste affiché tant que
+      vous ne le corrigez pas vous-même : faites glisser un équipement sur la
+      carte et déposez-le sur son répéteur réel pour déclarer ce rattachement
+      (il devient alors définitif et ne sera plus jamais réécrit
+      automatiquement). Trait plein = rattachement déclaré manuellement ou
+      racine ; trait pointillé = déduit automatiquement par interrogation SNMP
+      (table de pontage) de l'équipement en amont, quand celui-ci expose un
+      agent SNMP en lecture publique. Couleurs : bleu marine = racine, bleu
+      clair = box WiFi / répéteur / point d'accès (même famille que la racine,
+      pour repérer la hiérarchie réseau d'un coup d'œil), sarcelle = équipement
+      rattaché directement à la racine ou à un point d'accès / répéteur, bleu
+      moyen = rattachement automatique fiable (≥ 60% de confiance), orange =
+      rattachement automatique incertain (MAC vue dans plusieurs tables de
+      pontage pendant le même sweep), gris = rattachement indirect par défaut
+      (sous un autre équipement, non déterminé). Le pourcentage de confiance s'affiche sous le
       nom de l'équipement quand il est connu.
     </p>
 

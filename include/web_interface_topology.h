@@ -7,19 +7,25 @@ static const char TOPOLOGY_PAGE[] PROGMEM = R"HTML(
  Gateway Lab
  <span class="site-ver" id="site-ver">v—</span></div><span class="site-tag">Topologie du réseau</span></header><nav><a href="/">Accueil</a><a href="/scan">Équipements</a><a href="/history">Historique</a><a href="/topology">Topologie</a><a href="/wifi">Système</a><a href="/debug">Debug</a></nav><script>(function(){var links=document.querySelectorAll('nav a');for(var i=0;i<links.length;i++){if(links[i].getAttribute('href')===window.location.pathname){links[i].classList.add('active');}}})();</script><div class="card"><div class="card-header"><p class="card-title">Cartographie du réseau</p></div><p class="info-label" style="margin-bottom:0.9rem">
  Arbre du réseau : racine (box opérateur par défaut), points d'accès /
- répéteurs WiFi détectés et équipements rattachés. Un scan ARP/SSDP ne
- peut pas déterminer automatiquement à quel répéteur un appareil WiFi est
- relié — faites glisser un équipement sur la carte et déposez-le sur un
- autre pour déclarer ce rattachement. Trait plein = rattachement déclaré
- manuellement ou racine ; trait pointillé = déduit automatiquement par
- interrogation SNMP (table de pontage) de l'équipement en amont, quand
- celui-ci expose un agent SNMP en lecture publique. Couleurs : bleu marine
- = racine, vert = box WiFi / répéteur / point d'accès, sarcelle = équipement
- rattaché directement à la racine ou à un point d'accès / répéteur, bleu =
- rattachement automatique fiable (≥ 60% de confiance), orange = rattachement
- automatique incertain (MAC vue dans plusieurs tables de pontage pendant le
- même sweep), gris = rattachement indirect par défaut (sous un autre
- équipement, non déterminé). Le pourcentage de confiance s'affiche sous le
+ répéteurs WiFi détectés et équipements rattachés. Un scan ARP/SSDP seul
+ ne peut pas déterminer à quel répéteur un appareil WiFi est relié, et la
+ plupart des répéteurs mesh grand public (Deco, Orbi, eero, Velop…)
+ n'exposent aucun agent SNMP permettant de le déduire automatiquement —
+ dans ce cas, l'attachement par défaut à la racine reste affiché tant que
+ vous ne le corrigez pas vous-même : faites glisser un équipement sur la
+ carte et déposez-le sur son répéteur réel pour déclarer ce rattachement
+ (il devient alors définitif et ne sera plus jamais réécrit
+ automatiquement). Trait plein = rattachement déclaré manuellement ou
+ racine ; trait pointillé = déduit automatiquement par interrogation SNMP
+ (table de pontage) de l'équipement en amont, quand celui-ci expose un
+ agent SNMP en lecture publique. Couleurs : bleu marine = racine, bleu
+ clair = box WiFi / répéteur / point d'accès (même famille que la racine,
+ pour repérer la hiérarchie réseau d'un coup d'œil), sarcelle = équipement
+ rattaché directement à la racine ou à un point d'accès / répéteur, bleu
+ moyen = rattachement automatique fiable (≥ 60% de confiance), orange =
+ rattachement automatique incertain (MAC vue dans plusieurs tables de
+ pontage pendant le même sweep), gris = rattachement indirect par défaut
+ (sous un autre équipement, non déterminé). Le pourcentage de confiance s'affiche sous le
  nom de l'équipement quand il est connu.
  </p><div class="topo-root-row"><label for="topo-root-select">Racine de l'arbre (base du réseau)</label><select id="topo-root-select"></select><span class="card-meta" id="topo-root-current"></span></div><div class="topo-wrap"><svg id="topology-svg" class="topo-svg"></svg></div><p class="empty-msg" id="topology-empty" style="display:none">
  Aucune information de topologie disponible pour le moment — lancez un scan
@@ -33,7 +39,7 @@ return autoPickRoot(devices);}
 function buildTree(devices,root){var byMac={};devices.forEach(function(d){if(d.mac)byMac[d.mac]=d;});var nodes={};devices.forEach(function(d){nodes[d.mac||d.ip]={device:d,children:[],parent:null};});var rootKey=root.mac||root.ip;var roots=[nodes[rootKey]];devices.forEach(function(d){var key=d.mac||d.ip;if(key===rootKey)return;var parentKey=(d.topologyParent&&byMac[d.topologyParent])?d.topologyParent:rootKey;if(nodes[parentKey]&&parentKey!==key){nodes[parentKey].children.push(nodes[key]);nodes[key].parent=nodes[parentKey];}else{roots.push(nodes[key]);}});return{roots:roots,nodesByMac:nodes,rootKey:rootKey};}
 function descendantMacs(node){var out={};function walk(n){n.children.forEach(function(c){var k=c.device.mac||c.device.ip;out[k]=true;walk(c);});}
 walk(node);return out;}
-function nodeColor(d,isRoot,parentDevice,isParentRoot){if(isRoot)return{fill:'#0c4a6e',stroke:'#38bdf8',text:'#e0f2fe'};if(isAccessPointLike(d))return{fill:'#1c2a1a',stroke:'#86efac',text:'#dcfce7'};if(d.topologyParentAuto){var conf=d.topologyParentConfidence||0;if(conf>=60)return{fill:'#1e2a4a',stroke:'#60a5fa',text:'#dbeafe'};return{fill:'#3a2a14',stroke:'#f59e0b',text:'#fef3c7'};}
+function nodeColor(d,isRoot,parentDevice,isParentRoot){if(isRoot)return{fill:'#0c4a6e',stroke:'#38bdf8',text:'#e0f2fe'};if(isAccessPointLike(d))return{fill:'#0e3f63',stroke:'#7dd3fc',text:'#e0f7ff'};if(d.topologyParentAuto){var conf=d.topologyParentConfidence||0;if(conf>=60)return{fill:'#1e2a4a',stroke:'#60a5fa',text:'#dbeafe'};return{fill:'#3a2a14',stroke:'#f59e0b',text:'#fef3c7'};}
 if(isParentRoot||(parentDevice&&isAccessPointLike(parentDevice))){return{fill:'#0f3d3a',stroke:'#2dd4bf',text:'#ccfbf1'};}
 return{fill:'#1e293b',stroke:'#334155',text:'#e2e8f0'};}
 var ROW_H=50,COL_W=230,BOX_W=200,BOX_H=34;function renderSvg(tree){var svg=document.getElementById('topology-svg');var rows=[];var rowIndex={};function visit(node,depth){var idx=rows.length;rows.push({node:node,depth:depth});rowIndex[node.device.mac||node.device.ip]=idx;node.children.forEach(function(c){visit(c,depth+1);});}

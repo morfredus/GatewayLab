@@ -1200,9 +1200,20 @@ void NetworkScanner::_updateHistory(const std::vector<NetworkDevice>& previous, 
                 }
             }
             d.presenceCount = prev->presenceCount + 1;
+            // Anti-doublon : une "passe précise" (rescan d'un seul équipement,
+            // icône ⟲ de la page Équipement) passe par ce même code que le
+            // scan complet et incrémenterait seenCount à chaque clic, en plus
+            // des scans réels — ce qui rend le compteur peu fiable si
+            // l'utilisateur relance plusieurs passes rapprochées sur le même
+            // équipement. Si l'équipement était déjà vu en ligne il y a moins
+            // de 60s, on rafraîchit lastSeenEpoch mais on ne recompte pas une
+            // nouvelle "visibilité" - ces passes rapprochées ne reflètent pas
+            // un scan distinct, juste une verification immediate du meme etat.
+            bool tooSoonToRecount = prev->online && epoch > 0 && prev->lastSeenEpoch > 0 &&
+                                    epoch >= prev->lastSeenEpoch && (epoch - prev->lastSeenEpoch) < 60;
             if (epoch > 0) d.lastSeenEpoch = epoch;
             else d.lastSeenEpoch = prev->lastSeenEpoch;
-            d.seenCount = prev->seenCount + 1;
+            d.seenCount = tooSoonToRecount ? prev->seenCount : (prev->seenCount + 1);
             if (d.firstSeenEpoch == 0 && epoch > 0) d.firstSeenEpoch = epoch;
 
             // Cumul du temps hors ligne ecoule depuis la derniere deconnexion

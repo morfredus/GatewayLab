@@ -5,6 +5,66 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.4.10] - 2026-06-30
+
+### Ajouté
+
+- **OUI X-Sense ajouté à la table de reconnaissance** (`data/oui.json` →
+  `include/oui_table.h`) : le préfixe MAC `B4:61:E9` (caméras X-Sense) n'était
+  pas présent dans la table OUI embarquée, ce qui laissait ces équipements
+  affichés en « Identification en cours » sans fabricant/catégorie déduits.
+  Ajouté en catégorie `Camera` / type `IP Camera`, comme les autres marques
+  de caméras déjà répertoriées (Hikvision, Dahua, Reolink). Un nouveau scan
+  (complet ou passe précise) suffit à reclasser correctement les équipements
+  déjà connus portant ce préfixe.
+
+### Corrigé
+
+- **Comptage "vu Nx" encore optimiste après le correctif 1.4.8**
+  (`network_scanner.cpp`, `_updateHistory()`) : la « passe précise » lancée
+  depuis l'icône ⟲ d'un équipement (page Équipement) passe par le même code
+  que le scan complet et incrémentait donc `seenCount` à chaque clic, en plus
+  des vrais scans réseau — un utilisateur relançant plusieurs passes
+  rapprochées sur le même équipement (par exemple pour vérifier un
+  changement) voyait le compteur grimper bien plus vite que le nombre de
+  scans réellement effectués. Ajout d'une fenêtre anti-doublon de 60
+  secondes : si l'équipement était déjà vu en ligne il y a moins d'une
+  minute, `lastSeenEpoch` est rafraîchi mais `seenCount` n'est pas
+  réincrémenté, car ce n'est pas une nouvelle "visibilité" distincte. Le
+  correctif précédent (1.4.8, suppression de l'incrément dans
+  `_monitorTick()`) reste en place et nécessite toujours un flashage à jour
+  du firmware pour prendre effet — si l'ancien firmware tourne encore, le
+  compteur restera incohérent indépendamment de ce correctif.
+
+## [1.4.9] - 2026-06-29
+
+### Modifié
+
+- **Couleur des points d'accès / répéteurs sur la page Topologie**
+  (`topology.js`) : remplacée par un bleu clair de la même famille que le
+  bleu marine de la racine (au lieu du vert précédent), pour repérer la
+  hiérarchie box opérateur → répéteurs → équipements d'un coup d'œil.
+
+### Précision (limite technique connue)
+
+- **Rattachement automatique au bon répéteur toujours non garanti pour la
+  plupart des installations** (`topology.html`, `_discoverTopologyViaSnmp()`
+  côté firmware, inchangé dans ce patch) : un scan ARP/SSDP/mDNS ne peut
+  fondamentalement pas savoir à quel répéteur WiFi physique un appareil est
+  associé — cette information n'est connue que de l'AP/répéteur lui-même.
+  Le seul mécanisme de détection automatique disponible (interrogation de
+  la table de pontage SNMP, `dot1dTpFdbTable`) ne fonctionne que si le
+  répéteur expose un agent SNMP en lecture publique, ce qui est rare sur le
+  matériel mesh grand public (TP-Link Deco, Netgear Orbi, eero, Linksys
+  Velop…) — ces répéteurs n'exposant aucune API locale standard permettant
+  de lire leur table de clients. Sans cette donnée, l'équipement reste par
+  défaut rattaché à la racine et seul le glisser-déposer manuel (déjà
+  disponible) permet de corriger l'affichage ; ce rattachement manuel est
+  alors définitif et n'est plus jamais réécrit par la découverte
+  automatique. La page Topologie a été mise à jour pour expliquer
+  clairement cette limite et inviter à corriger manuellement quand la
+  détection automatique reste sans effet.
+
 ## [1.4.8] - 2026-06-29
 
 ### Corrige

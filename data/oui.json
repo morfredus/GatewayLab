@@ -934,6 +934,12 @@
     "type": "IP Camera"
   },
   {
+    "oui": "B4:61:E9",
+    "manufacturer": "X-Sense",
+    "category": "Camera",
+    "type": "IP Camera"
+  },
+  {
     "oui": "00:1B:A9",
     "manufacturer": "Brother",
     "category": "Printer",

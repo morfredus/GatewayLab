@@ -82,7 +82,11 @@ function descendantMacs(node) {
 
 function nodeColor(d, isRoot, parentDevice, isParentRoot) {
   if (isRoot)                   return { fill: '#0c4a6e', stroke: '#38bdf8', text: '#e0f2fe' };
-  if (isAccessPointLike(d))     return { fill: '#1c2a1a', stroke: '#86efac', text: '#dcfce7' };
+  // Teinte de la meme famille que la racine (bleu marine plus clair) plutot
+  // que le vert utilise auparavant : un point d'acces/répéteur est un
+  // relais du meme reseau que la box, pas une categorie d'equipement a part -
+  // la coherence visuelle aide a repérer la hierarchie reseau d'un coup d'œil.
+  if (isAccessPointLike(d))     return { fill: '#0e3f63', stroke: '#7dd3fc', text: '#e0f7ff' };
   if (d.topologyParentAuto) {
     var conf = d.topologyParentConfidence || 0;
     if (conf >= 60) return { fill: '#1e2a4a', stroke: '#60a5fa', text: '#dbeafe' };   // place automatiquement, confiance elevee
