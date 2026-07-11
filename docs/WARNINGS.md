@@ -424,7 +424,7 @@ ces deux modules — mais cette correction ne traitait que le conflit ENTRE
 ces deux modules applicatifs. Elle ne prenait pas en compte un troisième
 consommateur, toujours actif : le composant mDNS d'ESP-IDF lui-même
 (`MDNS.begin()`, appelé dans `wifi_manager.cpp` au démarrage Wi-Fi, log
-`[INF][WiFi] mDNS actif : http://gateway-lab.local`), qui garde
+`[INF][WiFi] mDNS actif : http://gatewaylab.local`), qui garde
 `224.0.0.251:5353` exclusivement pour son responder. En conséquence,
 `MdnsManager::acquire()` échouait systématiquement dès que le responder
 mDNS était actif (log `[WRN][MdnsMgr] Impossible de rejoindre

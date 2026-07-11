@@ -26,6 +26,6 @@ function loadHistory(){fetch('/api/history').then(function(r){return r.json();})
 function clearHistory(){if(!historyData.length){if(!confirm('Le journal est déjà vide. Continuer ?'))return;}else if(!confirm('Vider le journal d\'historique ? Une sauvegarde sera téléchargée avant suppression.')){return;}
 function doClear(){fetch('/api/history',{method:'DELETE'}).then(function(){loadHistory();});}
 if(!historyData.length){doClear();return;}
-var blob=new Blob([JSON.stringify(historyData,null,2)],{type:'application/json'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='gateway-lab-historique-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);doClear();}
+var blob=new Blob([JSON.stringify(historyData,null,2)],{type:'application/json'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='gatewaylab-historique-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);doClear();}
 fetch('/api/status').then(function(r){return r.json();}).then(function(d){if(d.version)document.getElementById('site-ver').textContent='v'+d.version;}).catch(function(){});loadFavorites();loadHistory();setInterval(loadHistory,30000);setInterval(loadFavorites,30000);</script></body></html>
 )HTML";

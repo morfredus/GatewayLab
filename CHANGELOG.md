@@ -412,8 +412,8 @@ Format : [Semantic Versioning](https://semver.org/)
   suffixe de version n'avait pas sa place dans le nom). Mis à jour partout :
   titres des pages web, en-tête de l'interface, `User-Agent` HTTP émis par
   les scanners (`port_scanner.cpp`, `media_api_scanner.cpp`, `ssdp_scanner.cpp`),
-  nom mDNS (`MDNS_HOSTNAME`, désormais `gateway-lab` — accessible via
-  `http://gateway-lab.local`), `PROJECT_NAME` (`platformio.ini`), et
+  nom mDNS (`MDNS_HOSTNAME`, désormais `gatewaylab` — accessible via
+  `http://gatewaylab.local`), `PROJECT_NAME` (`platformio.ini`), et
   documentation (`README.md`, `ROADMAP.md`, `INSTALLATION.md`,
   `CONTRIBUTING.md`, `docs/*.md`). Les entrées d'historique de ce fichier
   antérieures à cette version ne sont pas réécrites : elles reflètent le nom
@@ -1052,7 +1052,7 @@ Format : [Semantic Versioning](https://semver.org/)
   troisième consommateur, toujours actif : le composant mDNS d'ESP-IDF
   lui-même (`MDNS.begin()`, appelé dans `wifi_manager.cpp`), qui garde
   `224.0.0.251:5353` exclusivement pour son responder dès que le Wi-Fi est
-  connecté (log `[INF][WiFi] mDNS actif : http://gateway-lab-v1.local`).
+  connecté (log `[INF][WiFi] mDNS actif : http://gatewaylab-v1.local`).
   Résultat : `MdnsManager::acquire()` échouait systématiquement
   (`[WRN][MdnsMgr] Impossible de rejoindre 224.0.0.251:5353`) — la
   découverte DNS-SD et la résolution mDNS passive ne fonctionnaient en
@@ -2122,7 +2122,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 - **mDNS non republié après reconnexion** (`wifi_manager.cpp`) :
   `MDNS.begin()` n'était appelé qu'une seule fois dans `begin()`. Après perte et
-  reprise du WiFi, `gateway-lab-v1.local` devenait injoignable.
+  reprise du WiFi, `gatewaylab-v1.local` devenait injoignable.
   Correction : `_startMdns()` est extrait en fonction interne et rappelé lors de
   chaque reconnexion détectée dans `loop()`.
 
@@ -2295,7 +2295,7 @@ Format : [Semantic Versioning](https://semver.org/)
   - `GET /api/status` → JSON `{ssid, ip, rssi, uptime, version, hostname}`
   - `GET /update` → page de mise à jour OTA
   - `POST /update` → upload firmware `.bin` (librairie `Update`)
-- **mDNS** : accès via `gateway-lab-v1.local` (configurable via `MDNS_HOSTNAME`)
+- **mDNS** : accès via `gatewaylab-v1.local` (configurable via `MDNS_HOSTNAME`)
 - **Page d'accueil** (`web_src/index.html`) : titre, cartouche réseau (SSID, IP, RSSI, mDNS, Uptime, Statut), bouton OTA, rafraîchissement automatique toutes les 10 s
 - **Page OTA** (`web_src/ota.html`) : formulaire upload firmware avec barre de progression
 - **Minification automatique** (`tools/minify_web.py`) : génère les headers PROGMEM avant chaque compilation PlatformIO

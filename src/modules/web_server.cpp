@@ -4,7 +4,7 @@
  * Bibliothèques utilisées :
  *   WebServer    — serveur HTTP intégré à l'Arduino ESP32
  *   ArduinoJson  — sérialisation JSON pour les réponses /api/*
- *   ESPmDNS      — résolution de noms (gateway-lab.local)
+ *   ESPmDNS      — résolution de noms (gatewaylab.local)
  */
 
 #include "web_server.h"
@@ -166,7 +166,7 @@ void WebServerModule::_handleRoot() {
 // Handler : état du système en JSON
 // Exemple de réponse :
 //   {"ssid":"Livebox","ip":"192.168.1.42","rssi":-55,"uptime":12345,
-//    "version":"0.0.3","hostname":"gateway-lab","scanning":false}
+//    "version":"0.0.3","hostname":"gatewaylab","scanning":false}
 // ---------------------------------------------------------------------------
 void WebServerModule::_handleApiStatus() {
     JsonDocument doc;
@@ -330,7 +330,7 @@ void WebServerModule::_handleApiBackup() {
         return;
     }
     String json = _scan.getBackupJson();
-    _server.sendHeader("Content-Disposition", "attachment; filename=\"gateway-lab-backup.json\"");
+    _server.sendHeader("Content-Disposition", "attachment; filename=\"gatewaylab-backup.json\"");
     _server.send(200, "application/json; charset=utf-8", json);
 }
 
@@ -345,7 +345,7 @@ void WebServerModule::_handleApiDevicesExportCsv() {
         return;
     }
     String csv = "\xEF\xBB\xBF" + _scan.getDevicesCsv();
-    _server.sendHeader("Content-Disposition", "attachment; filename=\"gateway-lab-devices.csv\"");
+    _server.sendHeader("Content-Disposition", "attachment; filename=\"gatewaylab-devices.csv\"");
     _server.send(200, "text/csv; charset=utf-8", csv);
 }
 
@@ -393,7 +393,7 @@ void WebServerModule::_handleApiSystemBackup() {
 
     String json;
     serializeJson(doc, json);
-    _server.sendHeader("Content-Disposition", "attachment; filename=\"gateway-lab-settings.json\"");
+    _server.sendHeader("Content-Disposition", "attachment; filename=\"gatewaylab-settings.json\"");
     _server.send(200, "application/json; charset=utf-8", json);
 }
 

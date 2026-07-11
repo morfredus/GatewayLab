@@ -203,7 +203,7 @@ function clearHistory() {
   var url  = URL.createObjectURL(blob);
   var a    = document.createElement('a');
   a.href = url;
-  a.download = 'gateway-lab-historique-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.json';
+  a.download = 'gatewaylab-historique-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.json';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

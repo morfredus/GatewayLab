@@ -93,7 +93,7 @@ Le projet privilégie :
 2. Flasher l'ESP32-S3
 3. Se connecter au réseau WiFi `GatewayLab-Setup`
 4. Configurer le WiFi depuis le navigateur
-5. Accéder à Gateway Lab via `http://gateway-lab.local`
+5. Accéder à Gateway Lab via `http://gatewaylab.local`
 
 Guide détaillé : voir INSTALLATION.md
 Guide développeur : voir docs/DEVELOPMENT.md
@@ -117,7 +117,7 @@ Guide développeur : voir docs/DEVELOPMENT.md
 | WiFi multi-réseaux       | Connexion automatique au réseau enregistré au meilleur signal     |
 | Portail de configuration | Point d'accès `GatewayLab-Setup` + page web si aucun réseau n'est connu |
 | Persistance NVS          | Réseaux WiFi enregistrés survivant aux redémarrages/coupures      |
-| mDNS                     | Accessible via `gateway-lab.local`                             |
+| mDNS                     | Accessible via `gatewaylab.local`                             |
 | Interface web            | Pages Accueil / Équipements / Historique / Topologie / Système (réseau WiFi, OTA, état système) |
 | Scan réseau LAN          | Sweep ARP du sous-réseau local                                    |
 | Tâche FreeRTOS dédiée    | Scan asynchrone sur Core 0                                        |
@@ -177,7 +177,7 @@ Guide développeur : voir docs/DEVELOPMENT.md
 
 ### 1. Configurer le WiFi
 
-**Utilisateur final** (firmware déjà flashé, `gateway-lab.bin`) : aucune
+**Utilisateur final** (firmware déjà flashé, `gatewaylab.bin`) : aucune
 étape requise — connectez-vous au point d'accès `GatewayLab-Setup` au premier
 démarrage et suivez le portail de configuration. Détail complet dans INSTALLATION.md
 Fonctionnement avancé : docs/WIFI_SETUP.md
@@ -228,7 +228,7 @@ pio run --target upload
 ### 4. Accéder à l'interface
 
 ```text
-http://gateway-lab.local
+http://gatewaylab.local
 ```
 
 ou via l'adresse IP affichée sur la page d'accueil ou la page Système.
@@ -248,7 +248,7 @@ connexion à établir, aucune commande interprétée côté ESP32.
 ## Structure du projet
 
 ```text
-Gateway-Lab-V1/
+gatewaylab-V1/
 ├── src/
 │   ├── main.cpp
 │   │

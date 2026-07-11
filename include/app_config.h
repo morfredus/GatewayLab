@@ -7,7 +7,7 @@
 
 // Network
 #define WEB_SERVER_PORT  80
-#define MDNS_HOSTNAME    "gateway-lab"
+#define MDNS_HOSTNAME    "gatewaylab"
 
 // Miroir du moniteur série en UDP broadcast (src/modules/telnet_log.h) —
 // permet de recevoir le log dans un terminal (YAT, etc.) en WiFi plutôt

@@ -3,7 +3,7 @@
  *
  * Bibliothèques utilisées :
  *   WiFiMulti    — gestion de plusieurs réseaux, connexion au meilleur signal
- *   ESPmDNS      — résolution de noms sur le réseau local (gateway-lab.local)
+ *   ESPmDNS      — résolution de noms sur le réseau local (gatewaylab.local)
  *   Preferences  — persistance NVS des réseaux enregistrés
  *   DNSServer +
  *   WebServer    — portail captif de configuration (mode point d'accès)
