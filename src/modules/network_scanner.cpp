@@ -15,6 +15,7 @@
 #include <time.h>                // strftime() pour l'export CSV (dates lisibles)
 #include <algorithm>             // std::sort (éviction LRU des équipements)
 #include <map>                   // std::map (regroupement MAC -> AP candidats, decouverte topologie SNMP)
+#include <set>                   // std::set (equipements confirmes AP/repeteur par reponse SNMP, decouverte topologie)
 #include "hostname_resolver.h"   // mDNS passif + PTR DNS batch
 #include "isp_detector.h"        // Détection Free / Orange / SFR / Bouygues
 #include "ssdp_scanner.h"        // Découverte UPnP/SSDP
@@ -325,7 +326,7 @@ void NetworkScanner::_addSelfEntry() {
     NetworkDevice self;
     self.ip       = ip;
     self.mac      = mac;
-    self.hostname = MDNS_HOSTNAME;       // ex: "gateway-lab"
+    self.hostname = MDNS_HOSTNAME;       // ex: "gatewaylab"
     self.model    = PROJECT_NAME;        // ex: "GatewayLab"
     self.source   = "Self";
     self.category = "Gateway";
@@ -492,6 +493,16 @@ void NetworkScanner::_run() {
     {
         xSemaphoreTake(_mutex, portMAX_DELAY);
         previousState = _results;
+        xSemaphoreGive(_mutex);
+    }
+
+    // Réinitialiser l'état "en ligne" avant le sweep : sans ce reset, un
+    // équipement détecté une seule fois reste online=true indéfiniment
+    // (rien d'autre ne le remet à false), faussant le filtre "En ligne" et
+    // gonflant seenCount à chaque scan même si l'équipement a disparu.
+    {
+        xSemaphoreTake(_mutex, portMAX_DELAY);
+        for (auto& d : _results) d.online = false;
         xSemaphoreGive(_mutex);
     }
 
@@ -1166,6 +1177,12 @@ void NetworkScanner::_updateHistory(const std::vector<NetworkDevice>& previous, 
         bool mobile = _isMobileDevice(d);
 
         if (d.online) {
+            // seenCount compte le nombre de scans complets (_run(), declenches
+            // par l'utilisateur) ou l'equipement a ete detecte - incremente ici
+            // uniquement, jamais dans _monitorTick() (surveillance continue en
+            // arriere-plan) : sinon il grimpe au rythme des sweeps automatiques
+            // plutot qu'au rythme des scans reellement declenches, et le
+            // compteur affiche perd tout son sens ("vu 25x" apres 5 scans).
             if (!prev->online) {
                 // Reapparition - "reconnected" si l'equipement etait deja
                 // connu (au moins une presence anterieure), sinon "online"
@@ -1183,9 +1200,20 @@ void NetworkScanner::_updateHistory(const std::vector<NetworkDevice>& previous, 
                 }
             }
             d.presenceCount = prev->presenceCount + 1;
+            // Anti-doublon : une "passe précise" (rescan d'un seul équipement,
+            // icône ⟲ de la page Équipement) passe par ce même code que le
+            // scan complet et incrémenterait seenCount à chaque clic, en plus
+            // des scans réels — ce qui rend le compteur peu fiable si
+            // l'utilisateur relance plusieurs passes rapprochées sur le même
+            // équipement. Si l'équipement était déjà vu en ligne il y a moins
+            // de 60s, on rafraîchit lastSeenEpoch mais on ne recompte pas une
+            // nouvelle "visibilité" - ces passes rapprochées ne reflètent pas
+            // un scan distinct, juste une verification immediate du meme etat.
+            bool tooSoonToRecount = prev->online && epoch > 0 && prev->lastSeenEpoch > 0 &&
+                                    epoch >= prev->lastSeenEpoch && (epoch - prev->lastSeenEpoch) < 60;
             if (epoch > 0) d.lastSeenEpoch = epoch;
             else d.lastSeenEpoch = prev->lastSeenEpoch;
-            d.seenCount = prev->seenCount + 1;
+            d.seenCount = tooSoonToRecount ? prev->seenCount : (prev->seenCount + 1);
             if (d.firstSeenEpoch == 0 && epoch > 0) d.firstSeenEpoch = epoch;
 
             // Cumul du temps hors ligne ecoule depuis la derniere deconnexion
@@ -1413,8 +1441,13 @@ static String _enrichedHostname(const NetworkDevice& d) {
     return result;
 }
 
+// Fenêtre pendant laquelle un équipement est considéré "Nouveau" dans l'UI
+// après sa première détection (firstSeenEpoch).
+static constexpr uint32_t NEW_DEVICE_WINDOW_SEC = 24UL * 3600UL;
+
 String NetworkScanner::resultsToJson() const {
-    uint32_t now = millis();
+    uint32_t now      = millis();
+    uint32_t nowEpoch = timeSync.nowEpoch();
     // Copie locale sous mutex (durée < 1 ms) pour libérer rapidement
     std::vector<NetworkDevice> copy;
     xSemaphoreTake(_mutex, portMAX_DELAY);
@@ -1442,6 +1475,9 @@ String NetworkScanner::resultsToJson() const {
         obj["lastSeenAt"]   = d.lastSeenEpoch;
         obj["seenCount"]    = d.seenCount;
         obj["favorite"]     = d.favorite;
+        obj["isNew"]        = (d.firstSeenEpoch > 0 && nowEpoch > 0 &&
+                                nowEpoch >= d.firstSeenEpoch &&
+                                (nowEpoch - d.firstSeenEpoch) < NEW_DEVICE_WINDOW_SEC);
         JsonArray notesArr = obj["notes"].to<JsonArray>();
         for (const auto& n : d.notes) {
             JsonObject no = notesArr.add<JsonObject>();
@@ -2342,14 +2378,24 @@ void NetworkScanner::_discoverTopologyViaSnmp() {
     if (_lastTopologySnmpSweepMs != 0 && (nowMs - _lastTopologySnmpSweepMs) < intervalMs) return;
     _lastTopologySnmpSweepMs = nowMs;
 
-    std::vector<std::pair<String, String>> candidates;   // {ip, mac} des routeurs/AP/repeteurs
+    // v1.4.7 : on n'interroge plus seulement les equipements deja devines
+    // "Router"/repeteur/point d'acces par hostname ou SSDP - cette heuristique
+    // manque la plupart des repeteurs mesh grand public dont le hostname DHCP
+    // ne contient aucun mot-cle reconnu, et le rattachement de leurs clients
+    // retombait alors par defaut sur la racine (box operateur), meme quand le
+    // repeteur exposait bel et bien un agent SNMP. On interroge desormais tout
+    // equipement en ligne (hors la passerelle ESP32 elle-meme) : repondre avec
+    // une table de pontage non vide EST la preuve qu'il relaie du trafic pour
+    // d'autres MAC, donc qu'il joue un role d'AP/repeteur/switch - inutile de
+    // le deviner a priori. Cout : un sweep periodique (toutes les
+    // TOPOLOGY_SNMP_SWEEP_INTERVAL_MINUTES) avec un timeout court par
+    // equipement (la plupart ne repondent pas et echouent vite).
+    std::vector<std::pair<String, String>> candidates;   // {ip, mac} de tous les equipements en ligne
     xSemaphoreTake(_mutex, portMAX_DELAY);
     for (const auto& d : _results) {
         if (d.ip.isEmpty() || d.mac.isEmpty() || !d.online) continue;
-        bool apLike = d.category == "Router" ||
-                      d.type.indexOf("épéteur") >= 0 ||      // "Répéteur"/"répéteur" - insensible a la casse de l'initiale
-                      d.type.indexOf("oint d'accès") >= 0;    // "Point d'accès"/"point d'accès"
-        if (apLike) candidates.push_back({ d.ip, d.mac });
+        if (d.category == "Gateway") continue;   // l'ESP32 lui-meme - jamais un repeteur
+        candidates.push_back({ d.ip, d.mac });
     }
     xSemaphoreGive(_mutex);
     if (candidates.empty()) return;
@@ -2360,14 +2406,29 @@ void NetworkScanner::_discoverTopologyViaSnmp() {
     // le sweep, ou table de pontage partiellement obsolete) est ambigue :
     // on baisse la confiance plutot que de choisir arbitrairement un AP.
     std::map<String, std::vector<String>> macToApMacs;
+    std::set<String> respondingApMacs;   // equipements ayant revele une table de pontage non vide - role AP/repeteur/switch confirme
     for (const auto& ap : candidates) {
-        std::vector<String> macs = snmpScanner.walkBridgeMacTable(ap.first, 300, 64);
+        std::vector<String> macs = snmpScanner.walkBridgeMacTable(ap.first, 200, 64);
+        if (macs.empty()) continue;
+        respondingApMacs.insert(ap.second);
         for (const auto& mac : macs) {
             if (mac == ap.second) continue;   // L'AP se voit lui-meme dans sa propre table de pontage
             macToApMacs[mac].push_back(ap.second);
         }
     }
     if (macToApMacs.empty()) return;   // Aucun agent SNMP n'a repondu - rien a faire
+
+    // Phase 1bis : un equipement confirme comme AP/repeteur par sa table de
+    // pontage mais encore classe generiquement (type vide) est etiquete en
+    // consequence - utile pour la couleur/legende de la page Topologie et
+    // pour qu'il soit lui-meme repris comme racine potentielle plus tard.
+    xSemaphoreTake(_mutex, portMAX_DELAY);
+    for (auto& d : _results) {
+        if (d.type.isEmpty() && respondingApMacs.count(d.mac)) {
+            d.type = "Point d'accès / Répéteur (détecté via SNMP)";
+        }
+    }
+    xSemaphoreGive(_mutex);
 
     // Phase 2 : application sur _results, sous mutex.
     bool changed = false;
@@ -2431,6 +2492,14 @@ void NetworkScanner::_monitorTick() {
         xSemaphoreGive(_mutex);
     }
 
+    // Réinitialiser l'état "en ligne" avant le sweep — cf. _run() : sans ce
+    // reset, online ne redescend jamais à false entre deux ticks.
+    {
+        xSemaphoreTake(_mutex, portMAX_DELAY);
+        for (auto& d : _results) d.online = false;
+        xSemaphoreGive(_mutex);
+    }
+
     // Sweep ARP-only (3 passes, identique au scan complet) — reutilise
     // tel quel, aucune nouvelle decouverte de service.
     _sweepSubnet();
@@ -2482,7 +2551,12 @@ void NetworkScanner::_monitorTick() {
             if (d.online) {
                 if (epoch > 0) d.firstSeenEpoch = epoch;
                 d.lastSeenEpoch = epoch;
-                d.seenCount     = 1;
+                // seenCount reste a 0 ici : ce tick de surveillance n'est pas
+                // un "scan" du point de vue utilisateur (cf. _updateHistory).
+                // Le premier vrai scan complet/rescan le fera passer a 1 via
+                // sa propre branche "jamais vu" - sinon le premier scan
+                // affiche deja "vu 2x" (1 ici + 1 dans _updateHistory).
+                d.seenCount     = 0;
                 d.presenceCount = 1;
                 if (d.category.isEmpty()) d.category = "Identification en cours";
                 deviceHistory.addEvent(d.mac, d.ip, label, "new");
@@ -2491,9 +2565,10 @@ void NetworkScanner::_monitorTick() {
         }
 
         if (d.online && !wasOnline) {
-            // Reapparition — point 3 : equipement connu qui revient
+            // Reapparition — point 3 : equipement connu qui revient. seenCount
+            // n'est pas touche ici : il compte les scans complets (_run()),
+            // pas les ticks de surveillance continue (cf. _updateHistory()).
             d.presenceCount++;
-            d.seenCount = prev->seenCount + 1;
             if (epoch > 0) d.lastSeenEpoch = epoch;
             if (d.firstSeenEpoch == 0 && epoch > 0) d.firstSeenEpoch = epoch;
 
@@ -2525,8 +2600,10 @@ void NetworkScanner::_monitorTick() {
             // ne declenche plus de scan automatique (presence ARP seule).
 
         } else if (d.online && wasOnline) {
-            // Toujours en ligne — cumul du temps en ligne depuis le dernier tick
-            d.seenCount = prev->seenCount + 1;
+            // Toujours en ligne — cumul du temps en ligne depuis le dernier
+            // tick. seenCount n'est pas touche ici : il compte les scans
+            // complets (_run()), pas les ticks de surveillance continue
+            // (cf. _updateHistory()).
             if (epoch > 0) d.lastSeenEpoch = epoch;
             if (!mobile && epoch > 0 && prev->lastSeenEpoch > 0 && epoch > prev->lastSeenEpoch) {
                 d.totalOnlineSeconds += (epoch - prev->lastSeenEpoch);

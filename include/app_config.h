@@ -7,7 +7,14 @@
 
 // Network
 #define WEB_SERVER_PORT  80
-#define MDNS_HOSTNAME    "gateway-lab"
+#define MDNS_HOSTNAME    "gatewaylab"
+
+// Miroir du moniteur série en UDP broadcast (src/modules/telnet_log.h) —
+// permet de recevoir le log dans un terminal (YAT, etc.) en WiFi plutôt
+// qu'en USB. Lecture seule, sans connexion ni état, aucune commande
+// interprétée.
+#define TELNET_LOG_ENABLED
+#define TELNET_LOG_PORT  2323
 
 // Mémoire — protections contre l'épuisement du heap
 #define MAX_TRACKED_DEVICES   300     // Borne haute du nombre d'équipements suivis/persistés

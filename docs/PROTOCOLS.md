@@ -127,7 +127,7 @@ DNS classique = un serveur central qui traduit `google.com` → `142.250.74.46`.
 mDNS = DNS sans serveur central, pour les réseaux locaux.
 Chaque équipement s'annonce lui-même sur le réseau avec un nom en `.local`.
 
-Exemples : `raspberrypi.local`, `freebox-server.local`, `gateway-lab.local`.
+Exemples : `raspberrypi.local`, `freebox-server.local`, `gatewaylab.local`.
 
 ### Comment ça marche ?
 
@@ -714,7 +714,7 @@ juste deux entrées de plus dans la table des services interrogés.
 | HTTP | 80/443/49000/… | TCP | Descripteurs XML + APIs spécifiques |
 | ArduinoOTA | 3232 | UDP | Mise à jour firmware réseau |
 | HTTP (OTA web) | 80 | TCP | Mise à jour firmware navigateur |
-| mDNS (service) | 5353 | UDP | Annonce `gateway-lab.local` |
+| mDNS (service) | 5353 | UDP | Annonce `gatewaylab.local` |
 
 ---
 

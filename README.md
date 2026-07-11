@@ -1,6 +1,6 @@
 # Gateway Lab
 
-![Version](https://img.shields.io/badge/version-1.4.3-blue)
+![Version](https://img.shields.io/badge/version-1.6.0-blue)
 ![Platform](https://img.shields.io/badge/platform-ESP32--S3-orange)
 ![Framework](https://img.shields.io/badge/framework-Arduino%20%2F%20PlatformIO-00979D)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -93,7 +93,7 @@ Le projet privilégie :
 2. Flasher l'ESP32-S3
 3. Se connecter au réseau WiFi `GatewayLab-Setup`
 4. Configurer le WiFi depuis le navigateur
-5. Accéder à Gateway Lab via `http://gateway-lab.local`
+5. Accéder à Gateway Lab via `http://gatewaylab.local`
 
 Guide détaillé : voir INSTALLATION.md
 Guide développeur : voir docs/DEVELOPMENT.md
@@ -117,7 +117,7 @@ Guide développeur : voir docs/DEVELOPMENT.md
 | WiFi multi-réseaux       | Connexion automatique au réseau enregistré au meilleur signal     |
 | Portail de configuration | Point d'accès `GatewayLab-Setup` + page web si aucun réseau n'est connu |
 | Persistance NVS          | Réseaux WiFi enregistrés survivant aux redémarrages/coupures      |
-| mDNS                     | Accessible via `gateway-lab.local`                             |
+| mDNS                     | Accessible via `gatewaylab.local`                             |
 | Interface web            | Pages Accueil / Équipements / Historique / Topologie / Système (réseau WiFi, OTA, état système) |
 | Scan réseau LAN          | Sweep ARP du sous-réseau local                                    |
 | Tâche FreeRTOS dédiée    | Scan asynchrone sur Core 0                                        |
@@ -158,7 +158,7 @@ Guide développeur : voir docs/DEVELOPMENT.md
 | Cartouche diagnostics    | Heap libre, PSRAM libre, espace LittleFS, temps moyen d'un scan / d'une passe précise — affichée sur la page Accueil |
 | NeoPixel d'état          | Bleu pulsé (démarrage), bleu fixe (prêt), vert clignotant (scan), jaune clignotant (nouvel équipement), violet (portail WiFi), cyan (sauvegarde) — luminosité réglable depuis la page Système, persistée |
 | Bouton BOOT               | Appui court = lance un scan, maintien 3 s = sauvegarde immédiate |
-| Filtres équipements      | Filtre par type, fabricant, favoris uniquement, en ligne uniquement (page Équipements, côté client) |
+| Filtres équipements      | Filtre par type, fabricant, Favoris, En Ligne, Nouveau (détecté depuis moins de 24h) (page Équipements, côté client) |
 | Menu Données              | Sur la page Équipements : Export CSV / Export JSON (inventaire) uniquement — la Sauvegarde / Restauration des paramètres de fonctionnement a été déplacée sur la page Système (Patch 1) |
 | Sauvegarde des paramètres | Réseaux WiFi enregistrés, luminosité NeoPixel, état et fréquence de la surveillance automatique (`/api/system/backup`, `/api/system/restore`) — distincte de la sauvegarde de l'inventaire, accessible depuis la page Système (Patch 1) |
 | Page Topologie           | Vue simplifiée (passerelle/routeurs vs reste des équipements), première étape avant la cartographie graphique (roadmap v0.4.x) |
@@ -177,7 +177,7 @@ Guide développeur : voir docs/DEVELOPMENT.md
 
 ### 1. Configurer le WiFi
 
-**Utilisateur final** (firmware déjà flashé, `gateway-lab.bin`) : aucune
+**Utilisateur final** (firmware déjà flashé, `gatewaylab.bin`) : aucune
 étape requise — connectez-vous au point d'accès `GatewayLab-Setup` au premier
 démarrage et suivez le portail de configuration. Détail complet dans INSTALLATION.md
 Fonctionnement avancé : docs/WIFI_SETUP.md
@@ -228,17 +228,27 @@ pio run --target upload
 ### 4. Accéder à l'interface
 
 ```text
-http://gateway-lab.local
+http://gatewaylab.local
 ```
 
 ou via l'adresse IP affichée sur la page d'accueil ou la page Système.
+
+### 5. Moniteur série sans câble USB (UDP broadcast)
+
+Une fois le WiFi connecté, le journal normalement affiché sur le port série
+USB est également diffusé en broadcast UDP sur le sous-réseau local, sur le
+**port 2323** (configurable via `TELNET_LOG_PORT` dans `include/app_config.h`).
+Ouvrez un terminal comme [YAT](https://sourceforge.net/projects/y-a-terminal/)
+en mode "Socket / UDP Socket" en écoute sur le port `2323` pour voir
+exactement le même flux que le moniteur série — lecture seule, aucune
+connexion à établir, aucune commande interprétée côté ESP32.
 
 ---
 
 ## Structure du projet
 
 ```text
-Gateway-Lab-V1/
+gatewaylab-V1/
 ├── src/
 │   ├── main.cpp
 │   │

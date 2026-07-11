@@ -24,7 +24,7 @@ Téléchargez la dernière version du firmware depuis la section Releases du dé
 Fichier :
 
 ```text
-gateway-lab-vX.X.X-firmware.bin
+gatewaylab-vX.X.X-firmware.bin
 ```
 
 ## Flash du firmware
@@ -50,7 +50,7 @@ ESP32-S3
 Sélectionnez :
 
 ```text
-gateway-lab-vX.X.X-firmware.bin
+gatewaylab-vX.X.X-firmware.bin
 ```
 
 ### 5. Flasher
@@ -103,7 +103,7 @@ Gateway Lab redémarre automatiquement.
 Une fois connecté à votre réseau local :
 
 ```text
-http://gateway-lab.local
+http://gatewaylab.local
 ```
 
 Si votre réseau ne prend pas en charge mDNS, utilisez l'adresse IP affichée par votre routeur ou votre box Internet.

@@ -5,7 +5,7 @@ Ce guide explique comment connecter Gateway Lab à votre réseau WiFi
 téléphone ou un ordinateur et un navigateur web.
 
 Il s'adresse à toute personne qui a reçu un ESP32 déjà flashé avec
-`gateway-lab.bin` et qui veut le mettre en service chez elle.
+`gatewaylab.bin` et qui veut le mettre en service chez elle.
 
 ---
 
@@ -93,13 +93,13 @@ Une fois reconnecté à votre propre réseau WiFi, ouvrez un navigateur et allez
 à :
 
 ```
-http://gateway-lab.local
+http://gatewaylab.local
 ```
 
 Si cette adresse ne fonctionne pas (certains réseaux ou certains systèmes
 Windows ne supportent pas mDNS), consultez l'écran de votre routeur/box
 internet pour trouver l'adresse IP attribuée à l'appareil
-`gateway-lab`, ou utilisez la page **Système → Réseau WiFi** une fois
+`gatewaylab`, ou utilisez la page **Système → Réseau WiFi** une fois
 connecté une première fois.
 
 ---

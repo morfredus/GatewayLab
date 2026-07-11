@@ -5,6 +5,269 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.6.0] - 2026-06-30
+
+### Modifié
+
+- **Miroir du moniteur série : TCP remplacé par UDP broadcast**
+  (`src/modules/telnet_log.h/.cpp`) : malgré le correctif de course du
+  patch précédent, le texte restait invisible sous YAT (apparition brève
+  puis effacement) — comportement lié au cycle de connexion/déconnexion
+  TCP du serveur (`WiFiServer`/`WiFiClient`, accept/stop à chaque
+  reconnexion de YAT). Le module diffuse désormais chaque ligne de log en
+  **broadcast UDP** sur le sous-réseau local, port `2323` inchangé
+  (`TELNET_LOG_PORT`) : aucune connexion à établir ni à maintenir, aucun
+  état à suivre, donc plus aucun cycle de reconnexion pouvant perturber
+  l'affichage. Toujours protégé par un mutex FreeRTOS contre les envois
+  concurrents (boucle principale core 1 / tâches de scan core 0). Côté
+  YAT, ouvrir un "UDP Socket" en écoute sur le port 2323 au lieu d'un
+  "TCP Client".
+
+---
+
+## [1.5.1] - 2026-06-30
+
+### Corrigé
+
+- **Corruption du flux TCP du moniteur série (`telnet_log`)** : sous YAT,
+  les lignes n'affichaient que l'horodatage et le texte apparaissait
+  brièvement avant de s'effacer ou de rester blanc. Cause : `Log::*` est
+  appelé à la fois depuis la boucle principale (core 1) et depuis les
+  tâches de scan réseau (core 0, `xTaskCreatePinnedToCore` dans
+  `network_scanner.cpp`), qui écrivaient toutes deux sur le même socket
+  `WiFiClient` sans synchronisation — les écritures concurrentes se
+  corrompaient mutuellement, et `loop()` pouvait réassigner `_client`
+  pendant qu'une écriture était en cours. Ajout d'un mutex FreeRTOS
+  (`SemaphoreHandle_t`) dans `TelnetLog` (`src/modules/telnet_log.h/.cpp`)
+  protégeant `write()` et `loop()` (accept/déconnexion) — verrou court
+  (timeout 20 ms côté écriture) pour ne jamais bloquer le scan en cas de
+  client lent.
+
+---
+
+## [1.5.0] - 2026-06-30
+
+### Ajouté
+
+- **Miroir TCP du moniteur série** (`src/modules/telnet_log.h/.cpp`) :
+  tout ce qui est envoyé sur `Serial` (via `Log::i/w/e/d`) est désormais
+  aussi diffusé en clair sur TCP, port `2323` par défaut (`TELNET_LOG_PORT`,
+  `include/app_config.h`, activable/désactivable via `TELNET_LOG_ENABLED`).
+  Permet de connecter un terminal comme YAT en mode "Socket / TCP Client"
+  sur `<IP>:2323` à la place du câble USB, en conservant exactement le même
+  format de ligne que le moniteur série. Lecture seule (aucune commande
+  envoyée par le client n'est interprétée par l'ESP32), un seul client à la
+  fois — une nouvelle connexion remplace silencieusement l'ancienne pour
+  éviter de garder un socket mort si le terminal a été fermé brutalement.
+  Démarre après la connexion WiFi (`main.cpp`), n'affecte pas le port série
+  USB qui reste actif en parallèle.
+
+## [1.4.12] - 2026-06-30
+
+### Corrigé
+
+- **"vu 2x" dès le tout premier scan** (`network_scanner.cpp`, `_monitorTick()`) :
+  la surveillance continue en arrière-plan (sweep ARP périodique) initialisait
+  déjà `seenCount` à 1 dès qu'elle détectait un équipement jamais vu, avant
+  même qu'un scan complet ou une passe précise n'ait eu lieu. Le premier
+  scan réellement déclenché par l'utilisateur (`_updateHistory()`)
+  incrémentait ensuite ce 1 à 2, donnant l'impression incohérente de
+  « 2 vues » après un seul scan. `_monitorTick()` initialise désormais
+  `seenCount` à 0 pour un équipement jamais vu (seul `presenceCount`, qui
+  suit la présence brute en continu, reste à 1) ; c'est uniquement le
+  premier vrai scan/passe précise qui fait passer `seenCount` à 1, comme
+  attendu. Complète les correctifs 1.4.8 (suppression de l'incrément
+  pendant la surveillance continue) et 1.4.10 (anti-doublon sur les passes
+  rapprochées).
+
+## [1.4.11] - 2026-06-30
+
+### Ajouté
+
+- **OUI Xiaomi (caméra) ajouté à la table de reconnaissance**
+  (`data/oui.json` → `include/oui_table.h`) : le préfixe MAC `94:F8:27`
+  (caméra IP Xiaomi) n'était pas dans la table OUI embarquée et laissait
+  l'équipement en « Identification en cours ». Ajouté en catégorie `Camera`
+  / type `IP Camera`, distinct des préfixes Xiaomi déjà connus qui
+  correspondent à des téléphones (catégorie `Mobile`) — un même fabricant
+  peut avoir des préfixes OUI différents selon la gamme de produits, ce
+  n'est pas une erreur de doublon. Un nouveau scan (complet ou passe
+  précise) reclasse l'équipement déjà connu portant ce préfixe.
+
+## [1.4.10] - 2026-06-30
+
+### Ajouté
+
+- **OUI X-Sense ajouté à la table de reconnaissance** (`data/oui.json` →
+  `include/oui_table.h`) : le préfixe MAC `B4:61:E9` (caméras X-Sense) n'était
+  pas présent dans la table OUI embarquée, ce qui laissait ces équipements
+  affichés en « Identification en cours » sans fabricant/catégorie déduits.
+  Ajouté en catégorie `Camera` / type `IP Camera`, comme les autres marques
+  de caméras déjà répertoriées (Hikvision, Dahua, Reolink). Un nouveau scan
+  (complet ou passe précise) suffit à reclasser correctement les équipements
+  déjà connus portant ce préfixe.
+
+### Corrigé
+
+- **Comptage "vu Nx" encore optimiste après le correctif 1.4.8**
+  (`network_scanner.cpp`, `_updateHistory()`) : la « passe précise » lancée
+  depuis l'icône ⟲ d'un équipement (page Équipement) passe par le même code
+  que le scan complet et incrémentait donc `seenCount` à chaque clic, en plus
+  des vrais scans réseau — un utilisateur relançant plusieurs passes
+  rapprochées sur le même équipement (par exemple pour vérifier un
+  changement) voyait le compteur grimper bien plus vite que le nombre de
+  scans réellement effectués. Ajout d'une fenêtre anti-doublon de 60
+  secondes : si l'équipement était déjà vu en ligne il y a moins d'une
+  minute, `lastSeenEpoch` est rafraîchi mais `seenCount` n'est pas
+  réincrémenté, car ce n'est pas une nouvelle "visibilité" distincte. Le
+  correctif précédent (1.4.8, suppression de l'incrément dans
+  `_monitorTick()`) reste en place et nécessite toujours un flashage à jour
+  du firmware pour prendre effet — si l'ancien firmware tourne encore, le
+  compteur restera incohérent indépendamment de ce correctif.
+
+## [1.4.9] - 2026-06-29
+
+### Modifié
+
+- **Couleur des points d'accès / répéteurs sur la page Topologie**
+  (`topology.js`) : remplacée par un bleu clair de la même famille que le
+  bleu marine de la racine (au lieu du vert précédent), pour repérer la
+  hiérarchie box opérateur → répéteurs → équipements d'un coup d'œil.
+
+### Précision (limite technique connue)
+
+- **Rattachement automatique au bon répéteur toujours non garanti pour la
+  plupart des installations** (`topology.html`, `_discoverTopologyViaSnmp()`
+  côté firmware, inchangé dans ce patch) : un scan ARP/SSDP/mDNS ne peut
+  fondamentalement pas savoir à quel répéteur WiFi physique un appareil est
+  associé — cette information n'est connue que de l'AP/répéteur lui-même.
+  Le seul mécanisme de détection automatique disponible (interrogation de
+  la table de pontage SNMP, `dot1dTpFdbTable`) ne fonctionne que si le
+  répéteur expose un agent SNMP en lecture publique, ce qui est rare sur le
+  matériel mesh grand public (TP-Link Deco, Netgear Orbi, eero, Linksys
+  Velop…) — ces répéteurs n'exposant aucune API locale standard permettant
+  de lire leur table de clients. Sans cette donnée, l'équipement reste par
+  défaut rattaché à la racine et seul le glisser-déposer manuel (déjà
+  disponible) permet de corriger l'affichage ; ce rattachement manuel est
+  alors définitif et n'est plus jamais réécrit par la découverte
+  automatique. La page Topologie a été mise à jour pour expliquer
+  clairement cette limite et inviter à corriger manuellement quand la
+  détection automatique reste sans effet.
+
+## [1.4.8] - 2026-06-29
+
+### Corrige
+
+- **Compteur « vu Nx » (`seenCount`) toujours incohérent après le correctif
+  1.4.5 — incrémenté par la surveillance continue en plus des scans**
+  (`network_scanner.cpp`, `_updateHistory()`, `_monitorTick()`) : le
+  correctif 1.4.5 a bien réinitialisé `online` entre deux sweeps, mais
+  `seenCount` était en réalité incrémenté à *deux* endroits distincts —
+  une fois par scan complet déclenché par l'utilisateur (`_run()` via
+  `_updateHistory()`), et une seconde fois à chaque tick de la
+  surveillance continue en arrière-plan (`_monitorTick()`, toutes les
+  quelques minutes, indépendamment de tout scan manuel). Résultat : après
+  5 scans manuels espacés dans le temps, plusieurs ticks de surveillance
+  s'étaient glissés entre chaque scan et le compteur affichait « vu 25x »
+  au lieu de « vu 5x ». Correction : `seenCount` n'est désormais incrémenté
+  que dans `_updateHistory()` (scans complets), plus jamais dans
+  `_monitorTick()` — la surveillance continue met toujours à jour
+  `presenceCount`, `lastSeenEpoch`, les compteurs de reconnexion/stabilité
+  et `totalOnlineSeconds`/`totalOfflineSeconds`, mais ne touche plus à
+  `seenCount`.
+
+## [1.4.7] - 2026-06-29
+
+### Corrige
+
+- **Équipements rattachés à un répéteur affichés par défaut sous la box
+  opérateur sur la page Topologie** (`network_scanner.cpp`,
+  `_discoverTopologyViaSnmp()`) : la découverte automatique du rattachement
+  (table de pontage SNMP, `dot1dTpFdbTable`) n'interrogeait que les
+  équipements déjà devinés « Router »/répéteur/point d'accès via leur
+  hostname DHCP ou leur réponse SSDP. La plupart des répéteurs mesh grand
+  public (Deco, Orbi, eero, etc.) ne sont pas reconnus par cette heuristique
+  — hostname générique ou absent — et n'étaient donc jamais interrogés en
+  SNMP : leurs clients restaient rattachés par défaut à la racine. La
+  découverte interroge désormais tout équipement en ligne (hors la
+  passerelle ESP32 elle-même) ; répondre avec une table de pontage non vide
+  est en soi la preuve qu'un équipement relaie du trafic pour d'autres MAC,
+  donc qu'il joue un rôle d'AP/répéteur/switch, sans qu'il soit nécessaire
+  de le deviner au préalable. Un équipement ainsi confirmé mais encore
+  classé génériquement se voit également étiqueté `Point d'accès /
+  Répéteur (détecté via SNMP)` pour rester cohérent avec l'affichage de la
+  page Topologie (v1.4.6). Reste sans effet pour les répéteurs qui
+  n'exposent aucun agent SNMP en lecture publique — le rattachement manuel
+  par glisser-déposer demeure alors la seule solution.
+
+## [1.4.6] - 2026-06-29
+
+### Ajoute
+
+- **Couleur dédiée pour les équipements rattachés directement à la box
+  opérateur ou à un point d'accès / répéteur** (`topology.js`,
+  `topology.html`) : sur la page Topologie, `nodeColor()` distinguait déjà la
+  racine, les points d'accès/répéteurs et les rattachements automatiques
+  (SNMP, fiable/incertain), mais un équipement rattaché manuellement ou par
+  défaut à la racine ou à un point d'accès recevait la même couleur grise
+  que tout équipement rattaché plus profondément dans l'arbre (rattachement
+  « non déterminé »). `buildTree()` mémorise désormais le nœud parent de
+  chaque équipement, et `nodeColor()` applique une couleur sarcelle
+  (`#2dd4bf` sur fond `#0f3d3a`, contraste suffisant pour rester lisible)
+  lorsque le parent direct est la racine ou un point d'accès/répéteur. La
+  légende de la page a été mise à jour en conséquence. Le glisser-déposer
+  des équipements (`attachDragAndDrop()`) n'a pas été modifié.
+
+## [1.4.5] - 2026-06-29
+
+### Corrige
+
+- **Compteur « vu X fois » (`seenCount`) incohérent et filtre « En ligne »
+  toujours actif** (`network_scanner.cpp`) : l'état `online` d'un équipement
+  n'était jamais remis à `false` entre deux scans — `_readArpTable()` ne fait
+  que positionner `online = true` quand l'appareil répond, mais rien ne
+  réinitialisait cet état avant le sweep suivant. Un équipement détecté une
+  seule fois restait donc considéré « en ligne » indéfiniment, faussant le
+  filtre « En Ligne » et gonflant `seenCount` à chaque scan même après sa
+  disparition réelle du réseau. Correction : réinitialisation de `online` à
+  `false` pour tous les équipements connus juste avant chaque sweep, à la
+  fois dans le scan complet (`_run()`) et dans la surveillance périodique
+  légère (`_monitorTick()`).
+
+### Ajoute
+
+- **Filtre « Nouveau » sur la page Équipements** (`scan.html`, `scan.js`,
+  `network_scanner.cpp`) : un nouveau champ `isNew` est calculé côté firmware
+  (`resultsToJson()`) à partir de `firstSeenEpoch` — un équipement est
+  considéré « Nouveau » pendant les 24h suivant sa première détection. Une
+  case à cocher dédiée permet de filtrer sur ce statut, et un badge
+  « Nouveau » est affiché à côté du nom de l'équipement concerné.
+- Les cases à cocher « Favoris uniquement » et « En ligne uniquement » ont
+  été renommées respectivement « Favoris » et « En Ligne » (page
+  Équipements).
+
+## [1.4.4] - 2026-06-27
+
+### Corrige
+
+- **Page `/debug` : numéro de boot affiché dans le titre incohérent avec le
+  corps de l'entrée** (`debug.js`) : le titre calculait un rang relatif
+  (`total - index`, position dans la liste affichée) tandis que le corps
+  affichait `bootCount`, le compteur absolu persisté en NVS — les deux
+  pouvaient diverger (ex. "Boot #10" en titre, "Boot #16" dans le détail
+  de la même entrée). Le titre utilise désormais `bootCount` partout.
+- **Heap/uptime à 0 o affichés pour un redémarrage volontaire (OTA)**
+  (`boot_log.cpp`, `ota_manager.cpp`) : l'instantané périodique
+  `RuntimeStats` (heap libre, bloc max, etc.) n'est rafraîchi par
+  `service()` que toutes les `BOOT_LOG_STATS_INTERVAL_MS` (30 s) ; un
+  redémarrage déclenché par `ESP.restart()` juste après la fin d'un upload
+  OTA pouvait donc persister un instantané obsolète ou nul selon le hasard
+  du dernier tic. `service()` accepte désormais un paramètre `force`
+  (ignorant le délai), appelé juste avant `ESP.restart()` dans le handler
+  `/update` pour garantir un instantané à jour au moment du redémarrage.
+
+---
+
 ## [1.4.3] - 2026-06-27
 
 ### Corrige
@@ -149,8 +412,8 @@ Format : [Semantic Versioning](https://semver.org/)
   suffixe de version n'avait pas sa place dans le nom). Mis à jour partout :
   titres des pages web, en-tête de l'interface, `User-Agent` HTTP émis par
   les scanners (`port_scanner.cpp`, `media_api_scanner.cpp`, `ssdp_scanner.cpp`),
-  nom mDNS (`MDNS_HOSTNAME`, désormais `gateway-lab` — accessible via
-  `http://gateway-lab.local`), `PROJECT_NAME` (`platformio.ini`), et
+  nom mDNS (`MDNS_HOSTNAME`, désormais `gatewaylab` — accessible via
+  `http://gatewaylab.local`), `PROJECT_NAME` (`platformio.ini`), et
   documentation (`README.md`, `ROADMAP.md`, `INSTALLATION.md`,
   `CONTRIBUTING.md`, `docs/*.md`). Les entrées d'historique de ce fichier
   antérieures à cette version ne sont pas réécrites : elles reflètent le nom
@@ -789,7 +1052,7 @@ Format : [Semantic Versioning](https://semver.org/)
   troisième consommateur, toujours actif : le composant mDNS d'ESP-IDF
   lui-même (`MDNS.begin()`, appelé dans `wifi_manager.cpp`), qui garde
   `224.0.0.251:5353` exclusivement pour son responder dès que le Wi-Fi est
-  connecté (log `[INF][WiFi] mDNS actif : http://gateway-lab-v1.local`).
+  connecté (log `[INF][WiFi] mDNS actif : http://gatewaylab-v1.local`).
   Résultat : `MdnsManager::acquire()` échouait systématiquement
   (`[WRN][MdnsMgr] Impossible de rejoindre 224.0.0.251:5353`) — la
   découverte DNS-SD et la résolution mDNS passive ne fonctionnaient en
@@ -1859,7 +2122,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 - **mDNS non republié après reconnexion** (`wifi_manager.cpp`) :
   `MDNS.begin()` n'était appelé qu'une seule fois dans `begin()`. Après perte et
-  reprise du WiFi, `gateway-lab-v1.local` devenait injoignable.
+  reprise du WiFi, `gatewaylab-v1.local` devenait injoignable.
   Correction : `_startMdns()` est extrait en fonction interne et rappelé lors de
   chaque reconnexion détectée dans `loop()`.
 
@@ -2032,7 +2295,7 @@ Format : [Semantic Versioning](https://semver.org/)
   - `GET /api/status` → JSON `{ssid, ip, rssi, uptime, version, hostname}`
   - `GET /update` → page de mise à jour OTA
   - `POST /update` → upload firmware `.bin` (librairie `Update`)
-- **mDNS** : accès via `gateway-lab-v1.local` (configurable via `MDNS_HOSTNAME`)
+- **mDNS** : accès via `gatewaylab-v1.local` (configurable via `MDNS_HOSTNAME`)
 - **Page d'accueil** (`web_src/index.html`) : titre, cartouche réseau (SSID, IP, RSSI, mDNS, Uptime, Statut), bouton OTA, rafraîchissement automatique toutes les 10 s
 - **Page OTA** (`web_src/ota.html`) : formulaire upload firmware avec barre de progression
 - **Minification automatique** (`tools/minify_web.py`) : génère les headers PROGMEM avant chaque compilation PlatformIO

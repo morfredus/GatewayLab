@@ -189,7 +189,7 @@ depuis un téléphone ou un ordinateur, sans rien recompiler.
 Ouvrir un navigateur et aller sur :
 
 ```
-http://gateway-lab.local
+http://gatewaylab.local
 ```
 
 ou en utilisant l'adresse IP affichée dans le terminal (ex: `http://192.168.1.42`).
@@ -425,7 +425,7 @@ facilement.
 Sur certains ESP32-S3, il faut appuyer deux fois rapidement sur le bouton **BOOT**
 pour entrer en mode flash, puis relancer `pio run --target upload`.
 
-### `gateway-lab.local` ne répond pas
+### `gatewaylab.local` ne répond pas
 
 1. Vérifier que la carte est bien connectée (LED allumée, pas de reboot en boucle)
 2. Utiliser l'adresse IP directement (visible dans `pio device monitor`)
