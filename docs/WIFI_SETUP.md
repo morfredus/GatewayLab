@@ -4,8 +4,8 @@ Ce guide explique comment connecter Gateway Lab à votre réseau WiFi
 **sans installer aucun logiciel de développement**, simplement avec un
 téléphone ou un ordinateur et un navigateur web.
 
-Il s'adresse à toute personne qui a reçu un ESP32 déjà flashé avec
-`gatewaylab.bin` et qui veut le mettre en service chez elle.
+Il s'adresse à toute personne qui a reçu un ESP32 déjà flashé avec Gateway Lab
+et qui veut le mettre en service chez elle.
 
 ---
 

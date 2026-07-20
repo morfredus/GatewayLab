@@ -13,57 +13,54 @@ Ce guide explique comment installer et configurer Gateway Lab sur un ESP32-S3.
 
 ### Logiciel
 
-Pour un premier essai, le plus simple est d'utiliser ESP Launchpad :
+* [PlatformIO](https://platformio.org/) (extension VS Code ou `platformio-core`)
+* Git
 
-https://espressif.github.io/esp-launchpad/
+Aucun firmware précompilé n'est distribué pour le moment : Gateway Lab se
+compile depuis les sources. Le guide développeur détaille l'environnement et le
+dépannage : [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
-## Télécharger le firmware
+## Compiler et flasher le firmware
 
-Téléchargez la dernière version du firmware depuis la section Releases du dépôt GitHub.
+### 1. Récupérer les sources
 
-Fichier :
-
-```text
-gatewaylab-vX.X.X-firmware.bin
+```bash
+git clone git@github.com:morfredus/GatewayLab.git
+cd GatewayLab
 ```
 
-## Flash du firmware
+### 2. Connecter l'ESP32-S3
 
-### 1. Connecter l'ESP32-S3
+Branchez l'ESP32-S3 à l'ordinateur avec un câble USB **de données** (certains
+câbles ne transportent que l'alimentation et l'appareil n'apparaîtra pas).
 
-Branchez l'ESP32-S3 à votre ordinateur à l'aide d'un câble USB.
+### 3. Compiler et téléverser
 
-### 2. Ouvrir ESP Launchpad
-
-Lancez ESP Launchpad.
-
-### 3. Sélectionner la carte
-
-Choisissez :
-
-```text
-ESP32-S3
+```bash
+pio run --target upload
 ```
 
-### 4. Charger le firmware
+PlatformIO télécharge la chaîne de compilation au premier lancement, ce qui
+peut prendre plusieurs minutes. L'environnement `esp32s3_n16r8` est
+sélectionné automatiquement.
 
-Sélectionnez :
+Si la carte n'est pas détectée, préciser le port :
 
-```text
-gatewaylab-vX.X.X-firmware.bin
+```bash
+pio run --target upload --upload-port COM5          # Windows
+pio run --target upload --upload-port /dev/ttyUSB0  # Linux/macOS
 ```
 
-### 5. Flasher
+Si le téléversement échoue malgré tout, maintenir le bouton **BOOT** pendant la
+connexion pour entrer en mode flash, puis relancer la commande.
 
-Cliquez sur :
+### 4. Suivre le démarrage
 
-```text
-Flasher l'appareil
+```bash
+pio device monitor
 ```
 
-Patientez jusqu'à la fin de l'opération.
-
-L'ESP32 redémarrera automatiquement.
+L'ESP32 redémarre automatiquement à la fin du téléversement.
 
 ## Première configuration
 

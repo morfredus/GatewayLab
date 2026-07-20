@@ -5,6 +5,23 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [Non publié]
+
+### Modifié
+
+- `README.md` : l'accroche anglaise était balisée en titre `##`, ce qui créait
+  une fausse entrée de sommaire ; elle est désormais en emphase.
+- `README.md` : les renvois vers `INSTALLATION.md` et `docs/DEVELOPMENT.md`
+  étaient en texte brut et non cliquables ; ils sont devenus des liens.
+- **L'installation renvoyait vers un firmware qui n'existe pas.**
+  `INSTALLATION.md` et `README.md` demandaient de télécharger
+  `gatewaylab-vX.X.X-firmware.bin` depuis les Releases GitHub, alors que le
+  dépôt n'a aucune release : le chemin d'installation principal était une
+  impasse, et les deux guides ne s'accordaient même pas sur le nom du fichier
+  (`gatewaylab.bin` ailleurs). Les guides décrivent désormais la compilation
+  depuis les sources (`pio run --target upload`), seul chemin réellement
+  disponible, avec le dépannage du port série et du mode BOOT.
+
 ## [1.6.0] - 2026-06-30
 
 ### Modifié

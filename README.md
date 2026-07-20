@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-en%20développement-yellow)
 
-## Autonomous network inventory and discovery appliance powered by ESP32-S3.
+*Autonomous network inventory and discovery appliance powered by ESP32-S3.*
 
 Gateway Lab est une passerelle réseau autonome qui découvre, identifie et conserve l'historique des équipements présents sur un réseau local domestique.
 
@@ -89,14 +89,13 @@ Le projet privilégie :
 
 ## Installation rapide
 
-1. Télécharger le firmware depuis la dernière release GitHub
-2. Flasher l'ESP32-S3
-3. Se connecter au réseau WiFi `GatewayLab-Setup`
-4. Configurer le WiFi depuis le navigateur
-5. Accéder à Gateway Lab via `http://gatewaylab.local`
+1. Cloner le dépôt et compiler avec PlatformIO (`pio run --target upload`)
+2. Se connecter au réseau WiFi `GatewayLab-Setup`
+3. Configurer le WiFi depuis le navigateur
+4. Accéder à Gateway Lab via `http://gatewaylab.local`
 
-Guide détaillé : voir INSTALLATION.md
-Guide développeur : voir docs/DEVELOPMENT.md
+Guide détaillé : voir [INSTALLATION.md](INSTALLATION.md)
+Guide développeur : voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
 ---
 
@@ -177,9 +176,9 @@ Guide développeur : voir docs/DEVELOPMENT.md
 
 ### 1. Configurer le WiFi
 
-**Utilisateur final** (firmware déjà flashé, `gatewaylab.bin`) : aucune
+**Utilisateur final** (ESP32 déjà flashé) : aucune
 étape requise — connectez-vous au point d'accès `GatewayLab-Setup` au premier
-démarrage et suivez le portail de configuration. Détail complet dans INSTALLATION.md
+démarrage et suivez le portail de configuration. Détail complet dans [INSTALLATION.md](INSTALLATION.md)
 Fonctionnement avancé : docs/WIFI_SETUP.md
 
 **Développeur** (build local, pour éviter de ressaisir le WiFi à chaque
