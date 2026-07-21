@@ -8,6 +8,7 @@
  */
 
 #include "web_server.h"
+#include "../../third_party/morf/beacon-arduino/morfbeacon_emitter.h"
 #include "ota_manager.h"         // Enregistrement de la route POST /update
 #include "wifi_manager.h"        // Gestion des reseaux WiFi enregistres (NVS)
 #include "status_led.h"          // Luminosite NeoPixel - reglable depuis /wifi (Systeme)
@@ -34,6 +35,11 @@ static WebServer _server(WEB_SERVER_PORT);
 
 // Instance globale exportée
 WebServerModule webSrv;
+
+// Emetteur de presence declare dans main.cpp. /status doit publier le DETAIL de
+// ce que le heartbeat annonce : declarer la capacite « web_ui » sans servir ce
+// document designerait une interface que personne ne saurait ouvrir.
+extern morfbeacon::Emitter presence;
 
 void WebServerModule::registerScanProvider(ScanProvider p) {
     _scan    = p;
@@ -64,6 +70,14 @@ void WebServerModule::begin(uint16_t port) {
     });
     _on("/history",    HTTP_GET,  [this]() { _server.send_P(200, "text/html", HISTORY_PAGE); });
     _on("/topology",   HTTP_GET,  [this]() { _server.send_P(200, "text/html", TOPOLOGY_PAGE); });
+    // /status (et non /api/status, deja pris par le metier) : document
+    // compatible morfbeacon/1, qui rend GatewayLab lisible par un observateur
+    // du parc exactement comme un service Linux ou Windows.
+    _on("/status",     HTTP_GET,  [this]() {
+        _server.send(200, "application/json",
+                     morfbeacon::buildStatusJson(presence, "/", "GatewayLab",
+                                                 "Inventaire et topologie du reseau local."));
+    });
     _on("/api/status", HTTP_GET,  [this]() { _handleApiStatus(); });
     _on("/api/devices",HTTP_GET,  [this]() { _handleApiDevices(); });
     _on("/api/scan",   HTTP_POST, [this]() { _handleApiScanTrigger(); });

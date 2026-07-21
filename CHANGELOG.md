@@ -7,7 +7,22 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.7.0] – 2026-07-21
+
 ### Ajouté
+
+- **Annonce de présence sur le LAN (protocole `morfbeacon/1`)** et route
+  `GET /status` au format correspondant, avec déclaration de la capacité
+  `web_ui`.
+
+  GatewayLab n'était trouvé que par sonde réseau, ce qui suppose de connaître son
+  nom mDNS à l'avance — l'inverse d'une découverte. Il devient découvrable par le
+  même mécanisme que les services Linux et Windows du parc, et un observateur
+  peut proposer un lien vers son interface sans rien connaître de GatewayLab.
+
+  `/status` et non `/api/status`, déjà pris par le métier. Émetteur vendoré dans
+  `third_party/morf/beacon-arduino/`, copie du dépôt morfBeacon : le partage
+  porte sur le protocole, pas sur le code.
 
 - **Fichier `VERSION` à la racine, désormais autoritaire.** La version était
   écrite en dur dans `platformio.ini` (`-D PROJECT_VERSION='"1.6.0"'`), donc à
@@ -25,10 +40,6 @@ Format : [Semantic Versioning](https://semver.org/)
   avertissement : la décommenter telle quelle définirait une seconde clé
   `extra_scripts` dans la même section, qui écraserait la première et
   désactiverait silencieusement l'injection de version.
-
----
-
-## [Non publié]
 
 ### Modifié
 

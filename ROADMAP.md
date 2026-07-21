@@ -4,6 +4,19 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 
 ---
 
+## Écosystème morfSystem
+
+* **Émetteur morfBeacon.** GatewayLab est aujourd'hui découvert par sonde
+  réseau, ce qui suppose de connaître son nom mDNS à l'avance — l'inverse d'une
+  découverte. L'objectif de l'écosystème est que tout composant soit découvert
+  de façon homogène, quelle que soit sa plateforme. Le protocole
+  `morfbeacon/1` est du JSON compact en UDP et n'exige aucune dépendance
+  particulière. Cela permettrait aussi de déclarer l'interface Web du projet
+  pour qu'un observateur y propose un lien, sans rien connaître de GatewayLab.
+  Voir `docs/ECOSYSTEM-PRINCIPLES.md`, dans le dépôt **morfTools**.
+
+---
+
 ## En cours / Prochaine version
 
 * Authentification du portail de configuration WiFi et de l'API `/api/wifi`

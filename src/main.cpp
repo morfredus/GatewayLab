@@ -28,10 +28,16 @@
 #endif
 #ifdef TELNET_LOG_ENABLED
 #include "modules/telnet_log.h"        // Miroir UDP broadcast du moniteur série (YAT, etc.)
+#include "../third_party/morf/beacon-arduino/morfbeacon_emitter.h"
 #endif
 
 // Suit les transitions du scan en cours pour piloter la LED (Scanning -> Ready)
 static bool _ledScanInProgress = false;
+
+// Annonce de presence sur le LAN (protocole morfbeacon/1) : GatewayLab devient
+// decouvrable par le meme mecanisme que les services Linux et Windows du parc,
+// au lieu de devoir etre declare a la main dans une liste de sondes reseau.
+morfbeacon::Emitter presence;
 
 void setup() {
     Serial.begin(115200);
@@ -200,6 +206,14 @@ void setup() {
             .setMonitorEnabled    = [](bool enabled) { netScanner.setMonitorEnabled(enabled); },
         });
         webSrv.begin(WEB_SERVER_PORT);
+
+        // Annonce sur le LAN, une fois le serveur pret : la capacite « web_ui »
+        // est declaree, et le detail est servi par GET /status.
+        presence.appName    = PROJECT_NAME;
+        presence.version    = PROJECT_VERSION;
+        presence.statusPort = WEB_SERVER_PORT;
+        presence.webUi      = true;
+        presence.begin();
 #endif
     });
 }
@@ -216,6 +230,10 @@ void loop() {
 
     // Vérification et reconnexion WiFi automatique (debounce 30 s)
     wifiMgr.loop();
+
+    // Annonce de presence : n'emet qu'a l'intervalle prevu, et rien tant que le
+    // WiFi n'est pas connecte.
+    presence.update();
 
 #ifdef ENABLE_OTA
     // Traitement des paquets ArduinoOTA entrants
