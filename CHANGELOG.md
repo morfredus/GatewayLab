@@ -7,6 +7,29 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+### Ajouté
+
+- **Fichier `VERSION` à la racine, désormais autoritaire.** La version était
+  écrite en dur dans `platformio.ini` (`-D PROJECT_VERSION='"1.6.0"'`), donc à
+  un endroit différent des onze autres projets de l'écosystème, où un fichier
+  `VERSION` fait autorité. Aucun outil ne pouvait établir l'inventaire des
+  versions du parc, puisque deux projets sur quatorze publiaient la leur
+  autrement.
+
+  `tools/version.py` lit ce fichier et injecte `PROJECT_VERSION` à la
+  compilation. Ajouter le fichier **sans** ce script aurait créé deux sources de
+  vérité pour une même valeur. `platformio.ini` ne porte plus la version, il la
+  lit.
+
+  La ligne `extra_scripts` commentée pour les assets Web porte désormais un
+  avertissement : la décommenter telle quelle définirait une seconde clé
+  `extra_scripts` dans la même section, qui écraserait la première et
+  désactiverait silencieusement l'injection de version.
+
+---
+
+## [Non publié]
+
 ### Modifié
 
 - `README.md` : l'accroche anglaise était balisée en titre `##`, ce qui créait
