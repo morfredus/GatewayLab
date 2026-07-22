@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+p#!/usr/bin/env python3
 """
 Web Assets Minifier — Gateway Lab V1
 
