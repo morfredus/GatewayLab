@@ -8,6 +8,11 @@ include/wifi-config.h
 # Fichiers divers (a ignorer si leur contenu n'est pas a partager)
 .copilot
 
+#Fichiers UI web crees par le script de minification
+include/oui_table.h
+include/web*.h
+
+
 # Sources web extraites depuis les headers PROGMEM (récupération d'urgence)
 web_src/extracted/
 
