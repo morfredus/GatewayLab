@@ -11,6 +11,11 @@
 #include <vector>
 #include "network_scanner.h"
 
+// load() et save() sont appeles depuis PLUSIEURS taches (scan, rescan approfondi,
+// handlers web favori/alias/notes) et partagent LittleFS avec device_history et
+// boot_log. La serialisation passe par le verrou GLOBAL fslock (voir
+// utils/fs_lock.h), pas par un mutex propre a ce store : deux fichiers
+// DIFFERENTS ouverts en meme temps corrompent quand meme l'etat de LittleFS.
 class DeviceStore {
 public:
     bool begin();

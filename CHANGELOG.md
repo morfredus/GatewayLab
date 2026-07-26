@@ -7,6 +7,21 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.8.2] – 2026-07-26
+### Corrigé
+
+- **Plantage LittleFS sous accès concurrent (`assert lfs_file_close`).** Le
+  système de fichiers était ouvert/écrit sans verrou depuis plusieurs tâches à la
+  fois : le scan et le rescan approfondi (`device_store`, `device_history`), les
+  handlers web (favori / alias / notes), le journal de redémarrage (`boot_log`).
+  Deux séquences ouvrir→écrire→fermer qui se chevauchaient - même sur des
+  fichiers différents, car l'état interne de LittleFS est partagé - corrompaient
+  ce dernier et l'appareil paniquait (typiquement quand une passe précise se
+  déclenchait juste après un scan). Un **verrou global** (`utils/fs_lock.h`)
+  sérialise désormais toutes les opérations fichier du firmware. Ni réentrance
+  cassée, ni interblocage : les fonctions fichier ne prennent jamais le mutex du
+  scanner, donc aucun ordre de verrous opposé.
+
 ## [1.8.1] – 2026-07-26
 ### Corrigé
 

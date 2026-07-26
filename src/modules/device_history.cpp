@@ -14,6 +14,7 @@
 #include "time_sync.h"
 #include "system_health.h"
 #include "../utils/logger.h"
+#include "../utils/fs_lock.h"
 
 static const char* TAG = "History";
 
@@ -25,6 +26,7 @@ bool DeviceHistory::begin() {
 }
 
 std::vector<HistoryEntry> DeviceHistory::_readAll() const {
+    fslock::Guard lock;              // FS partage avec device_store / boot_log
     std::vector<HistoryEntry> result;
     if (!_mounted) return result;
 
@@ -52,6 +54,7 @@ std::vector<HistoryEntry> DeviceHistory::_readAll() const {
 }
 
 void DeviceHistory::_writeAll(const std::vector<HistoryEntry>& entries) {
+    fslock::Guard lock;              // FS partage avec device_store / boot_log
     if (!_mounted) return;
 
     File f = LittleFS.open(PATH, "w");
@@ -116,6 +119,7 @@ std::vector<HistoryEntry> DeviceHistory::load(int maxEntries) const {
 }
 
 void DeviceHistory::clear() {
+    fslock::Guard lock;              // FS partage avec device_store / boot_log
     if (!_mounted) return;
     LittleFS.remove(PATH);
     Log::i(TAG, "Journal d'historique vide");

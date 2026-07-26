@@ -12,6 +12,7 @@
 #include <time.h>
 #include "../../include/app_config.h"   // MAX_BOOT_LOG_ENTRIES, LOG_BUFFER_SIZE, LOG_LINE_MAX_LEN, BOOT_LOG_STATS_INTERVAL_MS
 #include "../utils/logger.h"
+#include "../utils/fs_lock.h"
 
 static const char* TAG = "BootLog";
 
@@ -261,6 +262,7 @@ void BootLog::noteApiCall() {
 }
 
 String BootLog::getLogJson() const {
+    fslock::Guard lock;              // FS partage avec device_store / device_history
     if (!_mounted) return "[]";
     File f = LittleFS.open("/bootlog.json", "r");
     if (!f) return "[]";
@@ -270,6 +272,7 @@ String BootLog::getLogJson() const {
 }
 
 void BootLog::clear() {
+    fslock::Guard lock;              // FS partage avec device_store / device_history
     if (!_mounted) return;
     LittleFS.remove("/bootlog.json");
     Log::i(TAG, "Journal de demarrage vide");

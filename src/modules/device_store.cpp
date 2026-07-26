@@ -13,12 +13,14 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include "../utils/logger.h"
+#include "../utils/fs_lock.h"
 
 static const char* TAG = "Store";
 
 DeviceStore deviceStore;
 
 bool DeviceStore::begin() {
+    fslock::handle();                // force l'init du verrou (mono-thread ici)
     if (!LittleFS.begin(true)) {
         Log::e(TAG, "LittleFS : montage échoué (formatage tenté)");
         _mounted = false;
@@ -33,6 +35,7 @@ bool DeviceStore::begin() {
 }
 
 std::vector<NetworkDevice> DeviceStore::load() {
+    fslock::Guard lock;              // exclusif avec toute autre operation fichier
     std::vector<NetworkDevice> result;
     if (!_mounted) return result;
 
@@ -103,6 +106,7 @@ std::vector<NetworkDevice> DeviceStore::load() {
 }
 
 void DeviceStore::save(const std::vector<NetworkDevice>& devices) {
+    fslock::Guard lock;              // exclusif avec toute autre operation fichier
     if (!_mounted) return;
 
     File f = LittleFS.open(PATH, "w");
