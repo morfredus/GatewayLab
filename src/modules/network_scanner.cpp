@@ -64,6 +64,12 @@ static bool isRandomizedMac(const String& mac) {
     return nibble == '2' || nibble == '6' || nibble == 'A' || nibble == 'E';
 }
 
+// Archive l'ancienne IP d'un appareil qui vient d'en changer (identite = MAC :
+// une IP differente n'est pas un nouvel appareil, c'est le meme qui a bouge).
+// La plus recente en dernier, bornee ; ignore les valeurs vides ou deja connues.
+// Declaree ici car utilisee des le sweep ARP, definie plus bas.
+static void archivePreviousIp(NetworkDevice& d, const String& oldIp);
+
 // Recherche de l'entrée OUI à partir des 3 premiers octets de l'adresse MAC.
 // Retourne nullptr si l'OUI n'est pas dans la table ou si la MAC est aléatoire
 // (dans ce cas, l'OUI ne correspond à aucun fabricant réel).
@@ -102,10 +108,14 @@ void NetworkScanner::_readArpTable() {
             eth_ptr->addr[0], eth_ptr->addr[1], eth_ptr->addr[2],
             eth_ptr->addr[3], eth_ptr->addr[4], eth_ptr->addr[5]);
 
-        // Déduplication par MAC — mise à jour si le MAC existe déjà
+        // Déduplication par MAC — mise à jour si le MAC existe déjà. Un MAC connu
+        // a une nouvelle IP, c'est le MEME appareil qui a change d'adresse : on
+        // archive l'ancienne IP au lieu de la perdre, et on ne cree pas de
+        // doublon.
         bool found = false;
         for (auto& d : _results) {
             if (d.mac == macStr) {
+                if (!d.ip.isEmpty() && d.ip != ipStr) archivePreviousIp(d, d.ip);
                 d.ip       = ipStr;
                 d.lastSeen = millis();
                 d.online   = true;
@@ -604,6 +614,13 @@ void NetworkScanner::_run() {
     // Classification intelligente : affine la categorie en combinant tous
     // les signaux disponibles (manufacturer, services, ports, hostname)
     _classifyDevices();
+
+    // Deduplication : une IP qui change ne doit laisser ni fantome a l'ancienne
+    // adresse, ni doublon. Identite = MAC. Apres l'enrichissement, pour disposer
+    // des hostnames/services au moment de choisir l'entree canonique.
+    xSemaphoreTake(_mutex, portMAX_DELAY);
+    _deduplicateLocked();
+    xSemaphoreGive(_mutex);
 
     // Historique : firstSeen/lastSeen/seenCount + journal des changements
     _updateHistory(previousState);
@@ -1289,6 +1306,150 @@ void NetworkScanner::_updateHistory(const std::vector<NetworkDevice>& previous, 
 // Chargement des devices connus depuis LittleFS
 // Injectés avec online=false — seront mis à jour si découverts par ARP/ICMP
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Identite des appareils et deduplication
+//
+// L'identite d'un appareil est sa MAC, pas son IP : un bail DHCP qui change ne
+// cree pas un nouvel appareil. Mais toutes les sources ne voient pas la MAC
+// (ARP oui ; mDNS/SSDP/DNS-SD donnent souvent une IP sans MAC), et un smartphone
+// re-randomise sa MAC. Ces ecarts produisaient des fantomes (l'ancienne IP hors
+// ligne) et des doublons. La passe ci-dessous les resorbe en fin de scan.
+// ---------------------------------------------------------------------------
+static void archivePreviousIp(NetworkDevice& d, const String& oldIp) {
+    if (oldIp.isEmpty() || oldIp == d.ip) return;
+    for (const auto& p : d.previousIps)
+        if (p == oldIp) return;                 // deja connue
+    d.previousIps.push_back(oldIp);
+    constexpr size_t MAX_PREV_IPS = 5;
+    while (d.previousIps.size() > MAX_PREV_IPS)
+        d.previousIps.erase(d.previousIps.begin());  // oublie la plus ancienne
+}
+
+// Fond `src` dans `dst` (dst = entree canonique conservee). Complete les champs
+// vides sans jamais ecraser un choix utilisateur (alias, favori, notes,
+// rattachement topologique). Compteurs pris au maximum, pas additionnes : c'est
+// le MEME appareil vu deux fois, une somme gonflerait son histoire.
+static void mergeDeviceInto(NetworkDevice& dst, const NetworkDevice& src) {
+    if (dst.mac.isEmpty() && !src.mac.isEmpty())
+        dst.mac = src.mac;
+
+    // IP courante = celle vue en ligne la plus recemment ; l'autre est archivee.
+    if (!src.ip.isEmpty() && src.ip != dst.ip) {
+        const bool srcPlusRecent =
+            (src.online && !dst.online) ||
+            (src.online == dst.online && src.lastSeen > dst.lastSeen);
+        if (srcPlusRecent) { archivePreviousIp(dst, dst.ip); dst.ip = src.ip; }
+        else               { archivePreviousIp(dst, src.ip); }
+    }
+    for (const auto& p : src.previousIps)
+        archivePreviousIp(dst, p);
+
+    if (dst.manufacturer.isEmpty()) dst.manufacturer = src.manufacturer;
+    if (dst.hostname.isEmpty())     dst.hostname     = src.hostname;
+    if (dst.category.isEmpty())     dst.category     = src.category;
+    if (dst.type.isEmpty())         dst.type         = src.type;
+    if (dst.model.isEmpty())        dst.model        = src.model;
+    if (dst.os.isEmpty())           dst.os           = src.os;
+    if (dst.source.isEmpty())       dst.source       = src.source;
+    if (dst.services.isEmpty())     dst.services     = src.services;
+    if (dst.openPorts.isEmpty())    dst.openPorts    = src.openPorts;
+    if (dst.alias.isEmpty())        dst.alias        = src.alias;
+    if (dst.topologyParent.isEmpty()) {
+        dst.topologyParent           = src.topologyParent;
+        dst.topologyParentAuto       = src.topologyParentAuto;
+        dst.topologyParentConfidence = src.topologyParentConfidence;
+    }
+    if (dst.mobilityOverride.isEmpty()) dst.mobilityOverride = src.mobilityOverride;
+
+    dst.online   = dst.online || src.online;
+    dst.favorite = dst.favorite || src.favorite;
+    if (src.lastSeen > dst.lastSeen) dst.lastSeen = src.lastSeen;
+    if (dst.firstSeenEpoch == 0 ||
+        (src.firstSeenEpoch != 0 && src.firstSeenEpoch < dst.firstSeenEpoch))
+        dst.firstSeenEpoch = src.firstSeenEpoch;
+    if (src.lastSeenEpoch      > dst.lastSeenEpoch)      dst.lastSeenEpoch      = src.lastSeenEpoch;
+    if (src.seenCount          > dst.seenCount)          dst.seenCount          = src.seenCount;
+    if (src.presenceCount      > dst.presenceCount)      dst.presenceCount      = src.presenceCount;
+    if (src.absenceCount       > dst.absenceCount)       dst.absenceCount       = src.absenceCount;
+    if (src.reconnectionCount  > dst.reconnectionCount)  dst.reconnectionCount  = src.reconnectionCount;
+    if (src.totalOnlineSeconds  > dst.totalOnlineSeconds)  dst.totalOnlineSeconds  = src.totalOnlineSeconds;
+    if (src.totalOfflineSeconds > dst.totalOfflineSeconds) dst.totalOfflineSeconds = src.totalOfflineSeconds;
+    if (dst.lastDisconnectEpoch == 0) dst.lastDisconnectEpoch = src.lastDisconnectEpoch;
+
+    for (const auto& n : src.notes) {
+        bool known = false;
+        for (const auto& e : dst.notes)
+            if (e.ts == n.ts && e.text == n.text) { known = true; break; }
+        if (!known) dst.notes.push_back(n);
+    }
+}
+
+void NetworkScanner::_deduplicateLocked() {
+    if (_results.size() < 2) return;
+    std::vector<bool> dead(_results.size(), false);
+    auto randomized = [](const NetworkDevice& d) {
+        return d.mac.isEmpty() || isRandomizedMac(d.mac);
+    };
+
+    // Passe 1 : meme MAC stable (non aleatoire) = meme appareil, quelle que soit
+    // l'IP. C'est le coeur du modele : l'identite est la MAC.
+    for (size_t i = 0; i < _results.size(); ++i) {
+        if (dead[i] || _results[i].mac.isEmpty() || isRandomizedMac(_results[i].mac))
+            continue;
+        for (size_t j = i + 1; j < _results.size(); ++j) {
+            if (dead[j]) continue;
+            if (_results[j].mac == _results[i].mac) {
+                mergeDeviceInto(_results[i], _results[j]);
+                dead[j] = true;
+            }
+        }
+    }
+
+    // Passe 2 : une entree SANS MAC dont l'IP est celle (courante) d'une entree
+    // AVEC MAC est le meme appareil, vu par une source qui n'a pas releve la MAC
+    // (mDNS/SSDP/DNS-SD). L'entree a MAC est autoritaire : on y fond l'autre.
+    for (size_t i = 0; i < _results.size(); ++i) {
+        if (dead[i] || _results[i].mac.isEmpty()) continue;
+        for (size_t j = 0; j < _results.size(); ++j) {
+            if (dead[j] || j == i) continue;
+            if (_results[j].mac.isEmpty() && !_results[j].ip.isEmpty() &&
+                _results[j].ip == _results[i].ip) {
+                mergeDeviceInto(_results[i], _results[j]);
+                dead[j] = true;
+            }
+        }
+    }
+
+    // Passe 3 : smartphones. Meme IP, MAC aleatoire ou absente des deux cotes =
+    // meme appareil qui a re-randomise sa MAC (choix retenu : fusion par IP pour
+    // ce cas). On adopte comme MAC courante celle vue en ligne, si presente.
+    for (size_t i = 0; i < _results.size(); ++i) {
+        if (dead[i] || _results[i].ip.isEmpty() || !randomized(_results[i])) continue;
+        for (size_t j = i + 1; j < _results.size(); ++j) {
+            if (dead[j] || !randomized(_results[j])) continue;
+            if (_results[j].ip != _results[i].ip) continue;
+            const bool adopt = _results[j].online && !_results[j].mac.isEmpty();
+            const String newMac = _results[j].mac;
+            mergeDeviceInto(_results[i], _results[j]);
+            if (adopt) _results[i].mac = newMac;
+            dead[j] = true;
+        }
+    }
+
+    // Compaction : retire les entrees fondues.
+    std::vector<NetworkDevice> kept;
+    kept.reserve(_results.size());
+    size_t removed = 0;
+    for (size_t i = 0; i < _results.size(); ++i) {
+        if (dead[i]) { ++removed; continue; }
+        kept.push_back(std::move(_results[i]));
+    }
+    if (removed) {
+        _results.swap(kept);
+        Log::i(TAG, "Deduplication : %u doublon(s) fusionne(s)", (unsigned)removed);
+    }
+}
+
 void NetworkScanner::_mergePersistedDevices() {
     auto stored = deviceStore.load();
     if (stored.empty()) return;
@@ -1468,6 +1629,10 @@ String NetworkScanner::resultsToJson() const {
         obj["model"]        = d.model;
         obj["os"]           = d.os;
         obj["source"]       = d.source;
+        // Anciennes IP de CET appareil (identite = MAC), pour l'infobulle
+        // « a change d'adresse » cote client. Absent/vide = jamais change.
+        JsonArray prevArr   = obj["previousIps"].to<JsonArray>();
+        for (const auto& p : d.previousIps) prevArr.add(p);
         obj["elapsedMs"]    = now - d.lastSeen;
         obj["online"]       = d.online;
         obj["alias"]        = d.alias;
@@ -2096,6 +2261,8 @@ String NetworkScanner::backupToJson() const {
         obj["lastSeenAt"]   = d.lastSeenEpoch;
         obj["seenCount"]    = d.seenCount;
         obj["favorite"]     = d.favorite;
+        JsonArray prevArr   = obj["previousIps"].to<JsonArray>();
+        for (const auto& p : d.previousIps) prevArr.add(p);
         String confLabel;
         obj["confidence"]      = _confidenceFor(d, confLabel);
         obj["confidenceLabel"] = confLabel;

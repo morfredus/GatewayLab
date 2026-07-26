@@ -233,9 +233,15 @@ function renderDevices(allDevices) {
       'data-key="' + esc(favKey) + '" onclick="toggleNotesRow(this)">📝' +
       (noteCount ? '<span class="notes-count">' + noteCount + '</span>' : '') + '</button>';
     var notesData = 'data-notes=\'' + esc(JSON.stringify(d.notes || [])) + '\'';
+    // Identité = MAC : un appareil qui a changé d'IP garde sa ligne, avec ses
+    // anciennes adresses en infobulle plutôt qu'un doublon fantôme.
+    var ipHist = (d.previousIps && d.previousIps.length)
+      ? ' <span class="ip-changed" title="A changé d\'adresse. Précédemment : ' +
+        esc(d.previousIps.join(', ')) + '">↔</span>'
+      : '';
     return '<tr' + (d.online ? '' : ' class="row-offline"') + ' ' + notesData + '>' +
       '<td class="status-cell">' + statusHtml + '</td>' +
-      '<td class="ip-cell">'     + esc(d.ip) + rescanBtn + '</td>' +
+      '<td class="ip-cell">'     + esc(d.ip) + ipHist + rescanBtn + '</td>' +
       '<td>'                     + nameHtml    + '</td>' +
       '<td>'                     + mfrHtml     + '</td>' +
       '<td>'                     + catHtml     + '</td>' +

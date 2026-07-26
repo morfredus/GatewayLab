@@ -412,6 +412,7 @@ tr:last-child td { border-bottom: none; }
 tr:hover td      { background: #ffffff06; }
 
 .ip-cell   { font-weight: 700; color: #f1f5f9; font-family: monospace; font-size: 0.87rem; white-space: nowrap; }
+.ip-changed { color: #fbbf24; cursor: help; font-weight: 700; }
 
 .rescan-btn {
   font-size: 0.75rem;

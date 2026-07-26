@@ -82,6 +82,13 @@ struct NetworkDevice {
     String   services;      // Services DNS-SD détectés, séparés par '|' (ex: "HTTP|SSH|SMB")
     String   openPorts;    // Ports TCP ouverts, séparés par '|' (ex: "80|443|22")
 
+    // Historique des IP de CET appareil. L'identite est la MAC : quand un
+    // appareil change d'IP (bail DHCP), ce n'est pas un nouvel appareil, c'est
+    // le meme qui a bouge. On archive l'ancienne IP ici (la plus recente en
+    // dernier, borne a quelques entrees) pour l'afficher en infobulle au lieu de
+    // laisser un fantome a l'ancienne adresse.
+    std::vector<String> previousIps;
+
     String   alias;         // Nom personnalise par l'utilisateur - prioritaire sur hostname a l'affichage
     uint32_t firstSeenEpoch = 0;   // Epoch NTP de la premiere detection (0 = inconnu, pas d'heure synchronisee)
     uint32_t lastSeenEpoch  = 0;   // Epoch NTP de la derniere detection (0 = inconnu)
@@ -313,6 +320,13 @@ private:
 
     // Charge les devices connus depuis DeviceStore et les injecte offline dans _results
     void _mergePersistedDevices();
+
+    // Normalise _results en fin de scan : fusionne les entrees qui designent le
+    // MEME appareil physique mais se sont dedoublees (une source avec MAC, une
+    // autre sans, apres un changement d'IP ; ou un smartphone qui a re-randomise
+    // sa MAC sur la meme IP). Identite = MAC quand elle est connue et stable ;
+    // repli sur l'IP pour les MAC absentes ou aleatoires. Appelee _mutex tenu.
+    void _deduplicateLocked();
 
     // Borne _results à MAX_TRACKED_DEVICES (évince les + anciens hors-ligne non favoris)
     // Appelée avec _mutex déjà acquis.

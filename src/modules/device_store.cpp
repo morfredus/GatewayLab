@@ -65,6 +65,9 @@ std::vector<NetworkDevice> DeviceStore::load() {
         d.source       = obj["source"]       | "";
         d.services     = obj["services"]     | "";
         d.openPorts    = obj["openPorts"]    | "";
+        JsonArray prevArr = obj["previousIps"].as<JsonArray>();
+        if (!prevArr.isNull())               // champ absent d'un ancien fichier = vide (migration douce)
+            for (JsonVariant v : prevArr) d.previousIps.push_back(v.as<String>());
         d.alias            = obj["alias"]        | "";
         d.firstSeenEpoch   = obj["firstSeen"]     | 0;
         d.lastSeenEpoch    = obj["lastSeenAt"]    | 0;
@@ -124,6 +127,8 @@ void DeviceStore::save(const std::vector<NetworkDevice>& devices) {
         obj["source"]       = d.source;
         obj["services"]     = d.services;
         obj["openPorts"]    = d.openPorts;
+        JsonArray prevArr   = obj["previousIps"].to<JsonArray>();
+        for (const auto& p : d.previousIps) prevArr.add(p);
         obj["alias"]        = d.alias;
         obj["firstSeen"]    = d.firstSeenEpoch;
         obj["lastSeenAt"]   = d.lastSeenEpoch;

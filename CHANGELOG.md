@@ -7,6 +7,28 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.8.0] – 2026-07-26
+### Corrigé
+
+- **Changement d'IP non géré : fantômes et doublons.** L'identité d'un appareil
+  est désormais sa MAC, pas son IP. Un appareil qui change d'adresse (bail DHCP)
+  garde une seule ligne, met à jour son IP courante et archive l'ancienne dans un
+  historique (`previousIps`, borné à 5), affiché en infobulle sur un indicateur
+  `↔`. Fini l'appareil affiché deux fois (ancien IP hors ligne + nouvel IP en
+  ligne), sur toutes les pages (Équipements, Historique, Topologie, Système),
+  puisque la correction est au niveau du modèle de données.
+
+  Le rapprochement se fait par une passe de déduplication en fin de scan :
+  (1) même MAC stable = même appareil ; (2) une entrée sans MAC à l'IP d'une
+  entrée avec MAC (cas mDNS/SSDP/DNS-SD qui ne relèvent pas la MAC) est fondue
+  dans celle-ci ; (3) **smartphones** à MAC aléatoire : une nouvelle MAC aléatoire
+  sur une IP déjà tenue par un appareil à MAC aléatoire est reconnue comme le même
+  appareil (fusion par IP), pour éviter les doublons à chaque re-randomisation.
+  La fusion préserve historique, favori, notes et rattachement topologique.
+
+  Nouveau champ `previousIps` dans `/devices.json` et l'API `/api/devices` ;
+  migration douce (champ absent d'un ancien fichier = vide).
+
 ## [1.7.1] – 2026-07-26
 
 ### Ajouté
