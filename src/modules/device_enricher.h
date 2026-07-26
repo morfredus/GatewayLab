@@ -28,9 +28,9 @@ struct EnrichPattern {
 
 static const EnrichPattern DEVICE_PATTERNS[] = {
     // Apple - Mobile
-    { "iphone",        "Apple",                   "Mobile",        ""              },
-    { "ipad",          "Apple",                   "Mobile",        ""              },
-    { "ipod",          "Apple",                   "Mobile",        ""              },
+    { "iphone",        "Apple",                   "Mobile",        "iOS"           },
+    { "ipad",          "Apple",                   "Mobile",        "iPadOS"        },
+    { "ipod",          "Apple",                   "Mobile",        "iOS"           },
     // Apple - Ordinateurs
     { "macbook",       "Apple",                   "Computer",      "macOS"         },
     { "imac",          "Apple",                   "Computer",      "macOS"         },
@@ -143,14 +143,28 @@ inline void applyDeviceEnrichment(NetworkDevice& d) {
         const EnrichPattern& p = DEVICE_PATTERNS[i];
         if (h.indexOf(p.keyword) < 0) continue;
 
-        if (d.manufacturer.isEmpty() && p.manufacturer[0] != '\0')
+        // Un hostname reconnu ("iphone", "roborock"...) prime sur les marqueurs
+        // d'ABSENCE d'info que pose la detection de MAC aleatoire : le fabricant
+        // "Unknown (Privacy Mode)" et la categorie "Mobile/Aléatoire" ne sont pas
+        // de vraies deductions, juste le constat qu'aucun OUI n'est exploitable.
+        // Un nom d'hote, lui, est une preuve. On l'autorise donc a les remplacer.
+        bool mfrOverridable = d.manufacturer.isEmpty() ||
+                              d.manufacturer == "Unknown (Privacy Mode)";
+        bool catOverridable = isGenericCategory(d.category) ||
+                              d.category == "Mobile/Aléatoire";
+
+        if (mfrOverridable && p.manufacturer[0] != '\0')
             d.manufacturer = p.manufacturer;
-        if (isGenericCategory(d.category) && p.category[0] != '\0')
+        if (catOverridable && p.category[0] != '\0')
             d.category = p.category;
         if (d.os.isEmpty() && p.os[0] != '\0')
             d.os = p.os;
 
-        if (!d.manufacturer.isEmpty() && !d.category.isEmpty() && !d.os.isEmpty())
+        // Tout est renseigne par de vraies valeurs (plus de marqueur d'absence) :
+        // inutile de continuer a parcourir les patterns.
+        bool mfrDone = !d.manufacturer.isEmpty() && d.manufacturer != "Unknown (Privacy Mode)";
+        bool catDone = !isGenericCategory(d.category) && d.category != "Mobile/Aléatoire";
+        if (mfrDone && catDone && !d.os.isEmpty())
             break;
     }
 }

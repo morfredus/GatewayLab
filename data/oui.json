@@ -1,5 +1,23 @@
 [
   {
+    "oui": "00:51:ED",
+    "manufacturer": "TP-Link",
+    "category": "Network",
+    "type": "Mesh WiFi (Deco)"
+  },
+  {
+    "oui": "B0:19:21",
+    "manufacturer": "TP-Link",
+    "category": "Network",
+    "type": "Mesh WiFi (Deco)"
+  },
+  {
+    "oui": "CC:7B:5C",
+    "manufacturer": "Xsens",
+    "category": "IoT",
+    "type": "Base Station"
+  },
+  {
     "oui": "B8:27:EB",
     "manufacturer": "Raspberry Pi",
     "category": "SBC",

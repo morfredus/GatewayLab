@@ -7,6 +7,32 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.9.2] – 2026-07-27
+### Ajouté
+
+- **Trois OUI ajoutés à la table fabricants** : `00:51:ED` et `B0:19:21`
+  (TP-Link, mesh WiFi Deco), `CC:7B:5C` (Xsens, station de base). Ces appareils
+  n'exposent ni nom d'hôte exploitable ni service, et leur préfixe MAC était
+  inconnu : ils restaient donc non identifiés. Renseignés d'après les
+  équipements réels du réseau.
+
+## [1.9.1] – 2026-07-27
+### Corrigé
+
+- **GatewayLab s'affichait « hors ligne » de lui-même.** L'auto-entrée (l'ESP32
+  qui exécute le code) n'était re-marquée en ligne qu'en toute fin de scan ; or
+  le réinitialiseur d'état la passait hors ligne au début, si bien qu'elle
+  paraissait absente pendant la minute ou deux du balayage. L'entrée `Self` est
+  désormais maintenue en ligne en permanence - elle l'est par définition.
+
+- **Smartphones reconnus par leur nom d'hôte.** Un téléphone à MAC aléatoire
+  recevait le fabricant « Unknown (Privacy Mode) » et la catégorie
+  « Mobile/Aléatoire » ; ces marqueurs d'absence d'info bloquaient ensuite
+  l'enrichissement par nom d'hôte, qui ne remplit que les champs vides. Résultat :
+  un appareil nommé `iphone` restait « Unknown » alors que son nom le trahit.
+  L'enrichissement par hostname prime désormais sur ces marqueurs : `iphone` →
+  Apple / Mobile / iOS, etc. Les mobiles Apple sont aussi étiquetés `iOS`/`iPadOS`.
+
 ## [1.9.0] – 2026-07-27
 ### Corrigé
 

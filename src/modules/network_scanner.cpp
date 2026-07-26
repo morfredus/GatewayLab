@@ -510,9 +510,14 @@ void NetworkScanner::_run() {
     // équipement détecté une seule fois reste online=true indéfiniment
     // (rien d'autre ne le remet à false), faussant le filtre "En ligne" et
     // gonflant seenCount à chaque scan même si l'équipement a disparu.
+    //
+    // Exception : l'ESP32 lui-meme (source "Self") est toujours en ligne -- il
+    // execute ce code. Le remettre hors ligne le faisait apparaitre "hors ligne"
+    // pendant toute la duree du sweep (une a deux minutes), puisque _addSelfEntry
+    // ne le re-marque qu'en fin de scan.
     {
         xSemaphoreTake(_mutex, portMAX_DELAY);
-        for (auto& d : _results) d.online = false;
+        for (auto& d : _results) d.online = (d.source == "Self");
         xSemaphoreGive(_mutex);
     }
 
