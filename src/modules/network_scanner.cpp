@@ -777,6 +777,15 @@ int NetworkScanner::_confidenceFor(const NetworkDevice& d, String& label) {
 
     bool ambiguousOui = (d.source == "MAC") && _isAmbiguousOuiBrand(d.manufacturer);
 
+    // La categorie est-elle PROUVEE par des services/ports concrets (SMB,
+    // NetBIOS, RPC, IPP, RTSP, HTTP...) plutot que devinee depuis un OUI ? Une
+    // categorie specifique (non generique) avec des ports/services detectes est
+    // une evidence, pas une hypothese : elle merite une confiance elevee, et une
+    // marque OUI incertaine ne doit pas rabaisser la confiance sur CE qu'est
+    // l'appareil. C'est le cas d'un PC Windows reconnu par SMB/NetBIOS/RPC.
+    bool catFromEvidence = !isGenericCategory(d.category) &&
+                           (!d.openPorts.isEmpty() || !d.services.isEmpty());
+
     int mfrConf = 0;
     if (!d.manufacturer.isEmpty()) {
         mfrConf = ambiguousOui ? 35 : _sourceTier(d.source);
@@ -784,7 +793,9 @@ int NetworkScanner::_confidenceFor(const NetworkDevice& d, String& label) {
 
     int catConf = 0;
     if (!d.category.isEmpty()) {
-        catConf = ambiguousOui ? 35 : _sourceTier(d.source);
+        if (catFromEvidence)   catConf = 90;
+        else if (ambiguousOui) catConf = 35;
+        else                   catConf = _sourceTier(d.source);
         // Categorie "IoT" par defaut, sans port/service detecte : signal faible
         if (d.category == "IoT" && d.openPorts.isEmpty() && d.services.isEmpty())
             catConf = min(catConf, 30);
@@ -793,15 +804,19 @@ int NetworkScanner::_confidenceFor(const NetworkDevice& d, String& label) {
     int modelConf = d.model.isEmpty() ? 0 : _sourceTier(d.source);
     int typeConf  = d.type.isEmpty()  ? 0 : _sourceTier(d.source);
 
-    // Score global prudent : le maillon le plus faible entre marque et
-    // categorie (s'ils existent tous les deux), sinon celui qui existe.
+    // Score global. Cas normal : prudent, le maillon le plus faible entre marque
+    // et categorie. Mais si la categorie est PROUVEE par les services, on sait
+    // ce qu'est l'appareil meme si la marque reste incertaine : on ne rabaisse
+    // pas la confiance a cause de l'OUI.
     int overall;
-    if (mfrConf > 0 && catConf > 0) overall = min(mfrConf, catConf);
+    if (catFromEvidence)            overall = max(catConf, mfrConf);
+    else if (mfrConf > 0 && catConf > 0) overall = min(mfrConf, catConf);
     else                            overall = max(mfrConf, catConf);
     if (overall == 0) overall = 20;   // Aucun signal
 
     label  = "Marque "     + String(mfrConf)  + "%";
     label += " · Categorie " + String(catConf) + "%";
+    if (catFromEvidence) label += " (confirmee par les services detectes)";
     if (modelConf > 0) label += " · Modele " + String(modelConf) + "%";
     if (typeConf  > 0) label += " · Type "   + String(typeConf)  + "%";
     if (ambiguousOui) label += " (OUI partage entre plusieurs familles d'appareils)";
@@ -1106,14 +1121,27 @@ void NetworkScanner::_classifyDevices() {
         bool hasHa    = d.openPorts.indexOf("HA")   >= 0 || d.services.indexOf("HA")   >= 0;
         bool hasPrint = d.openPorts.indexOf("IPP")  >= 0 || d.services.indexOf("Print") >= 0;
         bool hasAirplay = d.services.indexOf("AirPlay") >= 0;
+        bool hasNetbios = d.openPorts.indexOf("NetBIOS") >= 0 || d.services.indexOf("NetBIOS") >= 0;
+        bool hasRpc     = d.openPorts.indexOf("RPC") >= 0;   // MS-RPC (135)
+        bool hasRdp     = d.openPorts.indexOf("RDP") >= 0;   // Bureau a distance (3389)
 
         // Combinaisons de signaux les plus specifiques d'abord
         if (hasRtsp) {
             d.category = "Camera";
         } else if (hasHa) {
             d.category = "Smart Hub";
+        } else if (hasRpc || hasRdp) {
+            // RPC (135) et RDP (3389) sont quasi exclusifs d'un poste ou serveur
+            // Windows -- jamais un NAS. On teste avant la regle NAS.
+            d.category = "Computer";
+            if (d.os.isEmpty()) d.os = "Windows";
         } else if (hasSmb && (hasSsh || hasHttp)) {
-            d.category = "NAS";
+            d.category = "NAS";   // partage SMB + admin web/SSH : appareil de stockage
+        } else if (hasSmb && hasNetbios) {
+            // Partage de fichiers Windows classique (SMB + NetBIOS) sans admin web
+            // ni SSH : un poste Windows, pas un NAS.
+            d.category = "Computer";
+            if (d.os.isEmpty()) d.os = "Windows";
         } else if (hasPrint) {
             d.category = "Printer";
         } else if (hasAirplay) {

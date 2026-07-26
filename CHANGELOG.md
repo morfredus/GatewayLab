@@ -7,6 +7,28 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.9.0] – 2026-07-27
+### Corrigé
+
+- **PC Windows bloqués en « Identification en cours ».** Le classement ne
+  regardait que HTTP/SSH/SMB : un poste Windows annonçant SMB + NetBIOS + RPC
+  (sans HTTP ni SSH) ne correspondait à aucune règle et restait sans catégorie.
+  Ajout de la signature Windows : `RPC` (135) ou `RDP` (3389) - quasi exclusifs
+  d'un poste/serveur Windows - classent en `Computer` ; `SMB + NetBIOS` sans
+  admin web classe aussi en `Computer` (partage de fichiers Windows), en
+  distinguant du NAS (SMB + HTTP/SSH). L'OS est renseigné à `Windows`.
+
+### Modifié
+
+- **Confiance fondée sur les preuves, plus seulement sur la source.** Une
+  catégorie spécifique confirmée par des services/ports détectés (SMB, NetBIOS,
+  RPC, IPP, RTSP...) vaut désormais 90 % : on sait *ce qu'est* l'appareil même
+  si sa marque, déduite d'un OUI, reste incertaine. Auparavant la confiance
+  était plafonnée au palier de la source de découverte (PTR = 70 %), si bien
+  qu'un appareil dont on connaissait le nom, les services et le fabricant
+  restait affiché à 70 %. L'infobulle indique « confirmée par les services
+  détectés ».
+
 ## [1.8.2] – 2026-07-26
 ### Corrigé
 
