@@ -7,6 +7,17 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.8.1] – 2026-07-26
+### Corrigé
+
+- **Régression 1.8.0 : tous les champs des équipements vidés.** La compaction de
+  la passe de déduplication déplaçait (`std::move`) les entrées vers un tampon
+  puis ne l'échangeait avec la liste que s'il y avait eu des doublons. Sans
+  doublon (cas courant), les entrées restaient déplacées donc **vidées** : IP,
+  MAC, hostname, catégorie, tout disparaissait de l'affichage et la topologie se
+  retrouvait vide. La compaction sort maintenant immédiatement quand il n'y a
+  rien à retirer, et ne déplace les entrées que dans le cas contraire.
+
 ## [1.8.0] – 2026-07-26
 ### Corrigé
 

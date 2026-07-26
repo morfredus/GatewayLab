@@ -1436,18 +1436,20 @@ void NetworkScanner::_deduplicateLocked() {
         }
     }
 
-    // Compaction : retire les entrees fondues.
-    std::vector<NetworkDevice> kept;
-    kept.reserve(_results.size());
+    // Compaction : retire les entrees fondues. Rien a faire s'il n'y a aucun
+    // doublon -- et surtout NE PAS deplacer les elements dans ce cas : un
+    // std::move suivi d'un swap conditionnel laissait _results plein d'objets
+    // vides (tous les champs effaces) quand removed == 0.
     size_t removed = 0;
-    for (size_t i = 0; i < _results.size(); ++i) {
-        if (dead[i]) { ++removed; continue; }
-        kept.push_back(std::move(_results[i]));
-    }
-    if (removed) {
-        _results.swap(kept);
-        Log::i(TAG, "Deduplication : %u doublon(s) fusionne(s)", (unsigned)removed);
-    }
+    for (bool d : dead) if (d) ++removed;
+    if (removed == 0) return;
+
+    std::vector<NetworkDevice> kept;
+    kept.reserve(_results.size() - removed);
+    for (size_t i = 0; i < _results.size(); ++i)
+        if (!dead[i]) kept.push_back(std::move(_results[i]));
+    _results.swap(kept);
+    Log::i(TAG, "Deduplication : %u doublon(s) fusionne(s)", (unsigned)removed);
 }
 
 void NetworkScanner::_mergePersistedDevices() {
