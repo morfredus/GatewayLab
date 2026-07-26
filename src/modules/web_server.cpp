@@ -41,6 +41,31 @@ WebServerModule webSrv;
 // document designerait une interface que personne ne saurait ouvrir.
 extern morfbeacon::Emitter presence;
 
+// -----------------------------------------------------------------------------
+// API que GatewayLab OFFRE au parc, servie dans le champ « api » de /status.
+// Meme declaration que les services Linux (SelfDescription.h) : une liste
+// { methode, chemin, resume } que morfMonitor cartographie.
+//
+// Selection VOLONTAIRE des routes de lecture qui decrivent ce que l'appareil
+// observe du reseau ; les ecritures (rescan, alias, wifi, redemarrage) et les
+// pages statiques n'ont pas leur place dans une carte du parc. /status et
+// /healthz ne sont pas listees : le protocole les fait deja connaitre.
+//
+// PROGMEM (flash), pas RAM : chaine constante, memoire ESP32 comptee. Lue
+// uniquement quand on interroge /status : l'appareil reste 100 % autonome sans
+// recepteur, il ne diffuse rien de plus.
+static const char GATEWAYLAB_API_JSON[] PROGMEM =
+    "{\"base\":\"/api\",\"endpoints\":["
+      "{\"method\":\"GET\",\"path\":\"/api/status\",\"summary\":\"etat metier de la passerelle\"},"
+      "{\"method\":\"GET\",\"path\":\"/api/devices\",\"summary\":\"equipements decouverts sur le reseau\"},"
+      "{\"method\":\"GET\",\"path\":\"/api/devices/export.csv\",\"summary\":\"export CSV des equipements\"},"
+      "{\"method\":\"GET\",\"path\":\"/api/topology/root\",\"summary\":\"topologie du reseau local\"},"
+      "{\"method\":\"GET\",\"path\":\"/api/network/health\",\"summary\":\"sante du reseau\"},"
+      "{\"method\":\"GET\",\"path\":\"/api/history\",\"summary\":\"historique des scans\"},"
+      "{\"method\":\"GET\",\"path\":\"/api/diagnostics\",\"summary\":\"diagnostics reseau\"},"
+      "{\"method\":\"POST\",\"path\":\"/api/scan\",\"summary\":\"declenche un scan du reseau\"}"
+    "]}";
+
 void WebServerModule::registerScanProvider(ScanProvider p) {
     _scan    = p;
     _hasScan = true;
@@ -76,7 +101,9 @@ void WebServerModule::begin(uint16_t port) {
     _on("/status",     HTTP_GET,  [this]() {
         _server.send(200, "application/json",
                      morfbeacon::buildStatusJson(presence, "/", "GatewayLab",
-                                                 "Inventaire et topologie du reseau local."));
+                                                 "Inventaire et topologie du reseau local.",
+                                                 String(),                       // metrics : deja dans le heartbeat
+                                                 FPSTR(GATEWAYLAB_API_JSON)));    // api offerte au parc
     });
     _on("/api/status", HTTP_GET,  [this]() { _handleApiStatus(); });
     _on("/api/devices",HTTP_GET,  [this]() { _handleApiDevices(); });

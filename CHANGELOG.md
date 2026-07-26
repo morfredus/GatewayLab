@@ -7,6 +7,23 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.7.1] – 2026-07-26
+
+### Ajouté
+
+- **Déclaration de l'API dans `/status`.** GatewayLab annonce désormais, en plus
+  de son interface web, la liste de ses routes de lecture (`GET /api/status`,
+  `/api/devices`, `/api/devices/export.csv`, `/api/topology/root`,
+  `/api/network/health`, `/api/history`, `/api/diagnostics`, `POST /api/scan`)
+  sous la clé `api`, au même format que les services Linux du parc. morfMonitor
+  les cartographie sans connaître GatewayLab à l'avance.
+
+  **Rien ne change pour l'appareil seul.** L'API n'est pas une capacité du
+  heartbeat : elle ne vit que dans le document `/status`, servi à la demande.
+  Sans récepteur sur le réseau, GatewayLab scanne, inventorie et sert son
+  interface comme avant — il ne diffuse rien de plus. Liste en flash (PROGMEM).
+  Nécessite morfBeacon 0.5.1 (émetteur Arduino, re-vendoré).
+
 ## [1.7.0] – 2026-07-21
 
 ### Ajouté

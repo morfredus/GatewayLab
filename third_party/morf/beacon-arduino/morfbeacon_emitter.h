@@ -167,12 +167,24 @@ private:
 // Le heartbeat annonce la CAPACITE ; ce document en donne le DETAIL. Un service
 // qui declare « web_ui » sans servir ce bloc annonce une interface que personne
 // ne saura ouvrir.
+//
+// `apiJson` : bloc « api » deja serialise, decrivant les routes que l'appareil
+// offre au parc (meme principe que `metricsJson` -- une chaine prete a inserer,
+// pour ne pas imposer ArduinoJson a la bibliotheque). Forme attendue, identique
+// a celle de la bibliotheque Qt (describeService) :
+//     {"base":"/api","endpoints":[{"method":"GET","path":"/api/live",
+//                                  "summary":"..."}, ...]}
+// Vide => la cle « api » est absente, jamais un bloc vide. L'API n'est PAS une
+// capacite du heartbeat : elle ne vit que dans ce document, qui n'est lu qu'a la
+// demande. Un appareil sans recepteur sur le reseau n'emet donc rien de plus --
+// il repond ce detail uniquement si on l'interroge.
 // -----------------------------------------------------------------------------
 inline String buildStatusJson(const Emitter& e,
                               const String& webUiPath  = "/",
                               const String& webUiLabel = String(),
                               const String& webUiDesc  = String(),
-                              const String& metricsJson = String()) {
+                              const String& metricsJson = String(),
+                              const String& apiJson = String()) {
     const String host = WiFi.getHostname() ? String(WiFi.getHostname()) : String("esp32");
     String o = "{";
     o += "\"app\":\""     + e.appName + "\"";
@@ -190,6 +202,8 @@ inline String buildStatusJson(const Emitter& e,
             o += ",\"description\":\"" + webUiDesc + "\"";
         o += "}";
     }
+    if (apiJson.length())
+        o += ",\"api\":" + apiJson;
     o += "}";
     return o;
 }
