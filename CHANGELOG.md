@@ -7,6 +7,19 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+### Modifié
+
+- **Documentation refactorisée.** Le README embarquait toute la référence (API
+  REST complète, table exhaustive des fonctionnalités, sources d'identification,
+  structure du projet, workflow web). Il est ramené à un survol concis, et la
+  référence déménage dans des documents dédiés : `docs/API.md` (API REST),
+  `docs/FEATURES.md` (fonctionnalités exhaustives) et `docs/PROTOCOLS.md` (sources
+  d'identification, ajoutées). La structure du projet et le pipeline web étaient
+  déjà décrits dans `docs/ARCHITECTURE.md` (déduplication).
+- **README bilingue.** `README.md` (anglais) et `README.fr.md` (français) sont
+  désormais présents et miroirs l'un de l'autre, avec la ligne de bascule
+  linguistique et le badge de version.
+
 ## [1.9.2] - 2026-07-27
 ### Ajouté
 

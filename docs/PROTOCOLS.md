@@ -726,3 +726,31 @@ juste deux entrées de plus dans la table des services interrogés.
 | `239.255.255.250` | SSDP / UPnP |
 | `224.0.0.22` | IGMP (gestion des groupes multicast) |
 | `255.255.255.255` | Broadcast général |
+
+---
+
+# Sources d'identification
+
+Les informations affichées peuvent provenir de plusieurs mécanismes :
+
+| Source       | Badge UI  | Description                                                     |
+| ------------ | --------- | --------------------------------------------------------------- |
+| OUI          | -         | Fabricant déduit de l'adresse MAC (base locale `data/oui.json`) |
+| PTR          | `DNS↩`   | DNS inverse fourni par la box DHCP                              |
+| mDNS         | `mDNS`    | Annonce `.local` captée passivement                             |
+| SSDP         | `UPnP`    | Descripteur XML UPnP (M-SEARCH multicast)                       |
+| HueAPI       | `Hue`     | API Philips Hue Bridge `/api/config`                            |
+| SynologyAPI  | `DSM`     | API Synology DSM `/webapi/query.cgi`                            |
+| FreeboxAPI   | `Freebox` | API Freebox `/api_version`                                      |
+| NetBIOS      | `NetBIOS` | Node Status NetBIOS (UDP 137) - PC Windows / Samba              |
+| SNMP         | `SNMP`    | `sysDescr` SNMP (UDP 161), requête unicast ciblée (passe précise approfondie) |
+| Cast         | `Cast`    | API Google Cast `/setup/eureka_info`, requête unicast ciblée (passe précise approfondie) |
+| Sonos        | `Sonos`   | API Sonos `/xml/device_description.xml`, requête unicast ciblée (passe précise approfondie) |
+| Roku         | `Roku`    | API Roku `/query/device-info`, requête unicast ciblée (passe précise approfondie) |
+| SamsungTV    | `Samsung` | API Samsung Smart TV `/api/v2/`, requête unicast ciblée (passe précise approfondie) |
+| MQTT         | `MQTT`    | Broker MQTT (port 1883), CONNECT + topics `$SYS/broker/*`, requête unicast ciblée (passe précise approfondie) |
+| DHCP         | `DHCP`    | Hostname résolu via fingerprinting DHCP passif (option 12, UDP 67), écoute continue sans requête |
+| Self         | `ESP32`   | Informations de l'ESP32 lui-même                                |
+
+---
+
