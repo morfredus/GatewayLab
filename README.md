@@ -130,7 +130,7 @@ Guide développeur : voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 | Découverte NetBIOS       | Node Status (UDP 137) - hostnames PC Windows / Samba              |
 | Scan de ports TCP        | 14 ports, bannières HTTP/SSH/FTP, détection API IoT (Shelly/Tasmota/FritzBox) |
 | Inventaire réseau        | IP, nom, fabricant, modèle, catégorie, OS, services, ports, MAC, source |
-| Nom humain du matériel   | Intitulé déduit (modèle/fabricant/catégorie) affiché au-dessus du hostname brut quand celui-ci reste générique, repris dans l'export JSON (`hostnameDisplay`) — l'export CSV garde le hostname brut sur une seule ligne |
+| Nom humain du matériel   | Intitulé déduit (modèle/fabricant/catégorie) affiché au-dessus du hostname brut quand celui-ci reste générique, repris dans l'export JSON (`hostnameDisplay`) - l'export CSV garde le hostname brut sur une seule ligne |
 | Auto-détection ESP32     | Le Gateway apparaît dans sa propre liste                          |
 | Identification OUI       | Base externalisée générée automatiquement                         |
 | Persistance LittleFS     | Statistiques online/offline, état conservé entre redémarrages     |
@@ -141,29 +141,29 @@ Guide développeur : voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 | Détection des changements | Comparaison automatique entre deux scans (IP, fabricant, catégorie, ports...) |
 | Sauvegarde / restauration | Export et import JSON complet de l'inventaire et de l'historique |
 | Réinitialisation des équipements | RAZ de l'inventaire, avec options de conservation (alias, fabricant connu) |
-| Réinterrogation ciblée   | Rafraîchit un seul équipement (IP) sans relancer un scan complet, en deux passes au choix — rapide (1-3s, ARP/ICMP + PTR DNS) ou approfondie (<3s si rien d'exploitable, sinon quelques secondes) — qui n'interrogent jamais que l'IP visée (aucun SSDP, DNS-SD ou WS-Discovery global) ; tâche asynchrone avec barre de progression et journal d'enrichissement affichés sous la ligne de l'équipement |
+| Réinterrogation ciblée   | Rafraîchit un seul équipement (IP) sans relancer un scan complet, en deux passes au choix - rapide (1-3s, ARP/ICMP + PTR DNS) ou approfondie (<3s si rien d'exploitable, sinon quelques secondes) - qui n'interrogent jamais que l'IP visée (aucun SSDP, DNS-SD ou WS-Discovery global) ; tâche asynchrone avec barre de progression et journal d'enrichissement affichés sous la ligne de l'équipement |
 | Sous-catégorie (`type`)  | Précision du type d'équipement au sein d'une catégorie (ex: Caméra, Imprimante) |
 | Score de confiance unique | Calcul prudent (minimum des signaux fabricant/catégorie), avec détail par champ au survol |
-| Sondage SNMP             | `sysDescr` (UDP 161) en requête unicast ciblée, lors de la passe précise approfondie (profil Imprimante/Inconnu avec service exploitable) — fabricant/modèle en texte clair |
-| API appareils multimédia | Cast, Sonos, Roku, Samsung Smart TV — sondées en requête unicast ciblée, lors de la passe précise approfondie (profil Streaming/Domotique avec service exploitable) |
+| Sondage SNMP             | `sysDescr` (UDP 161) en requête unicast ciblée, lors de la passe précise approfondie (profil Imprimante/Inconnu avec service exploitable) - fabricant/modèle en texte clair |
+| API appareils multimédia | Cast, Sonos, Roku, Samsung Smart TV - sondées en requête unicast ciblée, lors de la passe précise approfondie (profil Streaming/Domotique avec service exploitable) |
 | Sondage broker MQTT      | CONNECT anonyme + topics `$SYS/broker/version`/`clients/connected`, requête TCP unicast ciblée, lors de la passe précise approfondie (profil Domotique/Inconnu avec port 1883 ouvert) |
-| Fingerprinting DHCP passif | Écoute continue des paquets DHCPDISCOVER/REQUEST (UDP 67) des autres équipements — hostname (option 12) et OS déclaré via vendor class (option 60), sans jamais émettre de requête ni ajouter de coût au scan |
+| Fingerprinting DHCP passif | Écoute continue des paquets DHCPDISCOVER/REQUEST (UDP 67) des autres équipements - hostname (option 12) et OS déclaré via vendor class (option 60), sans jamais émettre de requête ni ajouter de coût au scan |
 | Découverte Matter (DNS-SD) | Détection des appareils Matter commissionnables (`_matterc._udp`) |
 | Filtrage de l'historique | Filtres par type d'événement (nouveau, reconnexion, déconnexion, changement) et par favoris uniquement |
 | Effacement de l'historique | Vide le journal après téléchargement automatique d'une sauvegarde JSON |
 | OTA Web                  | Upload firmware depuis le navigateur                              |
 | ArduinoOTA               | Mise à jour réseau depuis PlatformIO                              |
 | Favoris et notes d'inventaire | Marquer un équipement en favori et lui attacher des notes libres datées (entretien, firmware, etc.) |
-| Cartouche diagnostics    | Heap libre, PSRAM libre, espace LittleFS, temps moyen d'un scan / d'une passe précise — affichée sur la page Accueil |
-| NeoPixel d'état          | Bleu pulsé (démarrage), bleu fixe (prêt), vert clignotant (scan), jaune clignotant (nouvel équipement), violet (portail WiFi), cyan (sauvegarde) — luminosité réglable depuis la page Système, persistée |
+| Cartouche diagnostics    | Heap libre, PSRAM libre, espace LittleFS, temps moyen d'un scan / d'une passe précise - affichée sur la page Accueil |
+| NeoPixel d'état          | Bleu pulsé (démarrage), bleu fixe (prêt), vert clignotant (scan), jaune clignotant (nouvel équipement), violet (portail WiFi), cyan (sauvegarde) - luminosité réglable depuis la page Système, persistée |
 | Bouton BOOT               | Appui court = lance un scan, maintien 3 s = sauvegarde immédiate |
 | Filtres équipements      | Filtre par type, fabricant, Favoris, En Ligne, Nouveau (détecté depuis moins de 24h) (page Équipements, côté client) |
-| Menu Données              | Sur la page Équipements : Export CSV / Export JSON (inventaire) uniquement — la Sauvegarde / Restauration des paramètres de fonctionnement a été déplacée sur la page Système (Patch 1) |
-| Sauvegarde des paramètres | Réseaux WiFi enregistrés, luminosité NeoPixel, état et fréquence de la surveillance automatique (`/api/system/backup`, `/api/system/restore`) — distincte de la sauvegarde de l'inventaire, accessible depuis la page Système (Patch 1) |
+| Menu Données              | Sur la page Équipements : Export CSV / Export JSON (inventaire) uniquement - la Sauvegarde / Restauration des paramètres de fonctionnement a été déplacée sur la page Système (Patch 1) |
+| Sauvegarde des paramètres | Réseaux WiFi enregistrés, luminosité NeoPixel, état et fréquence de la surveillance automatique (`/api/system/backup`, `/api/system/restore`) - distincte de la sauvegarde de l'inventaire, accessible depuis la page Système (Patch 1) |
 | Page Topologie           | Vue simplifiée (passerelle/routeurs vs reste des équipements), première étape avant la cartographie graphique (roadmap v0.4.x) |
 | Mode dégradé mémoire     | Heap critique (< `HEAP_CRITICAL_BYTES`) → refuse scans/rescans/notes/historique/config sans redémarrer ; inventaire déjà acquis consultable ; redémarrage manuel depuis la page Système |
 | Bornes mémoire           | Listes/historique/notes plafonnés (`MAX_TRACKED_DEVICES`, `MAX_HISTORY_EVENTS`, `MAX_NOTES_PER_DEVICE`, `MAX_NOTE_LENGTH`) pour garantir un fonctionnement stable sur la durée |
-| Surveillance continue    | Sweep ARP léger périodique (`serviceMonitor()`), activable/désactivable et fréquence configurable de 5 min à 1 h depuis la page Système (persisté NVS, Patch 1) — détection de présence uniquement : aucun scan rapide/approfondi automatique, aucune découverte SSDP/DNS-SD/SNMP lancée hors scan complet ou rescan manuel (Patch 2) |
+| Surveillance continue    | Sweep ARP léger périodique (`serviceMonitor()`), activable/désactivable et fréquence configurable de 5 min à 1 h depuis la page Système (persisté NVS, Patch 1) - détection de présence uniquement : aucun scan rapide/approfondi automatique, aucune découverte SSDP/DNS-SD/SNMP lancée hors scan complet ou rescan manuel (Patch 2) |
 | Score de stabilité       | Compteurs de présence/absence/reconnexion par équipement, score 0-100% pour les équipements fixes (équipements mobiles non pénalisés), évènements d'historique (`reconnected`, `disappeared`, `identification_improved`, `mobile_left`, `mobile_returned`, `offline_brief`) |
 | Historique sans bruit (Patch 1.1.1) | Absences courtes (<30 min) d'un mobile journalisées (`offline_brief`) en plus du `reconnected` qui suit ; chaînes de reconnexions sans déconnexion explicite regroupées sur la page Historique en une seule entrée « Connexion instable détectée » |
 | Classification mobile/fixe | Détection automatique par catégorie/type, override manuel via `POST /api/mobility` |
@@ -177,7 +177,7 @@ Guide développeur : voir [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 ### 1. Configurer le WiFi
 
 **Utilisateur final** (ESP32 déjà flashé) : aucune
-étape requise — connectez-vous au point d'accès `GatewayLab-Setup` au premier
+étape requise - connectez-vous au point d'accès `GatewayLab-Setup` au premier
 démarrage et suivez le portail de configuration. Détail complet dans [INSTALLATION.md](INSTALLATION.md)
 Fonctionnement avancé : docs/WIFI_SETUP.md
 
@@ -239,7 +239,7 @@ USB est également diffusé en broadcast UDP sur le sous-réseau local, sur le
 **port 2323** (configurable via `TELNET_LOG_PORT` dans `include/app_config.h`).
 Ouvrez un terminal comme [YAT](https://sourceforge.net/projects/y-a-terminal/)
 en mode "Socket / UDP Socket" en écoute sur le port `2323` pour voir
-exactement le même flux que le moniteur série — lecture seule, aucune
+exactement le même flux que le moniteur série - lecture seule, aucune
 connexion à établir, aucune commande interprétée côté ESP32.
 
 ---
@@ -287,15 +287,15 @@ gatewaylab-V1/
 │   └── web_interface_topology.h # Généré depuis web_src/topology.html
 │
 ├── web_src/
-│   ├── index.html                # Page d'accueil — HTML uniquement (source)
+│   ├── index.html                # Page d'accueil - HTML uniquement (source)
 │   ├── index.js                  # Script de la page d'accueil (source)
-│   ├── scan.html                 # Page équipements — HTML uniquement (source)
+│   ├── scan.html                 # Page équipements - HTML uniquement (source)
 │   ├── scan.js                   # Script de la page équipements (source)
-│   ├── history.html              # Page historique — HTML uniquement (source)
+│   ├── history.html              # Page historique - HTML uniquement (source)
 │   ├── history.js                # Script de la page historique (source)
-│   ├── wifi.html                 # Page Système (WiFi, OTA, état système) — HTML uniquement (source)
+│   ├── wifi.html                 # Page Système (WiFi, OTA, état système) - HTML uniquement (source)
 │   ├── wifi.js                   # Script de la page Système (source)
-│   ├── topology.html             # Page Topologie — HTML uniquement (source)
+│   ├── topology.html             # Page Topologie - HTML uniquement (source)
 │   ├── topology.js               # Script de la page Topologie (source)
 │   ├── menu.html                 # Bloc <nav> partagé, inliné dans toutes les pages (source)
 │   ├── styles.css                # Feuille de style unique (injectée inline par minify_web.py)
@@ -396,7 +396,7 @@ HTML est défini directement dans `src/modules/wifi_manager.cpp`, car elle
 doit pouvoir s'afficher avant toute connexion réseau, indépendamment du
 pipeline `web_src/`.
 
-Les headers générés sont versionnés dans Git — aucun pre-script PlatformIO requis.
+Les headers générés sont versionnés dans Git - aucun pre-script PlatformIO requis.
 
 ### Outils disponibles
 
@@ -480,12 +480,12 @@ disposant d'un alias et/ou d'un fabricant identifié.
 
 Réinterroge un seul équipement (paramètre `ip`) sans relancer un scan
 complet, et sans jamais relancer de découverte multicast réseau (aucun
-SSDP, DNS-SD ou WS-Discovery global n'est lancé depuis cette route — ce
+SSDP, DNS-SD ou WS-Discovery global n'est lancé depuis cette route - ce
 sont des protocoles qui sondent tout le sous-réseau et ne peuvent pas être
 restreints à une IP). Sonde ARP/ICMP ciblée, puis résolution de nom ;
 paramètre `mode` optionnel :
 - `quick` (par défaut, 1-3s) : ARP/ICMP, PTR DNS, mise à jour du
-  hostname, vérification de présence — rien d'autre.
+  hostname, vérification de présence - rien d'autre.
 - `deep` (<3s si rien d'exploitable, sinon quelques secondes) : scan TCP
   unicast des ports de la cible (`kRescanTargetPorts`). Si aucun
   port/service exploitable n'est trouvé, la passe s'arrête immédiatement.
@@ -495,7 +495,7 @@ paramètre `mode` optionnel :
   unicast directe sur l'IP visée : NetBIOS, API multimédia
   (Cast/Sonos/Roku/Samsung) et SNMP.
 
-Exécuté de façon asynchrone sur une tâche FreeRTOS dédiée — voir
+Exécuté de façon asynchrone sur une tâche FreeRTOS dédiée - voir
 `GET /api/devices/rescan/status` pour suivre la progression. Retourne une
 erreur 409 si un scan complet ou une autre passe précise est déjà en
 cours, ou 400 si l'IP est inconnue.
@@ -533,12 +533,12 @@ et `favorite` : `1` pour marquer, `0` pour démarquer).
 ### POST /api/notes
 
 Ajoute une note libre datée à un équipement (paramètres `mac` ou `ip`, et
-`text`). Le timestamp (`ts`, epoch NTP) est attribué côté serveur — `0` si
+`text`). Le timestamp (`ts`, epoch NTP) est attribué côté serveur - `0` si
 l'horloge n'est pas encore synchronisée.
 
 ### DELETE /api/notes
 
-Supprime une note d'un équipement (paramètres `mac` ou `ip`, et `ts` —
+Supprime une note d'un équipement (paramètres `mac` ou `ip`, et `ts` -
 le timestamp de la note à supprimer).
 
 ### GET /api/diagnostics
@@ -592,17 +592,17 @@ exactement une ligne physique : tout retour à la ligne présent dans une
 valeur (note libre saisie par l'utilisateur, hostname...) est aplati en
 espace avant export, pour rester lisible même par un tableur ou un script
 qui ne respecte pas les guillemets RFC4180. Utile pour une exploitation dans
-un tableur ou un script externe — pour une sauvegarde/restauration complète
+un tableur ou un script externe - pour une sauvegarde/restauration complète
 (format JSON, dates en epoch), utiliser `/api/backup`. Le fichier contient un
 BOM UTF-8 en tête pour un affichage correct des accents dans Excel.
 
 ### GET /api/system/backup
 
 Télécharge une sauvegarde JSON des **paramètres de fonctionnement du
-projet** — distincte de `/api/backup` (qui sauvegarde l'inventaire des
+projet** - distincte de `/api/backup` (qui sauvegarde l'inventaire des
 équipements) : réseaux WiFi enregistrés (SSID + mot de passe), luminosité
 NeoPixel, état et fréquence de la surveillance automatique du réseau
-(`monitorEnabled`, `monitorIntervalMinutes` — Patch 1), et nom mDNS à titre
+(`monitorEnabled`, `monitorIntervalMinutes` - Patch 1), et nom mDNS à titre
 informatif (fixé à la compilation via `MDNS_HOSTNAME`, non restaurable).
 Accessible depuis la carte « Sauvegarde / Restauration » de la page Système.
 
@@ -626,7 +626,7 @@ Retourne l'état du mode dégradé mémoire :
 }
 ```
 
-`degraded=true` quand le heap libre est tombé sous `HEAP_CRITICAL_BYTES` —
+`degraded=true` quand le heap libre est tombé sous `HEAP_CRITICAL_BYTES` -
 les nouveaux scans, rescans, notes, journalisation d'historique et
 modifications de configuration sont alors refusés jusqu'à ce que la mémoire
 se rétablisse (`HEAP_RECOVERY_MARGIN`) ou qu'un redémarrage manuel soit
@@ -635,7 +635,7 @@ effectué.
 ### POST /api/system/restart
 
 Redémarre l'ESP32 immédiatement (déclenché manuellement depuis le bouton
-« Redémarrer l'appareil » de la page Système — aucun redémarrage
+« Redémarrer l'appareil » de la page Système - aucun redémarrage
 automatique n'est déclenché par le firmware lui-même).
 
 ### POST /update
@@ -699,7 +699,7 @@ Définit l'état de la surveillance continue : paramètres optionnels `enabled`
 (`1`/`0`/`true`/`false`) et `minutes` (borné à 1-60 côté API ; l'interface
 propose 5/10/15/30/60 min), persistés en NVS. Lorsque `enabled=false`, la
 surveillance ne fait plus aucun tick (Patch 1). Quand elle est active, elle
-se limite à un sweep ARP de détection de présence — aucun scan rapide ou
+se limite à un sweep ARP de détection de présence - aucun scan rapide ou
 approfondi n'est plus déclenché automatiquement (Patch 2) ; pour une
 identification complète, lancer un scan manuel (`/scan`) ou une passe
 précise sur un équipement (`/api/devices/rescan`).
@@ -712,7 +712,7 @@ Les informations affichées peuvent provenir de plusieurs mécanismes :
 
 | Source       | Badge UI  | Description                                                     |
 | ------------ | --------- | --------------------------------------------------------------- |
-| OUI          | —         | Fabricant déduit de l'adresse MAC (base locale `data/oui.json`) |
+| OUI          | -         | Fabricant déduit de l'adresse MAC (base locale `data/oui.json`) |
 | PTR          | `DNS↩`   | DNS inverse fourni par la box DHCP                              |
 | mDNS         | `mDNS`    | Annonce `.local` captée passivement                             |
 | SSDP         | `UPnP`    | Descripteur XML UPnP (M-SEARCH multicast)                       |
@@ -762,8 +762,8 @@ Pour les fonctionnalités prévues, consulter `ROADMAP.md`.
 
 ## Contraintes de développement
 
-- `include/board_config.h` — ne pas modifier
-- `include/secrets.h` — ne jamais committer
+- `include/board_config.h` - ne pas modifier
+- `include/secrets.h` - ne jamais committer
 - CSS modifiable uniquement dans `web_src/styles.css`
 - Largeur de page : toutes les pages utilisent la classe `page-scan`
   (max-width 960px) pour une largeur uniforme ; seule la page Équipements

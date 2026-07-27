@@ -1,4 +1,4 @@
-# Changelog — Gateway Lab
+# Changelog - Gateway Lab
 
 Toutes les modifications notables sont documentées ici.
 Format : [Semantic Versioning](https://semver.org/)
@@ -7,7 +7,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
-## [1.9.2] – 2026-07-27
+## [1.9.2] - 2026-07-27
 ### Ajouté
 
 - **Trois OUI ajoutés à la table fabricants** : `00:51:ED` et `B0:19:21`
@@ -16,7 +16,7 @@ Format : [Semantic Versioning](https://semver.org/)
   inconnu : ils restaient donc non identifiés. Renseignés d'après les
   équipements réels du réseau.
 
-## [1.9.1] – 2026-07-27
+## [1.9.1] - 2026-07-27
 ### Corrigé
 
 - **GatewayLab s'affichait « hors ligne » de lui-même.** L'auto-entrée (l'ESP32
@@ -33,7 +33,7 @@ Format : [Semantic Versioning](https://semver.org/)
   L'enrichissement par hostname prime désormais sur ces marqueurs : `iphone` →
   Apple / Mobile / iOS, etc. Les mobiles Apple sont aussi étiquetés `iOS`/`iPadOS`.
 
-## [1.9.0] – 2026-07-27
+## [1.9.0] - 2026-07-27
 ### Corrigé
 
 - **PC Windows bloqués en « Identification en cours ».** Le classement ne
@@ -55,7 +55,7 @@ Format : [Semantic Versioning](https://semver.org/)
   restait affiché à 70 %. L'infobulle indique « confirmée par les services
   détectés ».
 
-## [1.8.2] – 2026-07-26
+## [1.8.2] - 2026-07-26
 ### Corrigé
 
 - **Plantage LittleFS sous accès concurrent (`assert lfs_file_close`).** Le
@@ -70,7 +70,7 @@ Format : [Semantic Versioning](https://semver.org/)
   cassée, ni interblocage : les fonctions fichier ne prennent jamais le mutex du
   scanner, donc aucun ordre de verrous opposé.
 
-## [1.8.1] – 2026-07-26
+## [1.8.1] - 2026-07-26
 ### Corrigé
 
 - **Régression 1.8.0 : tous les champs des équipements vidés.** La compaction de
@@ -81,7 +81,7 @@ Format : [Semantic Versioning](https://semver.org/)
   retrouvait vide. La compaction sort maintenant immédiatement quand il n'y a
   rien à retirer, et ne déplace les entrées que dans le cas contraire.
 
-## [1.8.0] – 2026-07-26
+## [1.8.0] - 2026-07-26
 ### Corrigé
 
 - **Changement d'IP non géré : fantômes et doublons.** L'identité d'un appareil
@@ -103,7 +103,7 @@ Format : [Semantic Versioning](https://semver.org/)
   Nouveau champ `previousIps` dans `/devices.json` et l'API `/api/devices` ;
   migration douce (champ absent d'un ancien fichier = vide).
 
-## [1.7.1] – 2026-07-26
+## [1.7.1] - 2026-07-26
 
 ### Ajouté
 
@@ -117,10 +117,10 @@ Format : [Semantic Versioning](https://semver.org/)
   **Rien ne change pour l'appareil seul.** L'API n'est pas une capacité du
   heartbeat : elle ne vit que dans le document `/status`, servi à la demande.
   Sans récepteur sur le réseau, GatewayLab scanne, inventorie et sert son
-  interface comme avant — il ne diffuse rien de plus. Liste en flash (PROGMEM).
+  interface comme avant - il ne diffuse rien de plus. Liste en flash (PROGMEM).
   Nécessite morfBeacon 0.5.1 (émetteur Arduino, re-vendoré).
 
-## [1.7.0] – 2026-07-21
+## [1.7.0] - 2026-07-21
 
 ### Ajouté
 
@@ -129,7 +129,7 @@ Format : [Semantic Versioning](https://semver.org/)
   `web_ui`.
 
   GatewayLab n'était trouvé que par sonde réseau, ce qui suppose de connaître son
-  nom mDNS à l'avance — l'inverse d'une découverte. Il devient découvrable par le
+  nom mDNS à l'avance - l'inverse d'une découverte. Il devient découvrable par le
   même mécanisme que les services Linux et Windows du parc, et un observateur
   peut proposer un lien vers son interface sans rien connaître de GatewayLab.
 
@@ -176,7 +176,7 @@ Format : [Semantic Versioning](https://semver.org/)
 - **Miroir du moniteur série : TCP remplacé par UDP broadcast**
   (`src/modules/telnet_log.h/.cpp`) : malgré le correctif de course du
   patch précédent, le texte restait invisible sous YAT (apparition brève
-  puis effacement) — comportement lié au cycle de connexion/déconnexion
+  puis effacement) - comportement lié au cycle de connexion/déconnexion
   TCP du serveur (`WiFiServer`/`WiFiClient`, accept/stop à chaque
   reconnexion de YAT). Le module diffuse désormais chaque ligne de log en
   **broadcast UDP** sur le sous-réseau local, port `2323` inchangé
@@ -199,11 +199,11 @@ Format : [Semantic Versioning](https://semver.org/)
   appelé à la fois depuis la boucle principale (core 1) et depuis les
   tâches de scan réseau (core 0, `xTaskCreatePinnedToCore` dans
   `network_scanner.cpp`), qui écrivaient toutes deux sur le même socket
-  `WiFiClient` sans synchronisation — les écritures concurrentes se
+  `WiFiClient` sans synchronisation - les écritures concurrentes se
   corrompaient mutuellement, et `loop()` pouvait réassigner `_client`
   pendant qu'une écriture était en cours. Ajout d'un mutex FreeRTOS
   (`SemaphoreHandle_t`) dans `TelnetLog` (`src/modules/telnet_log.h/.cpp`)
-  protégeant `write()` et `loop()` (accept/déconnexion) — verrou court
+  protégeant `write()` et `loop()` (accept/déconnexion) - verrou court
   (timeout 20 ms côté écriture) pour ne jamais bloquer le scan en cas de
   client lent.
 
@@ -221,7 +221,7 @@ Format : [Semantic Versioning](https://semver.org/)
   sur `<IP>:2323` à la place du câble USB, en conservant exactement le même
   format de ligne que le moniteur série. Lecture seule (aucune commande
   envoyée par le client n'est interprétée par l'ESP32), un seul client à la
-  fois — une nouvelle connexion remplace silencieusement l'ancienne pour
+  fois - une nouvelle connexion remplace silencieusement l'ancienne pour
   éviter de garder un socket mort si le terminal a été fermé brutalement.
   Démarre après la connexion WiFi (`main.cpp`), n'affecte pas le port série
   USB qui reste actif en parallèle.
@@ -253,7 +253,7 @@ Format : [Semantic Versioning](https://semver.org/)
   (caméra IP Xiaomi) n'était pas dans la table OUI embarquée et laissait
   l'équipement en « Identification en cours ». Ajouté en catégorie `Camera`
   / type `IP Camera`, distinct des préfixes Xiaomi déjà connus qui
-  correspondent à des téléphones (catégorie `Mobile`) — un même fabricant
+  correspondent à des téléphones (catégorie `Mobile`) - un même fabricant
   peut avoir des préfixes OUI différents selon la gamme de produits, ce
   n'est pas une erreur de doublon. Un nouveau scan (complet ou passe
   précise) reclasse l'équipement déjà connu portant ce préfixe.
@@ -277,7 +277,7 @@ Format : [Semantic Versioning](https://semver.org/)
   (`network_scanner.cpp`, `_updateHistory()`) : la « passe précise » lancée
   depuis l'icône ⟲ d'un équipement (page Équipement) passe par le même code
   que le scan complet et incrémentait donc `seenCount` à chaque clic, en plus
-  des vrais scans réseau — un utilisateur relançant plusieurs passes
+  des vrais scans réseau - un utilisateur relançant plusieurs passes
   rapprochées sur le même équipement (par exemple pour vérifier un
   changement) voyait le compteur grimper bien plus vite que le nombre de
   scans réellement effectués. Ajout d'une fenêtre anti-doublon de 60
@@ -286,7 +286,7 @@ Format : [Semantic Versioning](https://semver.org/)
   réincrémenté, car ce n'est pas une nouvelle "visibilité" distincte. Le
   correctif précédent (1.4.8, suppression de l'incrément dans
   `_monitorTick()`) reste en place et nécessite toujours un flashage à jour
-  du firmware pour prendre effet — si l'ancien firmware tourne encore, le
+  du firmware pour prendre effet - si l'ancien firmware tourne encore, le
   compteur restera incohérent indépendamment de ce correctif.
 
 ## [1.4.9] - 2026-06-29
@@ -304,12 +304,12 @@ Format : [Semantic Versioning](https://semver.org/)
   plupart des installations** (`topology.html`, `_discoverTopologyViaSnmp()`
   côté firmware, inchangé dans ce patch) : un scan ARP/SSDP/mDNS ne peut
   fondamentalement pas savoir à quel répéteur WiFi physique un appareil est
-  associé — cette information n'est connue que de l'AP/répéteur lui-même.
+  associé - cette information n'est connue que de l'AP/répéteur lui-même.
   Le seul mécanisme de détection automatique disponible (interrogation de
   la table de pontage SNMP, `dot1dTpFdbTable`) ne fonctionne que si le
   répéteur expose un agent SNMP en lecture publique, ce qui est rare sur le
   matériel mesh grand public (TP-Link Deco, Netgear Orbi, eero, Linksys
-  Velop…) — ces répéteurs n'exposant aucune API locale standard permettant
+  Velop…) - ces répéteurs n'exposant aucune API locale standard permettant
   de lire leur table de clients. Sans cette donnée, l'équipement reste par
   défaut rattaché à la racine et seul le glisser-déposer manuel (déjà
   disponible) permet de corriger l'affichage ; ce rattachement manuel est
@@ -323,10 +323,10 @@ Format : [Semantic Versioning](https://semver.org/)
 ### Corrige
 
 - **Compteur « vu Nx » (`seenCount`) toujours incohérent après le correctif
-  1.4.5 — incrémenté par la surveillance continue en plus des scans**
+  1.4.5 - incrémenté par la surveillance continue en plus des scans**
   (`network_scanner.cpp`, `_updateHistory()`, `_monitorTick()`) : le
   correctif 1.4.5 a bien réinitialisé `online` entre deux sweeps, mais
-  `seenCount` était en réalité incrémenté à *deux* endroits distincts —
+  `seenCount` était en réalité incrémenté à *deux* endroits distincts -
   une fois par scan complet déclenché par l'utilisateur (`_run()` via
   `_updateHistory()`), et une seconde fois à chaque tick de la
   surveillance continue en arrière-plan (`_monitorTick()`, toutes les
@@ -335,7 +335,7 @@ Format : [Semantic Versioning](https://semver.org/)
   s'étaient glissés entre chaque scan et le compteur affichait « vu 25x »
   au lieu de « vu 5x ». Correction : `seenCount` n'est désormais incrémenté
   que dans `_updateHistory()` (scans complets), plus jamais dans
-  `_monitorTick()` — la surveillance continue met toujours à jour
+  `_monitorTick()` - la surveillance continue met toujours à jour
   `presenceCount`, `lastSeenEpoch`, les compteurs de reconnexion/stabilité
   et `totalOnlineSeconds`/`totalOfflineSeconds`, mais ne touche plus à
   `seenCount`.
@@ -351,7 +351,7 @@ Format : [Semantic Versioning](https://semver.org/)
   équipements déjà devinés « Router »/répéteur/point d'accès via leur
   hostname DHCP ou leur réponse SSDP. La plupart des répéteurs mesh grand
   public (Deco, Orbi, eero, etc.) ne sont pas reconnus par cette heuristique
-  — hostname générique ou absent — et n'étaient donc jamais interrogés en
+  - hostname générique ou absent - et n'étaient donc jamais interrogés en
   SNMP : leurs clients restaient rattachés par défaut à la racine. La
   découverte interroge désormais tout équipement en ligne (hors la
   passerelle ESP32 elle-même) ; répondre avec une table de pontage non vide
@@ -361,7 +361,7 @@ Format : [Semantic Versioning](https://semver.org/)
   classé génériquement se voit également étiqueté `Point d'accès /
   Répéteur (détecté via SNMP)` pour rester cohérent avec l'affichage de la
   page Topologie (v1.4.6). Reste sans effet pour les répéteurs qui
-  n'exposent aucun agent SNMP en lecture publique — le rattachement manuel
+  n'exposent aucun agent SNMP en lecture publique - le rattachement manuel
   par glisser-déposer demeure alors la seule solution.
 
 ## [1.4.6] - 2026-06-29
@@ -388,7 +388,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 - **Compteur « vu X fois » (`seenCount`) incohérent et filtre « En ligne »
   toujours actif** (`network_scanner.cpp`) : l'état `online` d'un équipement
-  n'était jamais remis à `false` entre deux scans — `_readArpTable()` ne fait
+  n'était jamais remis à `false` entre deux scans - `_readArpTable()` ne fait
   que positionner `online = true` quand l'appareil répond, mais rien ne
   réinitialisait cet état avant le sweep suivant. Un équipement détecté une
   seule fois restait donc considéré « en ligne » indéfiniment, faussant le
@@ -402,7 +402,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 - **Filtre « Nouveau » sur la page Équipements** (`scan.html`, `scan.js`,
   `network_scanner.cpp`) : un nouveau champ `isNew` est calculé côté firmware
-  (`resultsToJson()`) à partir de `firstSeenEpoch` — un équipement est
+  (`resultsToJson()`) à partir de `firstSeenEpoch` - un équipement est
   considéré « Nouveau » pendant les 24h suivant sa première détection. Une
   case à cocher dédiée permet de filtrer sur ce statut, et un badge
   « Nouveau » est affiché à côté du nom de l'équipement concerné.
@@ -417,7 +417,7 @@ Format : [Semantic Versioning](https://semver.org/)
 - **Page `/debug` : numéro de boot affiché dans le titre incohérent avec le
   corps de l'entrée** (`debug.js`) : le titre calculait un rang relatif
   (`total - index`, position dans la liste affichée) tandis que le corps
-  affichait `bootCount`, le compteur absolu persisté en NVS — les deux
+  affichait `bootCount`, le compteur absolu persisté en NVS - les deux
   pouvaient diverger (ex. "Boot #10" en titre, "Boot #16" dans le détail
   de la même entrée). Le titre utilise désormais `bootCount` partout.
 - **Heap/uptime à 0 o affichés pour un redémarrage volontaire (OTA)**
@@ -461,7 +461,7 @@ Format : [Semantic Versioning](https://semver.org/)
   évaluer la fréquence des reboots. Deux sources, choisies par ordre de
   fiabilité : `resetEpoch`, capturé au dernier battement périodique (30 s)
   avant la coupure (le plus proche possible de l'instant réel de
-  l'évènement) ; à défaut, `bootEpoch`, lu dès le démarrage suivant — cela
+  l'évènement) ; à défaut, `bootEpoch`, lu dès le démarrage suivant - cela
   fonctionne dès l'instant T puisque l'horloge interne de l'ESP32
   (`time(nullptr)`) n'est remise à zéro que par une coupure d'alimentation
   ou un reset franc, pas par un redémarrage logiciel/crash/watchdog. Si
@@ -523,14 +523,14 @@ Format : [Semantic Versioning](https://semver.org/)
   `SnmpScanner::walkBridgeMacTable`). Quand un équipement en amont expose un
   agent SNMP en lecture publique, chaque MAC trouvée dans sa table de
   pontage lui est automatiquement rattachée (`topologyParent`), affranchissant
-  l'utilisateur du glisser-déposer manuel pour ces équipements — qu'ils
+  l'utilisateur du glisser-déposer manuel pour ces équipements - qu'ils
   soient en mode routeur ou en mode point d'accès transparent. Un nouveau
   drapeau `topologyParentAuto` distingue un rattachement déduit
   automatiquement d'un rattachement déclaré manuellement : ce dernier n'est
   jamais écrasé par la découverte SNMP, qui ne complète/rafraîchit que les
   entrées encore vides ou elles-même automatiques. Sweep périodique (30 min
   par défaut, `TOPOLOGY_SNMP_SWEEP_INTERVAL_MINUTES`), entièrement best-effort
-  et silencieux si aucun équipement ne répond — c'est le cas de la plupart
+  et silencieux si aucun équipement ne répond - c'est le cas de la plupart
   des répéteurs mesh grand public (TP-Link Deco, Orbi, eero…) qui n'exposent
   pas d'agent SNMP. Sur la carte de topologie, un rattachement déduit par
   SNMP est désormais affiché avec un trait pointillé (trait plein = manuel ou
@@ -576,7 +576,7 @@ Format : [Semantic Versioning](https://semver.org/)
   suffixe de version n'avait pas sa place dans le nom). Mis à jour partout :
   titres des pages web, en-tête de l'interface, `User-Agent` HTTP émis par
   les scanners (`port_scanner.cpp`, `media_api_scanner.cpp`, `ssdp_scanner.cpp`),
-  nom mDNS (`MDNS_HOSTNAME`, désormais `gatewaylab` — accessible via
+  nom mDNS (`MDNS_HOSTNAME`, désormais `gatewaylab` - accessible via
   `http://gatewaylab.local`), `PROJECT_NAME` (`platformio.ini`), et
   documentation (`README.md`, `ROADMAP.md`, `INSTALLATION.md`,
   `CONTRIBUTING.md`, `docs/*.md`). Les entrées d'historique de ce fichier
@@ -593,7 +593,7 @@ Format : [Semantic Versioning](https://semver.org/)
   classés « Point d'accès / Répéteur mesh ».
 - **Rattachement manuel des équipements WiFi** à leur point d'accès/répéteur
   via glisser-déposer directement sur la carte SVG (un scan ARP/SSDP seul ne
-  peut pas déterminer à quel répéteur un appareil WiFi est relié) — persisté
+  peut pas déterminer à quel répéteur un appareil WiFi est relié) - persisté
   par équipement (`topologyParent`, `NetworkScanner::setTopologyParent`).
 - **Racine de l'arbre configurable** : par défaut la box opérateur (catégorie
   `Router`) est choisie automatiquement plutôt que l'ESP32 lui-même
@@ -635,7 +635,7 @@ Format : [Semantic Versioning](https://semver.org/)
   `disappeared`, `mobile_left`, ou désormais `offline_brief`), ils sont
   fusionnés dans l'affichage en une seule entrée « ⚠️ Connexion instable
   détectée », avec le nombre de reconnexions et la fenêtre de temps
-  concernée — au lieu d'empiler des "Reconnecté" sans cause visible. Si une
+  concernée - au lieu d'empiler des "Reconnecté" sans cause visible. Si une
   déconnexion (même discrète) existe entre deux reconnexions, aucune fusion
   n'a lieu : chaque événement reste affiché individuellement, la cause étant
   déjà visible.
@@ -653,7 +653,7 @@ Format : [Semantic Versioning](https://semver.org/)
   module continu et indépendant du scanner réseau, démarré une fois le
   WiFi connecté. Ouvre un socket UDP non bloquant sur `0.0.0.0:67` et
   écoute les paquets DHCPDISCOVER/REQUEST émis par les autres équipements
-  du réseau — sans jamais émettre de requête ni répondre. Extrait le
+  du réseau - sans jamais émettre de requête ni répondre. Extrait le
   hostname déclaré (option 12) et devine l'OS à partir du vendor class
   identifier (option 60 : `MSFT*` → Windows, `android-dhcp*` → Android,
   `dhcpcd*`/`udhcp*` → Linux). Table interne MAC → fingerprint bornée à
@@ -671,7 +671,7 @@ Format : [Semantic Versioning](https://semver.org/)
 - **Sondage de broker MQTT lors de la passe précise approfondie**
   (`src/modules/mqtt_scanner.h/.cpp`) : déclenché uniquement quand le profil
   déduit (`SmartHome`/`Unknown`) a le port 1883 ouvert. Connexion TCP
-  unicast directe vers l'IP visée — CONNECT MQTT v3.1.1 anonyme, puis,
+  unicast directe vers l'IP visée - CONNECT MQTT v3.1.1 anonyme, puis,
   si accepté sans authentification, souscription aux topics standards
   `$SYS/broker/version` et `$SYS/broker/clients/connected` (jamais aux
   topics applicatifs des appareils). Le modèle/catégorie de l'équipement
@@ -714,7 +714,7 @@ Format : [Semantic Versioning](https://semver.org/)
   - Page `/debug` (`debug.html`/`debug.js`) mise à jour pour afficher toutes
     ces nouvelles données par démarrage enregistré.
   - Limite documentée : pas de capture de stack trace au PANIC (hors de
-    portée d'un module Arduino autonome sans `esp_core_dump` — voir le
+    portée d'un module Arduino autonome sans `esp_core_dump` - voir le
     commentaire dédié dans `boot_log.h`) ; la trace ESP-IDF reste visible
     uniquement sur le moniteur série, comme avant.
 
@@ -728,7 +728,7 @@ Format : [Semantic Versioning](https://semver.org/)
   (FONCTIONNALITÉ TEMPORAIRE).** Nouveau module `src/modules/boot_log.h/.cpp` :
   un buffer circulaire des derniers logs (`Log::i/w/e/d`) est conservé en
   RAM `RTC_NOINIT_ATTR` (survit à un reboot logiciel, un crash, un
-  watchdog ou un brownout — pas à une coupure d'alimentation). Au
+  watchdog ou un brownout - pas à une coupure d'alimentation). Au
   démarrage suivant, la raison du reset (`esp_reset_reason()` : panic,
   watchdog, brownout, reset logiciel/externe...) et le contenu du buffer
   précédent sont persistés dans `/bootlog.json` sur LittleFS (10 derniers
@@ -752,7 +752,7 @@ Format : [Semantic Versioning](https://semver.org/)
   `{ scanning, stats, devices: [...] }` (comme `scan.js` le fait déjà
   correctement via `data.devices`). `list.forEach` n'existe pas sur cet
   objet, l'exception était silencieusement absorbée par le `.catch()`, et
-  `favoriteMacs` restait toujours vide — la correction du Patch 5
+  `favoriteMacs` restait toujours vide - la correction du Patch 5
   (indexation par MAC et IP) ne pouvait donc jamais s'appliquer à aucune
   donnée. Correction : `loadFavorites()` lit désormais `data.devices`.
 
@@ -765,7 +765,7 @@ Format : [Semantic Versioning](https://semver.org/)
 - **Page Historique : le filtre « Favoris uniquement » n'affichait jamais
   aucun résultat.** `history.js` indexait les équipements favoris
   exclusivement par adresse MAC (`favoriteMacs[d.mac]`), sans repli sur
-  l'IP — contrairement à la convention utilisée partout ailleurs dans le
+  l'IP - contrairement à la convention utilisée partout ailleurs dans le
   projet (`scan.js` : `favKey = d.mac || d.ip` ; backend `network_scanner.cpp` :
   `(!d.mac.isEmpty() && d.mac == macOrIp) || d.ip == macOrIp`). Les
   équipements favoris dont la MAC n'était pas (encore) résolue, ainsi que
@@ -787,8 +787,8 @@ Format : [Semantic Versioning](https://semver.org/)
   `mobile_returned`, `offline`, `disappeared`, `mobile_left`, `changed`,
   `identification_improved`), mais la page Historique (`history.js`)
   n'en connaissait que 4 (`new`, `online`, `offline`, `changed`) : les
-  5 autres types — désormais les plus fréquents, car émis par chaque tick
-  de surveillance ARP au lieu d'un scan complet seulement — n'avaient
+  5 autres types - désormais les plus fréquents, car émis par chaque tick
+  de surveillance ARP au lieu d'un scan complet seulement - n'avaient
   aucune case de filtre correspondante et étaient donc systématiquement
   exclus de l'affichage, quel que soit l'état des cases cochées. En
   pratique, seuls les évènements `changed` restaient visibles par défaut,
@@ -815,15 +815,15 @@ Format : [Semantic Versioning](https://semver.org/)
   dans ce cas. Résultat : dès que le scan complet de démarrage (souvent
   long, 60-90 s) se terminait, le tick suivant était immédiatement déclaré
   "dû" (`_lastMonitorTickMs` encore à 0) et relançait un sweep ARP complet
-  — visible dans les journaux comme un second scan (mêmes lignes "ARP passe
+  - visible dans les journaux comme un second scan (mêmes lignes "ARP passe
   1/2/3") démarrant à l'instant exact où le premier se terminait, donnant
   l'impression d'un scan qui boucle sur lui-même. `_lastMonitorTickMs` est
   désormais aussi horodaté lorsque le tick est sauté pour cause de scan en
   cours, reportant l'échéance d'un intervalle complet (même traitement que
   le mode dégradé).
 - **Boucle infinie de passes précises sur les mêmes équipements.**
-  `NetworkScanner::_updateHistory()` — appelée à la fois en fin de scan
-  complet *et* en fin de chaque passe précise (`rescanDevice()`) — remettait
+  `NetworkScanner::_updateHistory()` - appelée à la fois en fin de scan
+  complet *et* en fin de chaque passe précise (`rescanDevice()`) - remettait
   en file un nouveau scan rapide (`_queueQuickScanLocked()`) dès que la
   confiance d'identification d'un équipement restait sous 35 %. Or un scan
   rapide ne recueille volontairement que très peu d'informations (ARP +
@@ -870,7 +870,7 @@ Format : [Semantic Versioning](https://semver.org/)
   `serviceMonitor()` ne fait plus rien (aucun tick, aucun drainage de la
   file différée).
 - **Intervalle de scan configurable de 5 minutes à 1 heure** (au lieu de
-  1-60 min libre) exposé dans l'interface — la borne API reste 1-60 min
+  1-60 min libre) exposé dans l'interface - la borne API reste 1-60 min
   côté `NetworkScanner::setMonitorInterval()`.
 - `GET /api/monitor` retourne désormais `{"enabled":bool,"intervalMinutes":int}`
   (auparavant `{"intervalMinutes":int}` seul).
@@ -883,7 +883,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ### Modifie
 
-- **Réorganisation de l'interface — page Système** : ajout d'une carte
+- **Réorganisation de l'interface - page Système** : ajout d'une carte
   « Surveillance automatique du réseau » (case d'activation + sélecteur
   d'intervalle 5 min/10 min/15 min/30 min/1 h) et déplacement de la carte
   « Sauvegarde / Restauration » des paramètres de fonctionnement
@@ -891,7 +891,7 @@ Format : [Semantic Versioning](https://semver.org/)
   Équipements.
 - **Page Équipements** : le menu « Données ▾ » ne propose plus que
   « Export CSV » (`/api/devices/export.csv`) et « Export JSON »
-  (`/api/backup`, sauvegarde de l'inventaire) — les actions Sauvegarde et
+  (`/api/backup`, sauvegarde de l'inventaire) - les actions Sauvegarde et
   Restauration des paramètres de fonctionnement en ont été retirées (voir
   ci-dessus).
 
@@ -900,7 +900,7 @@ Format : [Semantic Versioning](https://semver.org/)
 ## [1.0.0] - 2026-06-19
 
 > **Note (1.0.2)** : le comportement de mise en file automatique de passes
-> rapides/approfondies décrit ci-dessous a été retiré au Patch 2 — voir
+> rapides/approfondies décrit ci-dessous a été retiré au Patch 2 - voir
 > [1.0.2](#102---patch-2---2026-06-19). La surveillance continue ne fait
 > plus que sonder la présence (ARP).
 
@@ -911,7 +911,7 @@ Format : [Semantic Versioning](https://semver.org/)
   réseau.
   - `NetworkScanner::serviceMonitor()` exécute, sans tâche FreeRTOS dédiée,
     un sweep ARP léger à intervalle configurable (1 à 60 min, 5 min par
-    défaut, persisté en NVS) — jamais de SSDP/DNS-SD/WS-Discovery/SNMP ni
+    défaut, persisté en NVS) - jamais de SSDP/DNS-SD/WS-Discovery/SNMP ni
     d'appel aux API fabricants, et la passe est sautée (puis retentée au
     tour suivant) si un scan complet ou une passe précise est déjà en
     cours.
@@ -934,7 +934,7 @@ Format : [Semantic Versioning](https://semver.org/)
   - Score de stabilité (0-100 %) calculé pour les équipements fixes à
     partir du ratio temps en ligne / hors ligne, pénalisé par la
     fréquence de reconnexion ; les équipements mobiles renvoient `-1`
-    (« N/A — non pénalisé ») et ne sont jamais comptés dans les
+    (« N/A - non pénalisé ») et ne sont jamais comptés dans les
     statistiques de stabilité.
   - Classification mobile/fixe automatique par catégorie/type
     (smartphone, tablette, montre connectée, portable = mobile probable ;
@@ -965,12 +965,12 @@ Format : [Semantic Versioning](https://semver.org/)
   réutilisait `_enrichedHostname()`, une chaîne sur plusieurs lignes
   (nom déduit + hostname brut + source) prévue pour l'affichage UI, ce
   qui faisait apparaître les informations d'un même équipement sur
-  plusieurs lignes physiques dans le fichier — même correctement
+  plusieurs lignes physiques dans le fichier - même correctement
   échappée entre guillemets, la plupart des tableurs/scripts qui lisent
   une « ligne » comme un enregistrement coupent le CSV au mauvais
   endroit. `network_scanner.cpp` :
   - la colonne `hostname` utilise désormais directement `d.hostname`
-    (valeur brute, une seule ligne) — le nom déduit reste disponible via
+    (valeur brute, une seule ligne) - le nom déduit reste disponible via
     le JSON (`hostnameDisplay`, page Équipements).
   - `csvField()` aplatit systématiquement tout retour à la ligne (`\n`,
     `\r`, `\r\n`) en espace avant échappement, quelle que soit la
@@ -983,15 +983,15 @@ Format : [Semantic Versioning](https://semver.org/)
 ### Corrige
 
 - **Passe précise réellement ciblée sur un seul équipement** : la passe
-  approfondie (v0.9.0) lançait encore SSDP/UPnP, DNS-SD et WS-Discovery —
+  approfondie (v0.9.0) lançait encore SSDP/UPnP, DNS-SD et WS-Discovery -
   des protocoles multicast qui sondent tout le sous-réseau et ne peuvent
-  pas être restreints à une IP — ce qui faisait remonter des informations
+  pas être restreints à une IP - ce qui faisait remonter des informations
   sur d'autres équipements (ex: « Synology détecté / Imprimante détectée »
   en scannant un PC) et prenait 20-30s. La logique est entièrement
   réécrite autour du principe « poser les bonnes questions à l'équipement
   ciblé » plutôt que « relancer tous les moteurs de découverte réseau » :
   - **Scan rapide** (1-3s, inchangé dans son objectif) : ARP/ICMP, PTR
-    DNS, mise à jour du hostname, vérification de présence — rien
+    DNS, mise à jour du hostname, vérification de présence - rien
     d'autre.
   - **Scan approfondi** (<3s si rien d'exploitable, sinon quelques
     secondes au lieu de 20-30s) : étape 1, scan TCP unicast des ports de
@@ -1032,7 +1032,7 @@ Format : [Semantic Versioning](https://semver.org/)
   - `network_scanner.h`/`.cpp` : nouvelle fonction `_profileFor()` qui
     déduit un profil probable (Computer, NAS, Printer, Mobile, Streaming,
     SmartHome, Network, IoT, Unknown) à partir des informations déjà
-    connues (catégorie, services, fabricant, OS) — une simple hypothèse
+    connues (catégorie, services, fabricant, OS) - une simple hypothèse
     utilisée pour choisir les sondes les plus pertinentes, pas une
     classification figée. `rescanDevice(ip, deep)` prend désormais un
     paramètre de profondeur ; `_runRescan()` active sélectivement les
@@ -1094,8 +1094,8 @@ Format : [Semantic Versioning](https://semver.org/)
   fois le transfert terminé.
   - La barre reste désormais affichée à 100% et le message passe par les
     étapes « Transfert du firmware : X% » → « Vérification du firmware… »
-    → « Firmware vérifié — redémarrage en cours… » → « Redémarrage en
-    cours… » → « Redémarrage terminé — retour à l'accueil… ».
+    → « Firmware vérifié - redémarrage en cours… » → « Redémarrage en
+    cours… » → « Redémarrage terminé - retour à l'accueil… ».
   - Seuls le sélecteur de fichier et le bouton « Mettre à jour » sont
     désactivés pendant la mise à jour (au lieu de masquer tout le bloc).
   - Une fois le redémarrage détecté (`/api/status` répond à nouveau), la
@@ -1129,7 +1129,7 @@ Format : [Semantic Versioning](https://semver.org/)
   page via le nouveau marqueur `<!-- include:menu.html -->` (traité par
   `tools/minify_web.py` et simulé par `tools/validate_html.py`). Le lien
   actif est désormais marqué au runtime par un script JS embarqué dans
-  `menu.html`, au lieu d'un `class="active"` statique dupliqué par page —
+  `menu.html`, au lieu d'un `class="active"` statique dupliqué par page -
   simplifie la maintenance du menu sur l'ensemble des pages.
 
 ## [0.8.6] - 2026-06-18
@@ -1149,7 +1149,7 @@ Format : [Semantic Versioning](https://semver.org/)
   (initial ou global) découvre et identifie automatiquement les équipements
   présents, mais que certaines informations avancées peuvent nécessiter un
   scan ciblé de l'équipement pour interroger des services spécifiques ou
-  des API propriétaires — pour clarifier que le scan de départ n'est pas
+  des API propriétaires - pour clarifier que le scan de départ n'est pas
   conçu comme « agressif ».
   - `web_src/scan.html` : nouveau paragraphe `.scan-hint` sous l'en-tête de
     carte.
@@ -1163,7 +1163,7 @@ Format : [Semantic Versioning](https://semver.org/)
   **barre de défilement horizontale** apparaissant en bas de la page lors de
   l'affichage d'un nom d'hôte long : la colonne « Nom d'hôte » (`.name-cell`)
   n'avait aucune contrainte de largeur ni de retour à la ligne, contrairement
-  aux colonnes IP/MAC dont le contenu est intrinsèquement borné — un nom
+  aux colonnes IP/MAC dont le contenu est intrinsèquement borné - un nom
   d'hôte sans espace pouvait forcer le tableau (`table-layout` auto) à
   dépasser la largeur de page standard de 960px.
   - `web_src/styles.css` : `.name-cell` limitée à `max-width: 220px`, repli
@@ -1179,12 +1179,12 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ### Corrige
 
-- **Scan DNS-SD systématiquement vide** (`[INF][DNSSD] DNS-SD terminé — 0
+- **Scan DNS-SD systématiquement vide** (`[INF][DNSSD] DNS-SD terminé - 0
   IP(s) résolue(s)` malgré des services réellement présents : Philips Hue,
   Echo, Synology…) : la fenêtre d'attente par type de service interrogé via
   `mdns_query_ptr()` était plancher à 100 ms, trop courte face au délai
   aléatoire de réponse de 20 à 120 ms imposé par la RFC 6762 §6 sur les
-  enregistrements partagés (cas des PTR de découverte de service) — une
+  enregistrements partagés (cas des PTR de découverte de service) - une
   marge quasi nulle restait pour l'aller-retour réseau, et la quasi-totalité
   des réponses arrivait hors fenêtre.
   - `src/modules/dns_sd_scanner.cpp` : plancher relevé à 300 ms
@@ -1192,9 +1192,9 @@ Format : [Semantic Versioning](https://semver.org/)
     appelants de `network_scanner.cpp` ajustée de 4000/5000 ms à 9000 ms
     pour conserver une fenêtre réaliste par type de service sur les ~29
     types interrogés (le scan tourne dans sa propre tâche FreeRTOS, non
-    bloquant pour le reste du firmware — voir `docs/WARNINGS.md`).
+    bloquant pour le reste du firmware - voir `docs/WARNINGS.md`).
   - Ajout d'une journalisation des échecs `mdns_query_ptr()`
-    (`esp_err_to_name()`) — silencieusement ignorés auparavant — pour
+    (`esp_err_to_name()`) - silencieusement ignorés auparavant - pour
     faciliter le diagnostic d'un futur scan vide.
 
 ### Documentation
@@ -1210,7 +1210,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ### Corrige
 
-- **Conflit mDNS persistant après v0.8.1 — cause racine non traitée** :
+- **Conflit mDNS persistant après v0.8.1 - cause racine non traitée** :
   `MdnsManager` (v0.8.1) mutualisait correctement un socket entre
   `HostnameResolver` et `DnsSdScanner`, mais ne tenait pas compte d'un
   troisième consommateur, toujours actif : le composant mDNS d'ESP-IDF
@@ -1218,14 +1218,14 @@ Format : [Semantic Versioning](https://semver.org/)
   `224.0.0.251:5353` exclusivement pour son responder dès que le Wi-Fi est
   connecté (log `[INF][WiFi] mDNS actif : http://gatewaylab-v1.local`).
   Résultat : `MdnsManager::acquire()` échouait systématiquement
-  (`[WRN][MdnsMgr] Impossible de rejoindre 224.0.0.251:5353`) — la
+  (`[WRN][MdnsMgr] Impossible de rejoindre 224.0.0.251:5353`) - la
   découverte DNS-SD et la résolution mDNS passive ne fonctionnaient en
   réalité jamais dès que le responder mDNS était actif, c'est-à-dire en
   pratique en permanence.
   - `DnsSdScanner` (`src/modules/dns_sd_scanner.cpp`) est réécrit pour
     interroger directement le composant mDNS d'ESP-IDF via son API C
     (`mdns_query_ptr()` / `mdns_query_results_free()`, `<mdns.h>`) au lieu
-    d'ouvrir un socket multicast applicatif — passe par le service mDNS
+    d'ouvrir un socket multicast applicatif - passe par le service mDNS
     déjà initialisé par `MDNS.begin()`, donc aucun risque de conflit de
     bind. Le comportement public (`scan()`, table de services, déduction
     de catégorie) est inchangé.
@@ -1236,9 +1236,9 @@ Format : [Semantic Versioning](https://semver.org/)
     compatibilité des appelants). Seule la résolution PTR DNS (port 53,
     unicast, sans rapport avec ce conflit) reste active.
   - `MdnsManager` (`src/modules/mdns_manager.h/.cpp`, introduit en v0.8.1)
-    est supprimé — devenu inutile, plus aucun module n'ouvre de socket
+    est supprimé - devenu inutile, plus aucun module n'ouvre de socket
     multicast applicatif.
-  - Voir `docs/WARNINGS.md` (section « Socket mDNS multicast — conflit
+  - Voir `docs/WARNINGS.md` (section « Socket mDNS multicast - conflit
     avec ESPmDNS ») pour le détail de la cause racine et de la correction.
 
 ---
@@ -1257,7 +1257,7 @@ Format : [Semantic Versioning](https://semver.org/)
   (`[E][WiFiUdp.cpp:71] begin(): could not bind socket: 112`). Un nouveau
   module `MdnsManager` mutualise désormais un unique socket multicast,
   partagé par comptage de références entre les deux scanners et protégé par
-  un mutex FreeRTOS contre les accès concurrents — corrige le conflit de
+  un mutex FreeRTOS contre les accès concurrents - corrige le conflit de
   bind et réduit l'empreinte mémoire (un seul `WiFiUDP` au lieu de deux).
 - **LOCATION SSDP invalide pointant vers une adresse inutilisable**
   (`src/modules/ssdp_scanner.cpp`) : certains équipements UPnP mal
@@ -1289,7 +1289,7 @@ Format : [Semantic Versioning](https://semver.org/)
   `POST /api/system/restart`.
 - **Bornes mémoire explicites** (`include/app_config.h`) : `MAX_HISTORY_EVENTS`
   (1000), `MAX_NOTES_PER_DEVICE` (20), `MAX_NOTE_LENGTH` (256 caractères),
-  en plus de `MAX_TRACKED_DEVICES` (300) déjà existant — empêchent toute
+  en plus de `MAX_TRACKED_DEVICES` (300) déjà existant - empêchent toute
   croissance non bornée du journal d'historique, des notes par équipement et
   de la liste d'équipements suivis (éviction LRU sous mutex).
 
@@ -1362,7 +1362,7 @@ Format : [Semantic Versioning](https://semver.org/)
   `src/modules/web_server.cpp`) : distincte de la sauvegarde de l'inventaire
   (`/api/backup`), cette nouvelle sauvegarde couvre les réseaux WiFi
   enregistrés (SSID + mot de passe), la luminosité NeoPixel et le nom mDNS
-  (informatif uniquement — fixé à la compilation, non restaurable). Les
+  (informatif uniquement - fixé à la compilation, non restaurable). Les
   réseaux WiFi restaurés sont ajoutés/mis à jour, jamais supprimés
   automatiquement.
 
@@ -1389,8 +1389,8 @@ Format : [Semantic Versioning](https://semver.org/)
 - **Menu "Données ▾" unifié sur la page Équipements** (`web_src/scan.html`,
   `web_src/scan.js`) : le menu "Exporter ▾" (CSV/JSON) et la carte
   "Sauvegarde des équipements" (alors sur la page Accueil) sont regroupés en
-  un seul menu déroulant "Données ▾" — Export CSV, Export JSON, Restaurer…
-  — pour éviter d'étaler les actions sur deux pages et deux menus différents.
+  un seul menu déroulant "Données ▾" - Export CSV, Export JSON, Restaurer…
+  - pour éviter d'étaler les actions sur deux pages et deux menus différents.
   La carte Sauvegarde/Restauration est retirée de `web_src/index.html`.
 - **Export CSV plus lisible** (`NetworkScanner::devicesToCsv()`,
   `src/modules/network_scanner.cpp`) : les dates `firstSeen`/`lastSeenAt`
@@ -1426,7 +1426,7 @@ Format : [Semantic Versioning](https://semver.org/)
   page Équipements propose les deux formats (CSV et JSON).
 - **Page Topologie** (`GET /topology`, `web_src/topology.html/js`) : nouvelle
   page (vue simplifiée, sans représentation graphique) qui prépare le terrain
-  pour la cartographie réseau prévue en roadmap (v0.4.x) — elle distingue
+  pour la cartographie réseau prévue en roadmap (v0.4.x) - elle distingue
   pour l'instant la ou les passerelles/routeurs détectés du reste des
   équipements, à partir des données déjà collectées (`category`). Cette page
   sera étoffée avec la détection des points d'accès/répéteurs WiFi et une
@@ -1437,8 +1437,8 @@ Format : [Semantic Versioning](https://semver.org/)
 - **Cartouche diagnostics déplacée vers la page Accueil** (`web_src/index.html`,
   `web_src/index.js`) : l'affichage du heap libre, de la PSRAM, de l'usage
   LittleFS et des temps moyens de scan/passe précise (`GET /api/diagnostics`)
-  quitte la page Équipements — où il n'avait d'intérêt que pour le
-  développement — pour rejoindre la page Accueil, sous le cartouche
+  quitte la page Équipements - où il n'avait d'intérêt que pour le
+  développement - pour rejoindre la page Accueil, sous le cartouche
   "Informations réseau", dans une nouvelle carte "Diagnostics système".
 
 ## [0.6.2] - 2026-06-18
@@ -1450,7 +1450,7 @@ Format : [Semantic Versioning](https://semver.org/)
   minimum utile. La NeoPixel n'a plus que 6 états (bleu pulsé au démarrage,
   bleu fixe une fois prête, vert clignotant pendant un scan, jaune clignotant
   tant qu'un nouvel équipement n'a pas été consulté, violet pendant le
-  portail WiFi, cyan pendant une sauvegarde) — les états avertissement/erreur
+  portail WiFi, cyan pendant une sauvegarde) - les états avertissement/erreur
   et les effets de flash en surimpression sont retirés. Le bouton BOOT n'a
   plus que deux gestes : appui court = lance un scan, maintien 3 s =
   sauvegarde immédiate. Le double appui et les rescans automatiques des
@@ -1467,7 +1467,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 - **NeoPixel d'état et gestes du bouton BOOT** (`src/modules/status_led.*`,
   `src/modules/boot_button.*`) : une NeoPixel unique (`board_config.h::NEOPIXEL_PIN`)
-  affiche en continu l'état de la passerelle — bleu pulsé au démarrage, bleu
+  affiche en continu l'état de la passerelle - bleu pulsé au démarrage, bleu
   fixe une fois prête, vert clignotant pendant un scan, jaune clignotant tant
   qu'un nouvel équipement n'a pas été consulté (page Équipements), violet
   pendant le portail WiFi de première configuration, cyan pendant une
@@ -1480,14 +1480,14 @@ Format : [Semantic Versioning](https://semver.org/)
 - **Cartouche diagnostics** (`GET /api/diagnostics`, `NetworkScanner::diagnosticsToJson()`)
   : nouvelle barre d'information sur la page Équipements affichant heap libre,
   PSRAM libre, espace LittleFS utilisé/total, et le temps moyen d'un scan
-  complet / d'une passe précise — pour suivre l'impact mémoire et performance
+  complet / d'une passe précise - pour suivre l'impact mémoire et performance
   du scan dans la durée. Les temps moyens sont calculés à partir de compteurs
   cumulés (durée totale / nombre d'exécutions), réinitialisés au redémarrage.
 - **Favoris et notes d'inventaire par équipement** (`POST /api/favorite`,
   `POST /api/notes`, `DELETE /api/notes`) : chaque équipement peut désormais
   être marqué comme favori (étoile, bouton dédié sur la page Équipements) et
   porter une liste de notes libres datées (epoch NTP), par exemple "cartouche
-  d'encre changée le 12/05" ou "firmware mis à jour" — utile pour le suivi
+  d'encre changée le 12/05" ou "firmware mis à jour" - utile pour le suivi
   d'inventaire personnel. Favoris et notes sont persistés dans
   `/devices.json` (`DeviceStore::save()`/`load()`) au même titre que le reste
   de la fiche équipement, et inclus dans la sauvegarde/restauration complète
@@ -1501,7 +1501,7 @@ Format : [Semantic Versioning](https://semver.org/)
   : remplace l'ancienne logique par un score global qui retient le signal le
   *plus faible* entre marque et catégorie plutôt que le meilleur. Les OUI
   ambigus (Apple, Samsung, Xiaomi, Huawei, Intel, HP, Dell, Lenovo, Microsoft
-  — un même préfixe MAC pouvant désigner un PC, un mobile, une tablette ou un
+  - un même préfixe MAC pouvant désigner un PC, un mobile, une tablette ou un
   écran connecté) sont désormais plafonnés à 35 % de confiance. Une infobulle
   détaille la confiance par champ (marque / catégorie / modèle / type).
 - **Passe précise asynchrone avec suivi de progression** (`POST /api/devices/rescan`,
@@ -1513,7 +1513,7 @@ Format : [Semantic Versioning](https://semver.org/)
   ligne est en bas de liste.
 - **Sondage SNMP `sysDescr`** (`src/modules/snmp_scanner.cpp`, nouveau) :
   implémentation maison (encodage/décodage ASN.1 BER) d'une requête SNMPv1
-  `GetRequest` en lecture publique — beaucoup de routeurs, switches,
+  `GetRequest` en lecture publique - beaucoup de routeurs, switches,
   imprimantes et NAS y exposent fabricant et modèle en texte clair.
   Utilisé uniquement lors de la passe précise.
 - **Découverte WS-Discovery / ONVIF** (`src/modules/ws_discovery_scanner.cpp`,
@@ -1523,9 +1523,9 @@ Format : [Semantic Versioning](https://semver.org/)
 - **API HTTP propriétaires des appareils multimédia courants**
   (`src/modules/media_api_scanner.cpp`, nouveau) : sondage direct, lors de
   la passe précise, des ports fixes non couverts par le scan de ports
-  standard — Google Cast/Chromecast (`:8008/setup/eureka_info`), Sonos
+  standard - Google Cast/Chromecast (`:8008/setup/eureka_info`), Sonos
   (`:1400/xml/device_description.xml`), Roku (`:8060/query/device-info`),
-  Samsung Smart TV (`:8001/api/v2/`) — pour récupérer marque/modèle/nom
+  Samsung Smart TV (`:8001/api/v2/`) - pour récupérer marque/modèle/nom
   exacts sans configuration préalable.
 - **Service DNS-SD Matter** (`_matterc._udp`, en plus de `_matter._tcp` déjà
   présent) : détection des appareils Matter commissionables (pas encore
@@ -1548,7 +1548,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 - **Réinitialisation de l'inventaire** (`POST /api/devices/reset`,
   `src/modules/network_scanner.cpp`) : nouveau menu « Réinitialiser » sur la
-  page Équipements, avec quatre options — tout effacer, conserver les
+  page Équipements, avec quatre options - tout effacer, conserver les
   équipements ayant un alias, conserver ceux dont le fabricant est connu, ou
   les deux. Permet de repartir sur une base propre sans perdre les
   équipements identifiés manuellement ou automatiquement.
@@ -1595,7 +1595,7 @@ Format : [Semantic Versioning](https://semver.org/)
   se connecte automatiquement au premier disponible (signal le plus fort).
 - **Nouvelle page `Paramètres → Réseau WiFi`** (`/wifi`) : affiche l'état de
   connexion (SSID, IP, RSSI), liste les réseaux enregistrés, permet d'en
-  ajouter ou d'en supprimer — sans jamais exposer les mots de passe au
+  ajouter ou d'en supprimer - sans jamais exposer les mots de passe au
   navigateur.
 - **Nouvelles routes API** : `GET /api/wifi` (état + liste des SSID
   enregistrés), `POST /api/wifi` (ajoute/met à jour un réseau), `DELETE
@@ -1622,7 +1622,7 @@ Format : [Semantic Versioning](https://semver.org/)
 ### Notes
 
 - Aucune authentification n'est requise pour le portail de configuration ni
-  pour l'API `/api/wifi` — voir `docs/WARNINGS.md` (section mots de passe
+  pour l'API `/api/wifi` - voir `docs/WARNINGS.md` (section mots de passe
   WiFi en mémoire NVS) pour les implications de sécurité sur un réseau non
   fiable.
 - Compatible avec une distribution future du firmware sous forme de fichier
@@ -1645,7 +1645,7 @@ Format : [Semantic Versioning](https://semver.org/)
   en plus du CSS commun.
 - `tools/extract_web_sources.py` réécrit en conséquence : il extrait HTML
   **et** JS séparément depuis les headers PROGMEM, et écrit toujours dans
-  `web_src/extracted/` — les sources originales de `web_src/` ne sont plus
+  `web_src/extracted/` - les sources originales de `web_src/` ne sont plus
   jamais écrasées.
 
 ### Corrige
@@ -1657,7 +1657,7 @@ Format : [Semantic Versioning](https://semver.org/)
 ### Notes
 
 - Aucun changement de comportement côté utilisateur (hors lien de menu
-  corrigé) — uniquement une réorganisation des sources et de la chaîne de
+  corrigé) - uniquement une réorganisation des sources et de la chaîne de
   build des assets web.
 
 ---
@@ -1768,11 +1768,11 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.1.1] — 2026-06-16
+## [0.1.1] - 2026-06-16
 
 ### Ajouté
 
-- **`src/modules/port_scanner.h/.cpp`** — Scanner TCP des ports communs
+- **`src/modules/port_scanner.h/.cpp`** - Scanner TCP des ports communs
 
   **Principe :** Sockets non-bloquants + `select()` pour sonder plusieurs ports simultanément
   (lots de `MAX_BATCH = 8` pour rester dans les limites lwIP `CONFIG_LWIP_MAX_SOCKETS = 16`).
@@ -1806,7 +1806,7 @@ Format : [Semantic Versioning](https://semver.org/)
   Lot de 8 sockets × 2 iterations × ~5 ms = ≈ 80 ms si tous les ports sont fermés.
   Timeout de 250 ms par lot si ports filtrés.
 
-- **`IcmpScanner::pingWithTtl()`** — Nouveau variant ICMP retournant la valeur TTL
+- **`IcmpScanner::pingWithTtl()`** - Nouveau variant ICMP retournant la valeur TTL
 
   L'en-tête IP (octet 8 = TTL, RFC 791) est extrait de chaque réponse echo reply.
   `struct PingResult { String ip; uint8_t ttl; }` retourné pour chaque hôte répondant.
@@ -1823,25 +1823,25 @@ Format : [Semantic Versioning](https://semver.org/)
   Heuristiques complémentaires basées sur les ports : RDP ouvert → Windows certain,
   RTSP ouvert → Camera/NVR.
 
-- **`NetworkDevice.openPorts`** — Nouveau champ `String` pipe-séparé
+- **`NetworkDevice.openPorts`** - Nouveau champ `String` pipe-séparé
 
   Stocke les noms courts des ports TCP ouverts (ex: `"HTTP|SSH|SMB"`).
   Sérialisé en tableau JSON `["HTTP","SSH","SMB"]` dans `/api/devices`.
   Persisté dans `LittleFS` (`/devices.json`).
 
-- **`NetworkScanner::_scanPorts()`** — Nouvelle phase de scan (phase 10)
+- **`NetworkScanner::_scanPorts()`** - Nouvelle phase de scan (phase 10)
 
   Appelée après DNS-SD, avant la sauvegarde LittleFS.
   Collecte les IPs online (excl. ESP32 lui-même), appelle `portScanner.scan()`,
   fusionne les résultats dans `_results` sous mutex.
 
-- **UI — Badges ports TCP** (`web_src/scan.html`)
+- **UI - Badges ports TCP** (`web_src/scan.html`)
 
   Badges colorés affichés dans la cellule Fabricant, sous les badges de services DNS-SD.
   Tooltip `title="Port TCP ouvert : NOM"` sur chaque badge.
   Fonction `portClass(p)` → 10 classes CSS selon le protocole.
 
-- **UI — `web_src/styles.css`**
+- **UI - `web_src/styles.css`**
 
   Bloc `.port-list` + `.port-badge` + 10 classes de couleur :
 
@@ -1875,7 +1875,7 @@ Format : [Semantic Versioning](https://semver.org/)
 ### Technique
 
 - **Sockets non-bloquants** : `fcntl(F_SETFL, O_NONBLOCK)` + `connect()` → `EINPROGRESS` →
-  `select()` avec timeout — permet de sonder N ports en parallèle sans bloquer la tâche FreeRTOS
+  `select()` avec timeout - permet de sonder N ports en parallèle sans bloquer la tâche FreeRTOS
 - **Contrainte lwIP** : `CONFIG_LWIP_MAX_SOCKETS = 16` → `MAX_BATCH = 8` pour laisser 8 sockets
   disponibles pour le Web Server et les autres modules réseau actifs
 - **TTL extraction** : `buf[8]` dans la réponse ICMP raw (octet TTL de l'en-tête IP, RFC 791)
@@ -1884,7 +1884,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.1.0] — 2026-06-16
+## [0.1.0] - 2026-06-16
 
 ### Ajouté
 
@@ -1911,12 +1911,12 @@ Format : [Semantic Versioning](https://semver.org/)
   - `/api/devices` retourne `"stats":{"known":N,"online":N,"offline":N}`
   - `ScanProvider::getStats` lambda dans `web_server.h`
 
-- **UI — barre de statistiques** (`web_src/scan.html`) :
+- **UI - barre de statistiques** (`web_src/scan.html`) :
   - Bandeau `#stats-bar` au-dessus du tableau : connus · en ligne · hors ligne
   - Colonne "Statut" dans le tableau : ● vert (online) / ○ gris (offline)
   - `window._lastStats` extrait de la réponse `/api/devices` pour mise à jour du bandeau
 
-- **UI — styles** (`web_src/styles.css`) :
+- **UI - styles** (`web_src/styles.css`) :
   - `.stats-bar`, `.stat-sep`, `.stat-known`, `.stat-online`, `.stat-offline`
   - `.status-cell`, `.status-online`, `.status-offline`
 
@@ -1929,11 +1929,11 @@ Format : [Semantic Versioning](https://semver.org/)
 - **`src/main.cpp`** : `deviceStore.begin()` avant WiFi, lambda `getStats` dans `registerScanProvider`
 - **`platformio.ini`** : `PROJECT_VERSION` → `0.1.0`
 
-## [0.0.9] — 2026-06-16
+## [0.0.9] - 2026-06-16
 
 ### Ajouté
 
-- **`src/modules/dns_sd_scanner.h/.cpp`** — scanner DNS-SD complet (RFC 6763 / RFC 6762)
+- **`src/modules/dns_sd_scanner.h/.cpp`** - scanner DNS-SD complet (RFC 6763 / RFC 6762)
 
   **Principe :** DNS-SD utilise le même canal multicast que mDNS (`224.0.0.251:5353`)
   mais interroge des *types de services* (`_http._tcp.local`, `_ssh._tcp.local`…).
@@ -1973,14 +1973,14 @@ Format : [Semantic Versioning](https://semver.org/)
   - Accumule les services sans doublon (merge avec services déjà présents)
   - Appelée après `_mergeSsdp()`, avant `_addSelfEntry()`
 
-- **UI — `web_src/scan.html`** :
+- **UI - `web_src/scan.html`** :
   - Badges de service dans la cellule Fabricant, sous l'OS
   - 9 couleurs selon la famille : `web` (bleu), `ssh` (jaune), `share` (cyan),
     `apple` (rose), `google` (vert), `music` (violet), `iot` (turquoise),
     `print` (vert pâle), `other` (gris)
   - Tooltip `title="Service DNS-SD : NOM"` sur chaque badge
 
-- **UI — `web_src/styles.css`** :
+- **UI - `web_src/styles.css`** :
   - `.svc-list` : conteneur flex-wrap pour les badges de service
   - `.svc-badge` : style de base (très compact, 0.58 rem)
   - 9 classes de couleur : `.svc-web`, `.svc-ssh`, `.svc-share`, `.svc-apple`,
@@ -1999,11 +1999,11 @@ Format : [Semantic Versioning](https://semver.org/)
 ### Technique
 
 - **Paquet mDNS multi-question** : toutes les requêtes DNS-SD dans un seul UDP
-  (≈ 650 octets pour 22 services) — évite 22 allers-retours réseau séparés
+  (≈ 650 octets pour 22 services) - évite 22 allers-retours réseau séparés
 - **QU bit** (class 0x8001) : signale la préférence pour des réponses unicast ;
   réduit la charge multicast sur le réseau domestique
 - **Buffers heap** : les buffers de parsing (1 Ko) sont alloués sur le tas
-  (`malloc/free`) plutôt que sur la stack FreeRTOS — économise ~1 Ko de stack
+  (`malloc/free`) plutôt que sur la stack FreeRTOS - économise ~1 Ko de stack
 - **Déduplication instances** : clé composée `instanceName|serviceType` évite
   les doublons quand un device répond plusieurs fois à la même requête
 - **Résolution IP à 3 niveaux** : `inst.ip` direct → `_hostToIp[hostname]` →
@@ -2011,18 +2011,18 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.0.8] — 2026-06-15
+## [0.0.8] - 2026-06-15
 
 ### Ajouté
 
-- **`src/modules/ssdp_scanner.h/.cpp`** — scanner SSDP/UPnP complet et modulaire
+- **`src/modules/ssdp_scanner.h/.cpp`** - scanner SSDP/UPnP complet et modulaire
 
-  **Niveau 4 — Découverte UPnP :**
+  **Niveau 4 - Découverte UPnP :**
   - Envoi M-SEARCH multicast UDP → `239.255.255.250:1900`, collecte des réponses SSDP
   - Déduplication des réponses par URL `LOCATION` (un device peut annoncer plusieurs services)
   - HTTP GET non bloquant du descripteur XML pour chaque device découvert (timeout 2 s)
   - Parsing XML robuste : supporte les namespaces (`<ns:friendlyName>`), les attributs,
-    et le XML partiellement malformé — retourne `""` plutôt que de planter
+    et le XML partiellement malformé - retourne `""` plutôt que de planter
   - Extraction : `friendlyName` → `hostname`, `manufacturer`, `modelName` → `model`,
     `deviceType`, `presentationURL`
   - Catégorisation automatique des équipements courants :
@@ -2041,7 +2041,7 @@ Format : [Semantic Versioning](https://semver.org/)
     | Inférence via `deviceType` UPnP | MediaRenderer→Streaming, MediaServer→NAS… |
     | Fallback | IoT |
 
-  **Niveau 5 — APIs spécifiques (non authentifiées) :**
+  **Niveau 5 - APIs spécifiques (non authentifiées) :**
   - **Philips Hue Bridge** : `GET http://<ip>/api/config`
     - Extrait : `name`, `modelid` (BSB002 → "Hue Bridge v2"), `swversion` → `os`
     - Renseigne : `manufacturer="Philips Hue"`, `category="SmartHub"`, `source="HueAPI"`
@@ -2054,16 +2054,16 @@ Format : [Semantic Versioning](https://semver.org/)
     - Renseigne : `manufacturer="Free"`, `category="Router"`, `os="FreeboxOS x.y"`,
       `source="FreeboxAPI"`
 
-- **`NetworkScanner::_mergeSsdp()`** — fusion des résultats SSDP dans la liste ARP :
+- **`NetworkScanner::_mergeSsdp()`** - fusion des résultats SSDP dans la liste ARP :
   - Enrichit les champs vides d'un device déjà découvert par ARP (sans écraser mDNS/PTR)
   - Ajoute les devices UPnP non détectés par ARP (cas rare mais possible)
   - Appelée après `_resolveHostnames()` dans `_run()`, sous protection du mutex
 
-- **UI — `web_src/scan.html`** :
+- **UI - `web_src/scan.html`** :
   - Nouveaux badges source : `UPnP`, `Hue`, `DSM`, `Freebox` (avec tooltips explicatifs)
-  - Champ `os` affiché sous le modèle (`.mfr-os`) — ex: "FreeboxOS 4.8.3", "Hue FW 1.60"
+  - Champ `os` affiché sous le modèle (`.mfr-os`) - ex: "FreeboxOS 4.8.3", "Hue FW 1.60"
 
-- **UI — `web_src/styles.css`** :
+- **UI - `web_src/styles.css`** :
   - Badges source : `.source-ssdp` (vert pâle), `.source-hue` (orange), `.source-synology` (bleu),
     `.source-freebox` (violet)
   - Nouvelles catégories : `.type-smarthub` (rose/fuchsia), `.type-speaker` (vert)
@@ -2082,10 +2082,10 @@ Format : [Semantic Versioning](https://semver.org/)
 
 - **HTTP GET sans HTTPClient** : implémentation directe sur `WiFiClient` pour limiter la
   consommation de stack FreeRTOS ; timeout court (2 s), corps limité à 16 Ko par réponse
-- **Déduplication LOCATION** : `std::vector<String>` parcouru linéairement — suffisant pour
+- **Déduplication LOCATION** : `std::vector<String>` parcouru linéairement - suffisant pour
   les ≤ 30 devices UPnP typiques d'un réseau domestique
 - **Robustesse XML** : deux stratégies de recherche (`<tag>` exact puis `:<tag>`) ;
-  fermeture `</` cherchée après la valeur sans nécessiter le nom exact du tag fermant —
+  fermeture `</` cherchée après la valeur sans nécessiter le nom exact du tag fermant -
   tolérant aux namespaces et aux malformations courantes
 - **APIs non bloquantes** : chaque appel API spécifique a son propre timeout de 2 s ;
   si le device ne répond pas, le résultat SSDP de base est conservé sans erreur fatale
@@ -2102,7 +2102,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.0.7] — 2026-06-15 (suite — refactoring CSS & outils)
+## [0.0.7] - 2026-06-15 (suite - refactoring CSS & outils)
 
 ### Amélioré
 
@@ -2110,7 +2110,7 @@ Format : [Semantic Versioning](https://semver.org/)
   supprimés des trois pages HTML. `styles.css` est la source unique pour tous les styles,
   organisée en 12 sections (reset, conteneurs, en-tête, nav, carte, footer, puis sections
   spécifiques à chaque page). Le script `minify_web.py` l'injecte inline dans chaque page
-  lors de la minification — l'ESP32 continue de servir du HTML auto-contenu.
+  lors de la minification - l'ESP32 continue de servir du HTML auto-contenu.
 
 - **Polices légèrement agrandies** pour une meilleure lisibilité :
 
@@ -2123,7 +2123,7 @@ Format : [Semantic Versioning](https://semver.org/)
   | Pied de page | 0.78 rem | 0.85 rem |
   | Sous-titre en-tête | 0.72 rem | 0.80 rem |
   | Pastille version | 0.63 rem | 0.72 rem |
-  | Badges source/catégorie | 0.58–0.65 rem | 0.65–0.72 rem |
+  | Badges source/catégorie | 0.58-0.65 rem | 0.65-0.72 rem |
 
 - **Largeur de page gérée par classe CSS** (`body.page-scan` → max-width 960px,
   défaut → 520px) : élimine les règles dupliquées entre les pages et simplifie
@@ -2146,7 +2146,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.0.7] — 2026-06-15 (suite — passe cosmétique UI)
+## [0.0.7] - 2026-06-15 (suite - passe cosmétique UI)
 
 ### Amélioré
 
@@ -2167,7 +2167,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.0.7] — 2026-06-15
+## [0.0.7] - 2026-06-15
 
 ### Corrigé
 
@@ -2176,7 +2176,7 @@ Format : [Semantic Versioning](https://semver.org/)
   `d.type` → `d.category` dans `web_src/scan.html`. L'ESP32 servait encore
   l'ancienne version minifiée qui référençait `d.type` (toujours `undefined`
   dans la réponse JSON v0.0.7). Correction : regénération via
-  `python tools/minify_web.py` — le header intègre maintenant `d.category`,
+  `python tools/minify_web.py` - le header intègre maintenant `d.category`,
   `d.model` et `d.source`.
 
 - **ESP32 absent de sa propre liste d'équipements** (`network_scanner.cpp`) :
@@ -2189,7 +2189,7 @@ Format : [Semantic Versioning](https://semver.org/)
 - **Badge "PTR" opaque pour l'utilisateur** (`web_src/scan.html`) :
   Le badge affiché à côté du nom d'hôte ne donnait aucune indication sur sa
   signification. Correction : renommé `"DNS↩"` (flèche inverse = résolution inverse)
-  avec tooltip `title="DNS inverse (PTR) — nom fourni par le routeur / box"`.
+  avec tooltip `title="DNS inverse (PTR) - nom fourni par le routeur / box"`.
   Le badge `"Self"` pour l'ESP32 affiche `"ESP32"` avec tooltip explicatif.
 
 - **Modèle sous le fabricant peu lisible** (`web_src/scan.html`) :
@@ -2221,7 +2221,7 @@ Format : [Semantic Versioning](https://semver.org/)
   - Remplit `manufacturer` (marque FAI), `model` (ex: "Livebox 6"), `category` = "Router"
   - Détection non bloquante, 100 % locale (pas de requête réseau)
 
-- **Champ `hostname` effectivement renseigné** : `_resolveHostnames()` n'est plus un no-op —
+- **Champ `hostname` effectivement renseigné** : `_resolveHostnames()` n'est plus un no-op -
   implémentation complète avec `HostnameResolver`
 
 ### Modifié
@@ -2229,7 +2229,7 @@ Format : [Semantic Versioning](https://semver.org/)
 - **`struct NetworkDevice`** : refactoring des champs
   - `type` → `category` (alignement avec `OuiEntry.category`)
   - Ajout `model` (ex: "Freebox Ultra", "Livebox 6", `""` si inconnu)
-  - Ajout `os`     (usage futur — vide en v0.0.7)
+  - Ajout `os`     (usage futur - vide en v0.0.7)
   - Ajout `source` (`"mDNS"` | `"PTR"` | `"MAC"` | `""`)
 
 - **`network_scanner.cpp`** :
@@ -2273,7 +2273,7 @@ Format : [Semantic Versioning](https://semver.org/)
 - Les badges et tooltips expliquent désormais la provenance des informations affichées.
 ---
 
-## [0.0.6] — 2026-06-15
+## [0.0.6] - 2026-06-15
 
 ### Corrigé
 
@@ -2296,7 +2296,7 @@ Format : [Semantic Versioning](https://semver.org/)
   Correction : guard `if (_mutex) return;` en tête de `begin()`.
 
 - **Callbacks ArduinoOTA empilés à chaque reconnexion** (`ota_manager.h/.cpp`) :
-  `ArduinoOTA.onStart/onEnd/onError` s'enregistrent en liste — les rappeler à
+  `ArduinoOTA.onStart/onEnd/onError` s'enregistrent en liste - les rappeler à
   chaque reconnexion faisait croître la chaîne indéfiniment.
   Correction : flag `_callbacksRegistered` ; les lambdas ne s'enregistrent qu'une
   fois. `ArduinoOTA.begin()` est toujours rappelé (nécessaire pour ré-ouvrir le
@@ -2318,7 +2318,7 @@ Format : [Semantic Versioning](https://semver.org/)
 ### Technique
 
 - Modèle de robustesse adopté : chaque `begin()` exposé publiquement est désormais
-  **idempotent** — appelable plusieurs fois sans effet de bord (guard mutex,
+  **idempotent** - appelable plusieurs fois sans effet de bord (guard mutex,
   flag `_started`, flag `_callbacksRegistered`).
 - `WiFiManager` est le seul point de déclenchement post-reconnexion : il stocke le
   callback applicatif et le rappelle lors de toute transition déconnecté → connecté,
@@ -2328,12 +2328,12 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.0.5] — 2026-06-15
+## [0.0.5] - 2026-06-15
 
 ### Ajouté
 - **`data/oui.json`** : source unique pour 151 entrées OUI avec champs `manufacturer` et `category`
   (SBC, IoT, Mobile, Network, Router, NAS, Camera, Printer, Audio, TV, Streaming, Smart Home,
-  Home Automation, Robot Vacuum, Security, Computer) — seul fichier à modifier pour enrichir la base
+  Home Automation, Robot Vacuum, Security, Computer) - seul fichier à modifier pour enrichir la base
 - **`include/oui_table.h`** : header C++ généré automatiquement depuis `data/oui.json` par
   `tools/minify_web.py`, contient `struct OuiEntry{oui, manufacturer, category}` et `OUI_TABLE[]`
 - **`doc/warnings.md`** : catalogue des limitations connues, comportements non évidents et points
@@ -2342,46 +2342,46 @@ Format : [Semantic Versioning](https://semver.org/)
 ### Modifié
 - **`struct NetworkDevice`** (renommé depuis `HostInfo`) : champs refactorisés
   `vendor` → `manufacturer`, `lastSeenMs` → `lastSeen`, ajout `type` (alimenté depuis `category` OUI)
-  et `online` — structure extensible pour les futures colonnes de l'interface
+  et `online` - structure extensible pour les futures colonnes de l'interface
 - **`tools/minify_web.py`** : traite désormais `data/oui.json` en plus des pages HTML ;
   génère `include/oui_table.h` avec déduplications des OUI et échappement des caractères spéciaux
 - **`network_scanner.cpp`** : retire la table OUI inline (100+ lignes), inclut `oui_table.h`,
   `lookupOui()` retourne `const OuiEntry*` et alimente `manufacturer` + `type` en une seule passe
 - **`resultsToJson()`** : envoie `elapsedMs = millis() - d.lastSeen` (durée écoulée en ms)
-  au lieu du timestamp brut `millis()` — corrige l'affichage **"56 ans"** dans "Vu il y a"
+  au lieu du timestamp brut `millis()` - corrige l'affichage **"56 ans"** dans "Vu il y a"
 - **`web_src/scan.html`** : `fmtSeen()` reçoit `elapsedMs` directement (plus de `Date.now()`),
   champ `d.vendor` → `d.manufacturer`, couleurs de texte éclaircies pour meilleur contraste
 - **`platformio.ini`** : `PROJECT_VERSION` → `0.0.5`
 
 ### Technique
 - La durée "Vu il y a" était erronée car `millis()` (ms depuis boot ESP32, ex: 5 000)
-  était comparé à `Date.now()` (epoch Unix, ex: 1 750 000 000 000) côté navigateur — différence ≈ 56 ans.
+  était comparé à `Date.now()` (epoch Unix, ex: 1 750 000 000 000) côté navigateur - différence ≈ 56 ans.
   Correction : `resultsToJson()` calcule l'écart côté ESP32 avant serialisation.
-- `lookupOui()` retourne `const OuiEntry*` (nullptr si inconnu) plutôt qu'une `String` copiée —
+- `lookupOui()` retourne `const OuiEntry*` (nullptr si inconnu) plutôt qu'une `String` copiée -
   un seul accès à la table pour remplir deux champs de `NetworkDevice`
-- `OUI_TABLE[]` est en flash (`static const`) depuis `oui_table.h` inclus dans le `.cpp` uniquement —
+- `OUI_TABLE[]` est en flash (`static const`) depuis `oui_table.h` inclus dans le `.cpp` uniquement -
   pas d'exposition dans l'interface publique du module
 
 ### Infrastructure
 - Workflow de génération unifié : `data/oui.json` + `web_src/*.html` → `python tools/minify_web.py`
-  → headers C++ versionnés — aucun autre outil requis
+  → headers C++ versionnés - aucun autre outil requis
 - `minify_web.py` déduplique les OUI au passage (protection contre les doublons dans le JSON)
 
 ---
 
-## [0.0.4] — 2026-06-15
+## [0.0.4] - 2026-06-15
 
 ### Ajouté
 - **Page dédiée équipements** (`web_src/scan.html`) : tableau IP / Fabricant / MAC / Vu il y a, barre de progression animée, polling 2 s pendant le scan, rafraîchissement auto 60 s
 - **Navigation** : menu persistant Accueil / Équipements / OTA sur toutes les pages
 - **Route `GET /scan`** : sert `SCAN_PAGE` depuis la flash (PROGMEM)
 - **`include/web_interface_scan.h`** : header PROGMEM généré depuis `web_src/scan.html`
-- **Champ `hostname`** dans `struct NetworkDevice` et déclaration `_resolveHostnames()` (stub) : infrastructure préparée pour la résolution PTR DNS, différée en v0.0.6 — `gethostbyaddr()` non disponible sur lwIP ESP32 (voir `docs/WARNINGS.md`)
+- **Champ `hostname`** dans `struct NetworkDevice` et déclaration `_resolveHostnames()` (stub) : infrastructure préparée pour la résolution PTR DNS, différée en v0.0.6 - `gethostbyaddr()` non disponible sur lwIP ESP32 (voir `docs/WARNINGS.md`)
 - **`ROADMAP.md`** : renommé depuis `BACKLOG.md`
 
 ### Modifié
 - `src/modules/network_scanner.h` : renommage `HostInfo` → `struct NetworkDevice`, ajout du champ `hostname`
-- `src/modules/network_scanner.cpp` : `_resolveHostnames()` déclarée mais non-operative (no-op) — `gethostbyaddr()` introuvable sur cette plateforme ; `resultsToJson()` inclut le champ `hostname` (vide)
+- `src/modules/network_scanner.cpp` : `_resolveHostnames()` déclarée mais non-operative (no-op) - `gethostbyaddr()` introuvable sur cette plateforme ; `resultsToJson()` inclut le champ `hostname` (vide)
 - `web_src/index.html` : simplifié (tableau équipements retiré), accès `/scan` via menu et raccourcis
 - `tools/minify_web.py` : ajout de `scan.html` dans `PAGES[]`
 - `platformio.ini` : `PROJECT_VERSION` → `0.0.4`
@@ -2392,12 +2392,12 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.0.3] — 2026-06-15
+## [0.0.3] - 2026-06-15
 
 ### Ajouté
 - **Architecture modulaire** : `src/` réorganisé en sous-dossiers thématiques
-  - `src/modules/` — modules fonctionnels indépendants et transposables
-  - `src/utils/` — utilitaires partagés header-only
+  - `src/modules/` - modules fonctionnels indépendants et transposables
+  - `src/utils/` - utilitaires partagés header-only
 - **`WiFiManager`** (`modules/wifi_manager.h/.cpp`) : encapsule WiFiMulti, reconnexion
   avec debounce 30 s, callback de connexion, mDNS intégré
 - **`OtaManager`** (`modules/ota_manager.h/.cpp`) : encapsule ArduinoOTA + routes web OTA,
@@ -2416,12 +2416,12 @@ Format : [Semantic Versioning](https://semver.org/)
   - `POST /api/scan`    → déclenche un scan async
 
 ### Modifié
-- `src/main.cpp` : réduit à 30 lignes — orchestre uniquement l'initialisation des modules
+- `src/main.cpp` : réduit à 30 lignes - orchestre uniquement l'initialisation des modules
 - `web_src/index.html` : cartouche réseau aligné à la largeur du nouveau tableau équipements
 
 ### Technique
 - **`ScanProvider`** (struct de lambdas) : interface de découplage entre `WebServerModule`
-  et `NetworkScanner` — pas d'include croisé entre modules
+  et `NetworkScanner` - pas d'include croisé entre modules
 - **Thread-safety** : `NetworkScanner` protège `_results` par `SemaphoreHandle_t` ;
   `getResults()` retourne une copie value, jamais une référence mutable
 - **Sweep UDP** : envoie un paquet vide sur le port 9 (discard) pour chaque IP du sous-réseau
@@ -2439,7 +2439,7 @@ Format : [Semantic Versioning](https://semver.org/)
 - **PlatformIO auto-discovery** : les `.cpp` dans `src/modules/` et `src/utils/` sont
   compilés automatiquement sans modifier `platformio.ini`
 - **`main.cpp` comme orchestrateur** : aucune logique métier, uniquement
-  `module.begin()` + `module.loop()` — extension future = ajouter un module, pas modifier main
+  `module.begin()` + `module.loop()` - extension future = ajouter un module, pas modifier main
 - **`extra_scripts` corrigé** : déplacé de la section `[platformio]` vers `[env:esp32s3_n16r8]`
   (seul emplacement valide selon la doc PlatformIO)
 - **`PROJECT_VERSION`** mis à jour → `0.0.3`
@@ -2449,7 +2449,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [0.0.2] — 2026-06-14
+## [0.0.2] - 2026-06-14
 
 ### Ajouté
 - **WiFiMulti** : gestion multi-réseaux depuis `include/secrets.h`, reconnexion automatique dans `loop()`
@@ -2471,18 +2471,18 @@ Format : [Semantic Versioning](https://semver.org/)
 ### Modifié
 - `src/main.cpp` : implémentation complète (stub remplacé)
 - `platformio.ini` : `PROJECT_VERSION` → `0.0.2`, ajout `lib_deps` (ArduinoJson v7), `extra_scripts` (minification pre-build), suppression des chemins Windows
-- `tools/minify_web.py` : refonte complète — traite plusieurs pages, génère des headers PROGMEM paramétrables, dual-mode standalone/PlatformIO
+- `tools/minify_web.py` : refonte complète - traite plusieurs pages, génère des headers PROGMEM paramétrables, dual-mode standalone/PlatformIO
 
 ### Technique
-- **Stratégie de stockage HTML** : abandon de SPIFFS au profit de l'injection PROGMEM —
+- **Stratégie de stockage HTML** : abandon de SPIFFS au profit de l'injection PROGMEM -
   le HTML est compilé directement dans le firmware, éliminant la partition filesystem et
   l'étape « Upload Filesystem Image »
 - **Serving sans RAM** : `server.send_P()` lit `INDEX_HTML` et `OTA_PAGE` depuis la flash
-  (PROGMEM) via DMA, sans copie en heap — empreinte RAM quasi nulle pour les pages web
+  (PROGMEM) via DMA, sans copie en heap - empreinte RAM quasi nulle pour les pages web
 - **`/api/status` sans template** : les données dynamiques (SSID, IP, RSSI, uptime) sont
   injectées côté client par `fetch()` toutes les 10 s, évitant la génération HTML serveur
 - **OTA dual-stack** : ArduinoOTA (UDP, port 3232) pour les mises à jour PlatformIO/réseau,
-  et `WebServer + Update` (HTTP POST multipart) pour les mises à jour via navigateur —
+  et `WebServer + Update` (HTTP POST multipart) pour les mises à jour via navigateur -
   les deux coexistent et partagent le même hostname mDNS
 - **WiFiMulti** : l'ESP32 tente chaque SSID de `secrets.h` par ordre de signal, avec
   timeout `WIFI_CONNECT_TIMEOUT` (15 s) ; la reconnexion dans `loop()` est non-bloquante
@@ -2492,7 +2492,7 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ### Infrastructure
 - **Pre-script PlatformIO** (`extra_scripts = pre:tools/minify_web.py`) : la minification
-  s'exécute automatiquement avant chaque `pio run` — le header C++ est toujours synchronisé
+  s'exécute automatiquement avant chaque `pio run` - le header C++ est toujours synchronisé
   avec les sources HTML sans intervention manuelle
 - **Table `PAGES[]`** dans `minify_web.py` : architecture extensible pour ajouter de
   nouvelles pages sans modifier la logique du script
@@ -2500,7 +2500,7 @@ Format : [Semantic Versioning](https://semver.org/)
   à des regex de substitution intégrées ; les librairies optionnelles améliorent simplement
   le taux de compression
 - **Dual-mode du script** : détection automatique du contexte d'exécution
-  (`Import("env")` PlatformIO vs `__main__` standalone) — un seul fichier pour les deux usages
+  (`Import("env")` PlatformIO vs `__main__` standalone) - un seul fichier pour les deux usages
 - **`lib_deps` minimal** : seule dépendance externe ajoutée = `ArduinoJson v7` ;
   WiFi, mDNS, OTA, WebServer, Update sont tous dans le SDK Arduino ESP32
 - **Suppression des chemins Windows** dans `platformio.ini` (`build_dir`, `build_cache_dir`) :
@@ -2511,18 +2511,18 @@ Format : [Semantic Versioning](https://semver.org/)
 web_src/index.html  ──minify──►  include/web_interface.h      (INDEX_HTML[] PROGMEM)
 web_src/ota.html    ──minify──►  include/web_interface_ota.h  (OTA_PAGE[]  PROGMEM)
 ```
-Aucune étape « Upload Filesystem Image » requise — le HTML voyage avec le firmware.
+Aucune étape « Upload Filesystem Image » requise - le HTML voyage avec le firmware.
 
 ---
 
-## [0.0.1] — 2026-06-13
+## [0.0.1] - 2026-06-13
 
 ### Ajouté
 - Structure initiale du projet PlatformIO (ESP32-S3 DevKitC-1 N16R8)
 - `include/board_config.h` : brochage complet de la carte (SPI, I2C, GPIO, NeoPixel, capteurs)
 - `include/app_config.h` : paramètres centralisés de l'application (timeouts, port, features)
 - `include/secrets_example.h` : modèle pour les identifiants WiFi multi-réseaux
-- `web_src/` : dossier sources HTML — seul endroit autorisé pour modifier le HTML
+- `web_src/` : dossier sources HTML - seul endroit autorisé pour modifier le HTML
 - `tools/minify_web.py` : minificateur CSS/JS pour injection dans header C++
 - `tools/extract_web_sources.py` : extracteur/beautifier de sources depuis un header existant
 - `tools/validate_html.py` : validateur de structure HTML (balises, IDs, i18n)

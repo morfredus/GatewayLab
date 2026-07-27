@@ -1,4 +1,4 @@
-# Configuration WiFi — Gateway Lab
+# Configuration WiFi - Gateway Lab
 
 Ce guide explique comment connecter Gateway Lab à votre réseau WiFi
 **sans installer aucun logiciel de développement**, simplement avec un
@@ -25,7 +25,7 @@ connectée.
 
 ---
 
-## Comment ça fonctionne — vue d'ensemble
+## Comment ça fonctionne - vue d'ensemble
 
 À chaque démarrage, l'ESP32 applique les règles suivantes, dans cet ordre :
 
@@ -42,19 +42,19 @@ connectée.
 
 La mémoire NVS (*Non-Volatile Storage*) est une petite zone de stockage à
 l'intérieur de la puce ESP32 qui **survit aux redémarrages et aux coupures
-de courant** — comme le disque dur d'un ordinateur, mais beaucoup plus petit.
+de courant** - comme le disque dur d'un ordinateur, mais beaucoup plus petit.
 
 ---
 
-## Première mise en service — étape par étape
+## Première mise en service - étape par étape
 
-### Étape 1 — Alimenter la carte
+### Étape 1 - Alimenter la carte
 
 Branchez l'ESP32 sur une alimentation USB (chargeur de téléphone, port USB
 d'un ordinateur, etc.). Aucune connexion réseau n'est nécessaire pour cette
 étape.
 
-### Étape 2 — Se connecter au point d'accès de configuration
+### Étape 2 - Se connecter au point d'accès de configuration
 
 Sur votre téléphone ou ordinateur, ouvrez les réglages WiFi et cherchez un
 réseau nommé :
@@ -72,7 +72,7 @@ l'adresse :
 http://192.168.4.1
 ```
 
-### Étape 3 — Choisir votre réseau WiFi domestique
+### Étape 3 - Choisir votre réseau WiFi domestique
 
 La page affiche la liste des réseaux WiFi détectés à proximité.
 
@@ -81,13 +81,13 @@ La page affiche la liste des réseaux WiFi détectés à proximité.
 2. Saisissez le mot de passe de ce réseau
 3. Cliquez sur **Enregistrer et connecter**
 
-### Étape 4 — Redémarrage automatique
+### Étape 4 - Redémarrage automatique
 
 L'ESP32 enregistre les informations dans sa mémoire NVS, puis redémarre
 automatiquement. Le point d'accès `GatewayLab-Setup` disparaît : c'est normal,
 votre téléphone se reconnectera tout seul à votre WiFi habituel.
 
-### Étape 5 — Retrouver l'interface
+### Étape 5 - Retrouver l'interface
 
 Une fois reconnecté à votre propre réseau WiFi, ouvrez un navigateur et allez
 à :
@@ -151,7 +151,7 @@ réseau de développement dans `include/secrets.h` (voir
 ```
 
 Ce fichier n'est **jamais** utilisé si un réseau a déjà été enregistré via
-le portail (priorité à la configuration NVS) — il ne sert qu'en
+le portail (priorité à la configuration NVS) - il ne sert qu'en
 développement, sur une carte qui n'a encore aucun réseau enregistré.
 
 `include/secrets.h` est ignoré par Git : il ne sera jamais distribué avec
@@ -174,5 +174,5 @@ redémarrage (délai d'environ 15 secondes), l'ESP32 réactive automatiquement
 le portail `GatewayLab-Setup` pour corriger les identifiants.
 
 **Puis-je configurer le WiFi 5 GHz ?**
-Non — l'ESP32 ne supporte que le WiFi 2,4 GHz (b/g/n). Assurez-vous que
+Non - l'ESP32 ne supporte que le WiFi 2,4 GHz (b/g/n). Assurez-vous que
 votre routeur diffuse bien un réseau 2,4 GHz séparé ou en mode mixte.

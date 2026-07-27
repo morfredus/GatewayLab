@@ -1,4 +1,4 @@
-# Architecture, Limitations & Points de vigilance — Gateway Lab
+# Architecture, Limitations & Points de vigilance - Gateway Lab
 
 Ce document regroupe les principales décisions d'architecture, limitations connues,
 risques identifiés et points de vigilance pour la maintenance et l'évolution du projet.
@@ -97,9 +97,9 @@ Objectifs :
 
 `HostnameResolver` implémente deux stratégies parallèles :
 
-1. **mDNS passif** — écoute les annonces multicast `224.0.0.251:5353` pendant le sweep ARP.
+1. **mDNS passif** - écoute les annonces multicast `224.0.0.251:5353` pendant le sweep ARP.
    Capture les enregistrements A des devices compatibles (`.local`).
-2. **PTR DNS batch** — envoie des requêtes `d.c.b.a.in-addr.arpa` au DNS du réseau.
+2. **PTR DNS batch** - envoie des requêtes `d.c.b.a.in-addr.arpa` au DNS du réseau.
    Toutes les requêtes sont envoyées simultanément (fenêtre d'attente unique de 500 ms).
 
 `gethostbyaddr()` n'est pas utilisé (indisponible sur lwIP Arduino ESP32) ;
@@ -109,14 +109,14 @@ ces deux mécanismes manuels le remplacent efficacement.
 
 ---
 
-## SSDP — Limitations connues
+## SSDP - Limitations connues
 
 ### ⚠️ Équipements hors UPnP non détectés par SSDP
 
 Le scanner SSDP ne découvre que les devices qui répondent à M-SEARCH multicast.
 Les équipements suivants n'apparaissent pas dans les résultats SSDP :
 
-* Smartphones (Android/iOS) — UPnP désactivé par défaut
+* Smartphones (Android/iOS) - UPnP désactivé par défaut
 * Raspberry Pi sans serveur UPnP
 * Imprimantes sans UPnP
 * Équipements avec pare-feu bloquant le multicast
@@ -132,20 +132,20 @@ Certains devices annoncent une `LOCATION` qui n'est plus joignable (device étei
 entre l'annonce et le fetch, port changé, redirection non gérée).
 
 **Comportement** : timeout de 2 s, entrée minimale conservée avec `source="SSDP"`
-et champs vides — aucun crash, aucun blocage.
+et champs vides - aucun crash, aucun blocage.
 
 ---
 
 ### ℹ️ LOCATION inutilisable rejetée (depuis v0.8.1)
 
 Certains équipements UPnP mal configurés annoncent une `LOCATION` dont
-l'adresse est inutilisable depuis l'ESP32 — la tentative de récupération du
+l'adresse est inutilisable depuis l'ESP32 - la tentative de récupération du
 descripteur XML échoue systématiquement (`Connection reset by peer`) ou ne
 correspond à aucun équipement réellement joignable sur le réseau scanné :
 
-* `127.0.0.0/8` — boucle locale
-* `0.0.0.0` — adresse non initialisée
-* `169.254.0.0/16` — lien-local APIPA (auto-configuration Windows)
+* `127.0.0.0/8` - boucle locale
+* `0.0.0.0` - adresse non initialisée
+* `169.254.0.0/16` - lien-local APIPA (auto-configuration Windows)
 
 **Comportement** : ces LOCATION sont détectées et rejetées avant tout essai
 de connexion HTTP (`SsdpScanner::scan()`, `ssdp_scanner.cpp`), avec un
@@ -250,9 +250,9 @@ Routes sensibles :
 
 * `POST /api/scan`
 * `POST /update`
-* `GET /api/system/backup` — télécharge les mots de passe WiFi enregistrés
+* `GET /api/system/backup` - télécharge les mots de passe WiFi enregistrés
   en clair (sauvegarde des paramètres de fonctionnement)
-* `POST /api/system/restore` — peut enregistrer de nouveaux réseaux WiFi
+* `POST /api/system/restore` - peut enregistrer de nouveaux réseaux WiFi
 
 Ne jamais exposer Gateway Lab directement sur Internet.
 
@@ -315,7 +315,7 @@ défaut.
   réseau local pouvant joindre l'API `/api/wifi`
 * l'API REST `/api/wifi` ne renvoie jamais les mots de passe enregistrés
   (uniquement les SSID), mais l'ajout/suppression de réseaux n'est protégé
-  par aucune authentification — limiter l'accès au réseau local de confiance
+  par aucune authentification - limiter l'accès au réseau local de confiance
 * le portail de configuration (`GatewayLab-Setup`) est lui aussi sans mot de
   passe par conception (accessibilité du premier démarrage) : il n'est actif
   que tant qu'aucun réseau n'est enregistré
@@ -378,7 +378,7 @@ journalisent leur high-water-mark en fin d'exécution (niveau `DEBUG`).
 
 ---
 
-## ⚠️ Mémoire critique — mode dégradé plutôt que redémarrage automatique
+## ⚠️ Mémoire critique - mode dégradé plutôt que redémarrage automatique
 
 Depuis la v0.8.0, `SystemHealth` (`src/modules/system_health.*`) ne
 redémarre **jamais** automatiquement l'ESP32 sur condition mémoire basse.
@@ -396,19 +396,19 @@ HEAP_RECOVERY_MARGIN` octets à nouveau libres ; sinon, redémarrage manuel
 via `POST /api/system/restart` (bouton dédié, page Système). Ce choix
 évite un redémarrage intempestif qui ferait perdre une session utilisateur
 en cours, au prix d'une disponibilité réduite en cas de fuite mémoire réelle
-— surveiller `GET /api/system/health` / `GET /api/diagnostics` en cas de
+- surveiller `GET /api/system/health` / `GET /api/diagnostics` en cas de
 mode dégradé récurrent (signe d'une fuite à corriger plutôt que de
 contourner).
 
 **Bornes complémentaires** pour éviter toute croissance non bornée :
 `MAX_TRACKED_DEVICES` (300), `MAX_HISTORY_EVENTS` (1000),
-`MAX_NOTES_PER_DEVICE` (20), `MAX_NOTE_LENGTH` (256 caractères) — au-delà,
+`MAX_NOTES_PER_DEVICE` (20), `MAX_NOTE_LENGTH` (256 caractères) - au-delà,
 éviction des entrées les plus anciennes (devices, historique FIFO) ou refus
 silencieux côté API (notes).
 
 ---
 
-## ⚠️ Socket mDNS multicast — conflit avec ESPmDNS (résolu en v0.8.2)
+## ⚠️ Socket mDNS multicast - conflit avec ESPmDNS (résolu en v0.8.2)
 
 ### Historique du problème
 
@@ -420,7 +420,7 @@ déclenchant `DnsSdScanner::scan()` pendant qu'un scan principal gardait
 (`could not bind socket: 112`).
 
 La v0.8.1 a introduit `MdnsManager`, qui mutualisait un unique socket entre
-ces deux modules — mais cette correction ne traitait que le conflit ENTRE
+ces deux modules - mais cette correction ne traitait que le conflit ENTRE
 ces deux modules applicatifs. Elle ne prenait pas en compte un troisième
 consommateur, toujours actif : le composant mDNS d'ESP-IDF lui-même
 (`MDNS.begin()`, appelé dans `wifi_manager.cpp` au démarrage Wi-Fi, log
@@ -428,21 +428,21 @@ consommateur, toujours actif : le composant mDNS d'ESP-IDF lui-même
 `224.0.0.251:5353` exclusivement pour son responder. En conséquence,
 `MdnsManager::acquire()` échouait systématiquement dès que le responder
 mDNS était actif (log `[WRN][MdnsMgr] Impossible de rejoindre
-224.0.0.251:5353`) — c'est-à-dire en pratique en permanence.
+224.0.0.251:5353`) - c'est-à-dire en pratique en permanence.
 
 ### Résolution (v0.8.2)
 
 * **`DnsSdScanner`** a été réécrit pour interroger directement le composant
   mDNS d'ESP-IDF via son API C (`mdns_query_ptr()` / `mdns_query_results_free()`,
   `<mdns.h>`), qui passe par le service mDNS déjà initialisé par
-  `MDNS.begin()` — aucun socket applicatif dédié, donc aucun risque de
+  `MDNS.begin()` - aucun socket applicatif dédié, donc aucun risque de
   conflit de bind.
 * **`HostnameResolver`** ne tente plus d'écoute mDNS passive : il n'existe
   pas d'API publique ESP-IDF pour observer passivement les annonces reçues
   par le responder partagé. `begin()`/`update()`/`end()` sont conservés
   comme no-op (compatibilité des appelants) ; seule la résolution PTR DNS
   (port 53, unicast, sans rapport avec ce conflit) reste active.
-* `MdnsManager` (`src/modules/mdns_manager.h/.cpp`) est supprimé — devenu
+* `MdnsManager` (`src/modules/mdns_manager.h/.cpp`) est supprimé - devenu
   inutile, plus aucun module n'ouvre de socket multicast applicatif.
 
 **Limite résiduelle** : la résolution de noms d'hôtes via mDNS passif
@@ -457,7 +457,7 @@ disponible.
 
 ### Symptôme
 
-`[INF][DNSSD] DNS-SD terminé — 0 IP(s) résolue(s)` à chaque scan, malgré la
+`[INF][DNSSD] DNS-SD terminé - 0 IP(s) résolue(s)` à chaque scan, malgré la
 présence réelle d'objets exposant des services DNS-SD sur le réseau
 (Philips Hue, Echo, Synology, etc.).
 
@@ -468,8 +468,8 @@ fenêtre d'attente par type de service interrogé via `mdns_query_ptr()`
 restait calculée en divisant `timeout_ms` par le nombre de types de service
 (~29), avec un plancher de seulement 100 ms. Or la RFC 6762 §6 impose aux
 répondeurs un délai aléatoire de 20 à 120 ms avant de répondre à une
-question portant sur un enregistrement partagé — cas des PTR de découverte
-de service — afin d'éviter une rafale de réponses simultanées. Une fenêtre
+question portant sur un enregistrement partagé - cas des PTR de découverte
+de service - afin d'éviter une rafale de réponses simultanées. Une fenêtre
 de 100 ms (déjà réduite par l'appel précédent du minuteur lwIP/mDNS) ne
 laissait quasiment aucune marge pour l'aller-retour réseau au-delà de ce
 délai : la quasi-totalité des réponses arrivait hors fenêtre, d'où un scan
@@ -500,7 +500,7 @@ démarrage d'un scan de ports (`Ports`/`Scanner`, tag dans les logs).
 
 `PortScanner::_httpBanner()`, `_tcpBanner()` et `_httpGet()`
 (`port_scanner.cpp`) retournaient immédiatement en cas d'échec de
-`WiFiClient::connect()`, sans appeler `client.stop()` — comptant sur le
+`WiFiClient::connect()`, sans appeler `client.stop()` - comptant sur le
 destructeur RAII de `WiFiClient` pour libérer le socket lwIP. Sous
 Arduino-ESP32, cette libération peut être retardée, ajoutant de la pression
 sur le pool de sockets lwIP (`CONFIG_LWIP_MAX_SOCKETS = 16`, partagé avec le
@@ -524,7 +524,7 @@ anticipé sur échec de `connect()`, dans les trois fonctions concernées.
 succès (`_httpBanner()` suivi de `_probeIoTApis()`, `port_scanner.cpp`).
 Contrairement aux crashs précédents (v1.4.2 et antérieurs), le heap réel
 juste avant l'incident (lu dans les lignes de log brutes) est sain
-(~230-235 000 o) — la cause n'est donc **pas** un épuisement du tas.
+(~230-235 000 o) - la cause n'est donc **pas** un épuisement du tas.
 
 ### État de l'investigation
 
@@ -546,14 +546,14 @@ fin de tâche, jamais atteinte lors d'un crash en cours de scan).
 
 **Si le PANIC se reproduit malgré ces mitigations**, un moniteur série
 branché au moment des faits reste nécessaire pour obtenir la trace réelle
-du PANIC — `BootLog` ne capture pas de backtrace (limitation documentée
+du PANIC - `BootLog` ne capture pas de backtrace (limitation documentée
 dans `boot_log.h`).
 
 ### Anomalie de rapport associée (non liée à la cause du crash)
 
 Le champ `freeHeapAtReset`/`lastStats` de l'entrée `/debug` affiche
 systématiquement 0 même quand `uptimeAtResetMs` est correctement renseigné
-— `BootLog::service()` ne semble jamais atteindre la mise à jour complète
+- `BootLog::service()` ne semble jamais atteindre la mise à jour complète
 de `RuntimeStats` avant un PANIC, y compris sur le tout premier appel après
 le boot (qui devrait s'exécuter sans le délai de 30 s). Cause non
 identifiée à ce stade ; n'affecte que l'affichage de diagnostic, pas le

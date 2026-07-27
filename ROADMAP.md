@@ -1,4 +1,4 @@
-# Roadmap — Gateway Lab
+# Roadmap - Gateway Lab
 
 Fonctionnalités planifiées par ordre de priorité décroissante.
 
@@ -7,7 +7,7 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 ## Écosystème morfSystem
 
 * **Émetteur morfBeacon.** GatewayLab est aujourd'hui découvert par sonde
-  réseau, ce qui suppose de connaître son nom mDNS à l'avance — l'inverse d'une
+  réseau, ce qui suppose de connaître son nom mDNS à l'avance - l'inverse d'une
   découverte. L'objectif de l'écosystème est que tout composant soit découvert
   de façon homogène, quelle que soit sa plateforme. Le protocole
   `morfbeacon/1` est du JSON compact en UDP et n'exige aucune dépendance
@@ -26,7 +26,7 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 * Intégration optionnelle de l'API locale des mesh WiFi propriétaires
   (ex. TP-Link Deco) pour déduire automatiquement le rattachement exact
   d'un appareil à un répéteur, en complément du rattachement manuel et de
-  la découverte SNMP (v1.4.0) — utile pour les répéteurs mesh grand public
+  la découverte SNMP (v1.4.0) - utile pour les répéteurs mesh grand public
   qui n'exposent pas d'agent SNMP
 * Scan croisé multi-sous-réseaux (cas du double NAT, ex. plusieurs Deco
   X50 chacun en mode routeur) : `gatewaylab` ne voit aujourd'hui que le
@@ -35,13 +35,13 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
   l'autre réseau pour y lancer un scan ARP/SNMP avant de revenir, donc la
   gestion d'identifiants WiFi multiples, une file de scan différée, et une
   tolérance à l'indisponibilité temporaire de l'interface web pendant la
-  bascule — chantier non trivial, à dater une fois priorisé
+  bascule - chantier non trivial, à dater une fois priorisé
 
 ---
 
 ## Roadmap produit
 
-### v0.1.x — Inventaire enrichi (terminé en v0.2.0)
+### v0.1.x - Inventaire enrichi (terminé en v0.2.0)
 
 * ~~Historique persistant des équipements~~
 * ~~Première apparition / dernière apparition~~
@@ -52,11 +52,11 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 * ~~Export CSV~~ (terminé en v0.7.0)
 * ~~Filtres sur la page Équipements (type, fabricant, favoris)~~ (terminé en v0.7.0)
 
-### v0.2.x — Découverte avancée
+### v0.2.x - Découverte avancée
 * Fingerprinting TCP/IP stack avancé (TTL + TCP options + window size)
 * ~~SNMP v1/v2c (community "public") pour équipements réseau (port UDP 161)~~ (terminé en v0.6.0, sondage `sysDescr` lors de la passe précise)
 
-### v0.3.x — Configuration WiFi sans recompilation (terminé en v0.3.0)
+### v0.3.x - Configuration WiFi sans recompilation (terminé en v0.3.0)
 
 * ~~Portail de configuration WiFi (point d'accès + page captive)~~
 * ~~Persistance NVS multi-réseaux (`Preferences`)~~
@@ -67,30 +67,30 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 * Détection des caméras Xiaomi
 * Intégrations d'objets connectés locaux supplémentaires
 
-### v0.4.x — Topologie réseau
+### v0.4.x - Topologie réseau
 
 * ~~Page dédiée et détection automatique de la passerelle~~ (terrain préparé
   en v0.7.0 : page `/topology`, vue texte passerelle/équipements à partir des
   données déjà collectées)
 * ~~Détection des points d'accès / répéteurs mesh WiFi par hostname~~ (ex.
-  TP-Link Deco, Orbi, eero, Nest WiFi — terminé : `applyMeshDetection()`,
+  TP-Link Deco, Orbi, eero, Nest WiFi - terminé : `applyMeshDetection()`,
   `device_enricher.h`)
 * ~~Cartographie logique du réseau~~ (arbre SVG sur la page `/topology`)
 * ~~Relations entre équipements (qui est connecté à quel répéteur/AP)~~
-  (déclaration manuelle via `/api/topology/parent` — un scan ARP/SSDP seul ne
+  (déclaration manuelle via `/api/topology/parent` - un scan ARP/SSDP seul ne
   peut pas déduire le rattachement WiFi exact à un répéteur mesh propriétaire)
 * Identification des switches connus
 * Visualisation graphique du réseau plus riche (zoom, drag, icônes par
   catégorie)
 
-### v0.5.x — Connectivité
+### v0.5.x - Connectivité
 
 * MQTT
 * Webhooks
 * Événements réseau temps réel
 * API d'intégration externe
 
-### v0.6.x — Détection avancée (terminé en v0.6.0)
+### v0.6.x - Détection avancée (terminé en v0.6.0)
 
 * ~~Sous-catégorie (`type`) au sein d'une catégorie~~
 * ~~Score de confiance unique et plus prudent (minimum des signaux), détail par champ~~
@@ -100,14 +100,14 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 * ~~API HTTP propriétaires des appareils multimédia courants (Cast, Sonos, Roku, Samsung)~~
 * ~~Service DNS-SD Matter (`_matterc._udp`)~~
 
-### v0.7.x — Matériel
+### v0.7.x - Matériel
 
 * Écran OLED
 * Analyse Bluetooth Low Energy
 * Découverte des équipements BLE
 * Interface locale embarquée
 
-### v1.0.0 — Gateway réseau complète
+### v1.0.0 - Gateway réseau complète
 
 * ~~Surveillance continue du réseau et score de stabilité~~ ✅ v1.0.0
 * Cartographie réseau
@@ -128,7 +128,7 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 | v0.0.6  | Corrections de robustesse, reconnexion WiFi, mDNS, OTA, JSON sécurisé, modules idempotents                                                                         |
 | v0.0.7  | Résolution des noms d'hôtes (mDNS + PTR), détection des box FAI, modèle/source/catégorie, ESP32 visible dans sa propre liste, amélioration complète de l'interface |
 | v0.0.8  | Scanner SSDP/UPnP complet, parsing XML robuste, catégorisation automatique, APIs Hue Bridge / Synology DSM / Freebox, nouveaux badges source UI |
-| v0.0.9  | Scanner DNS-SD (RFC 6763) — 22 types de services, badges services HTTP/SSH/AirPlay/Cast/Sonos/HomeKit…, champ services dans NetworkDevice et API |
+| v0.0.9  | Scanner DNS-SD (RFC 6763) - 22 types de services, badges services HTTP/SSH/AirPlay/Cast/Sonos/HomeKit…, champ services dans NetworkDevice et API |
 | v0.1.0  | Persistance LittleFS, statistiques online/offline, UI barre de statistiques et colonne statut |
 | v0.1.1  | Scanner TCP 14 ports (sockets non-bloquants), banner HTTP, TTL → OS, badges ports TCP colorés dans l'UI |
 | v0.1.2  | Scanner NetBIOS (UDP 137), enrichissement par patterns hostname, bannières SSH/FTP, détection API IoT (Shelly/Tasmota/FritzBox), DNS-SD étendu à 31 types de services, badge source NetBIOS |
@@ -148,7 +148,7 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 | v0.8.0  | Mode dégradé mémoire (refus scans/rescans/notes/historique/config sous `HEAP_CRITICAL_BYTES`, redémarrage manuel uniquement), bornes mémoire explicites (historique, notes, équipements suivis), correction de la barre de progression du scan automatique au démarrage, correction de la NeoPixel ne devant pas revenir à l'état normal pendant un incident mémoire |
 | v0.8.1  | Socket mDNS multicast (224.0.0.251:5353) mutualisé entre `HostnameResolver` et `DnsSdScanner` via le nouveau module `MdnsManager` (corrige un conflit de bind lors d'un rescan ciblé concurrent au scan principal, réduit l'empreinte mémoire), rejet des LOCATION SSDP invalides pointant vers la boucle locale (127.0.0.0/8) |
 | v0.8.2  | Correction de la cause racine du conflit mDNS (le composant mDNS d'ESP-IDF garde 224.0.0.251:5353 exclusivement pour son responder, non pris en compte par `MdnsManager` en v0.8.1) : `DnsSdScanner` réécrit pour interroger directement le composant mDNS d'ESP-IDF (`mdns_query_ptr()`) sans socket dédié, retrait de l'écoute mDNS passive de `HostnameResolver` (aucune API ESP-IDF équivalente), suppression de `MdnsManager` devenu inutile |
-| v0.8.3  | Correction du scan DNS-SD systématiquement vide (`DnsSdScanner`) : plancher de fenêtre d'attente par type de service relevé de 100 ms à 300 ms (RFC 6762 — délai aléatoire de réponse 20-120 ms sur les enregistrements partagés), journalisation des échecs de requête `mdns_query_ptr()`, valeur par défaut/appelants ajustés à 9000 ms ; reformulation à l'infinitif des commentaires et de la documentation utilisant des tournures "on fait" |
+| v0.8.3  | Correction du scan DNS-SD systématiquement vide (`DnsSdScanner`) : plancher de fenêtre d'attente par type de service relevé de 100 ms à 300 ms (RFC 6762 - délai aléatoire de réponse 20-120 ms sur les enregistrements partagés), journalisation des échecs de requête `mdns_query_ptr()`, valeur par défaut/appelants ajustés à 9000 ms ; reformulation à l'infinitif des commentaires et de la documentation utilisant des tournures "on fait" |
 | v0.8.4  | Largeur de la page Équipements rendue strictement identique aux autres pages (960px, plus d'exception « largeur adaptable »), correction de la barre de défilement horizontale causée par les noms d'hôte longs (colonne `.name-cell` limitée à deux lignes avec coupure de mot, infobulle conservant le nom complet) |
 | v0.8.5  | Avertissement sur la page Équipements précisant que le scan de départ/global n'est pas agressif : certaines informations avancées nécessitent un scan ciblé de l'équipement pour interroger des services spécifiques ou des API propriétaires |
 | v0.8.6  | Ajout de la propriété standard `line-clamp` en complément de `-webkit-line-clamp` sur `.name-cell`, pour une meilleure compatibilité navigateur |
@@ -162,18 +162,18 @@ Fonctionnalités planifiées par ordre de priorité décroissante.
 | v1.0.0  | Surveillance continue du réseau et score de stabilité : sweep ARP léger périodique (`serviceMonitor()`, 1-60 min, persisté NVS), identification automatique différée des nouveaux équipements (file rapide/approfondie), compteurs de présence/absence/reconnexion, score de stabilité 0-100% pour les équipements fixes, classification mobile/fixe automatique avec override manuel (`POST /api/mobility`), nouveaux évènements d'historique (`reconnected`, `disappeared`, `identification_improved`, `mobile_left`, `mobile_returned`), tableau de bord réseau (`GET /api/network/health`) |
 | v1.0.0  | Surveillance continue du réseau (sweep ARP léger configurable 1-60 min, sans tâche FreeRTOS dédiée) et score de stabilité par équipement (0-100 %, mobiles exclus) ; classification mobile/fixe automatique + override manuel (`setMobility`) ; gestion des absences mobiles (`mobile_left`/`mobile_returned`) ; file de scans différés ; nouvel indicateur de santé réseau (`/api/network/health`) et endpoints `/api/mobility`, `/api/monitor` |
 | v1.0.1 (Patch 1) | Activation/désactivation de la surveillance automatique du réseau et intervalle configurable de 5 min à 1 h depuis la page Système (`GET`/`POST /api/monitor` étendus au champ `enabled`), réglage inclus dans la sauvegarde des paramètres de fonctionnement (`monitorEnabled`/`monitorIntervalMinutes`) ; déplacement de la carte Sauvegarde/Restauration des paramètres vers la page Système ; page Équipements recentrée sur Export CSV / Export JSON uniquement |
-| v1.0.2 (Patch 2) | Correction : la surveillance continue mettait automatiquement en file des passes rapides/approfondies (nouvel équipement, changement de champ, confiance faible), draînées à chaque itération de `loop()` indépendamment de l'intervalle configuré — la surveillance se limite désormais strictement à la détection de présence ARP, tout scan approfondi restant à l'initiative explicite de l'utilisateur |
+| v1.0.2 (Patch 2) | Correction : la surveillance continue mettait automatiquement en file des passes rapides/approfondies (nouvel équipement, changement de champ, confiance faible), draînées à chaque itération de `loop()` indépendamment de l'intervalle configuré - la surveillance se limite désormais strictement à la détection de présence ARP, tout scan approfondi restant à l'initiative explicite de l'utilisateur |
 | v1.0.3 (Patch 3) | Correction du scan complet qui semblait se relancer en boucle au démarrage (tick de surveillance immédiatement "dû" dès la fin du scan initial, faute d'horodatage lors d'un tick sauté) ; correction de la boucle infinie de passes précises sur un même petit groupe d'équipements (un scan rapide se remettait lui-même en file indéfiniment dès que la confiance restait sous 35 %, seuil qu'il ne peut volontairement jamais dépasser) |
-| v1.0.4 (Patch 4) | Correction du filtrage de la page Historique : les 5 types d'évènements introduits par la surveillance continue (v1.0.0 — `reconnected`, `mobile_returned`, `disappeared`, `mobile_left`, `identification_improved`) n'avaient pas de case de filtre correspondante et étaient toujours exclus de l'affichage, ne laissant visibles par défaut que les évènements `changed` ; chaque type est désormais rattaché à l'une des 4 catégories de filtre existantes |
+| v1.0.4 (Patch 4) | Correction du filtrage de la page Historique : les 5 types d'évènements introduits par la surveillance continue (v1.0.0 - `reconnected`, `mobile_returned`, `disappeared`, `mobile_left`, `identification_improved`) n'avaient pas de case de filtre correspondante et étaient toujours exclus de l'affichage, ne laissant visibles par défaut que les évènements `changed` ; chaque type est désormais rattaché à l'une des 4 catégories de filtre existantes |
 | v1.0.5 (Patch 5) | Correction du filtre "Favoris uniquement" de la page Historique, systématiquement vide : `history.js` n'indexait les favoris que par adresse MAC, sans repli sur l'IP comme partout ailleurs dans le projet ; le filtre vérifie désormais la correspondance par MAC ou par IP |
 | v1.0.6 (Patch 6) | Correction de la véritable cause du filtre "Favoris uniquement" toujours vide après le Patch 5 : `loadFavorites()` lisait la réponse de `GET /api/devices` comme un tableau brut alors que cet endpoint renvoie `{ scanning, stats, devices }` ; lit désormais `data.devices` comme `scan.js` |
 | v1.0.7 (Patch 7) | Journal de redémarrage temporaire pour le débogage sans moniteur série : buffer circulaire des derniers logs en RAM `RTC_NOINIT_ATTR`, persisté avec la raison du reset (`esp_reset_reason`) au boot suivant (`/bootlog.json`, 10 derniers démarrages), page `/debug` et API `GET`/`DELETE /api/bootlog` ; conçu pour un retrait facile (voir `docs/DEVELOPMENT.md`) |
 | v1.0.8 (Patch 8) | Extension du journal de redémarrage : compteurs `boot_count`/`crash_count` persistés en NVS, température interne, dernier état connu avant reset (heap/bloc libre/uptime/WiFi/dernière tâche via `setLastTask()`), instantané périodique `RuntimeStats` (toutes les 30 s, incluant équipements connus/pages servies/appels API), lignes de log au format JSON enrichi (heap + bloc libre par ligne), page `/debug` mise à jour pour afficher toutes ces données |
-| v1.1.1 (Patch 9) | Correction de la page Historique : les absences courtes (<30 min) d'un équipement mobile ne journalisaient aucune déconnexion, faisant apparaître des chaînes de "Reconnecté" sans cause visible — nouvel évènement discret `offline_brief`, symétrique au `reconnected` qui suit ; côté UI, les reconnexions consécutives sans déconnexion explicite entre elles sont désormais regroupées en une seule entrée "Connexion instable détectée" plutôt que d'être empilées |
+| v1.1.1 (Patch 9) | Correction de la page Historique : les absences courtes (<30 min) d'un équipement mobile ne journalisaient aucune déconnexion, faisant apparaître des chaînes de "Reconnecté" sans cause visible - nouvel évènement discret `offline_brief`, symétrique au `reconnected` qui suit ; côté UI, les reconnexions consécutives sans déconnexion explicite entre elles sont désormais regroupées en une seule entrée "Connexion instable détectée" plutôt que d'être empilées |
 | v1.2.0  | Renommage du projet « Gateway Lab V1 » → « Gateway Lab » (mDNS `gatewaylab.local`, `PROJECT_NAME`, titres et en-têtes web, `User-Agent` HTTP, documentation) ; cartographie graphique de la topologie réseau (arbre SVG fait maison) ; détection automatique des répéteurs mesh (TP-Link Deco, Orbi, eero, Velop…) ; rattachement manuel des équipements WiFi par glisser-déposer sur la carte ; racine de l'arbre configurable, par défaut la box opérateur plutôt que l'ESP32 lui-même |
-| v1.3.0  | Correction des équipements bloqués indéfiniment en « Identification en cours » (catégorie non reconnue comme générique par le pipeline d'identification, même un rescan manuel ne pouvait pas en sortir — centralisé dans `isGenericCategory()`) ; re-identification automatique périodique des équipements restés génériques (« IoT »/« Identification en cours »), toutes les heures par défaut ; bouton « Rescan non identifiés » sur la page Équipements pour forcer ce rescan en un clic |
+| v1.3.0  | Correction des équipements bloqués indéfiniment en « Identification en cours » (catégorie non reconnue comme générique par le pipeline d'identification, même un rescan manuel ne pouvait pas en sortir - centralisé dans `isGenericCategory()`) ; re-identification automatique périodique des équipements restés génériques (« IoT »/« Identification en cours »), toutes les heures par défaut ; bouton « Rescan non identifiés » sur la page Équipements pour forcer ce rescan en un clic |
 | v1.4.0  | Découverte automatique de la topologie réseau par SNMP : interrogation de la table de pontage (Bridge MIB, `dot1dTpFdbTable`) des routeurs/points d'accès/répéteurs qui exposent un agent SNMP en lecture publique, pour rattacher automatiquement les équipements qu'ils relaient (`topologyParent`/`topologyParentAuto`), sans jamais écraser un rattachement manuel ; affichage distinct (trait pointillé) des rattachements déduits par SNMP sur la carte de topologie |
 | v1.4.1  | Taux de confiance (`topologyParentConfidence`, 0-100) pour les rattachements automatiques SNMP : confiance élevée pour une entrée FDB non ambiguë, dégradée quand une même MAC est revendiquée par plusieurs AP pendant le même sweep ; code couleur dans la topologie (vert = box/répéteur conservé, bleu = rattachement automatique fiable, orange = incertain) avec pourcentage affiché ; correction de deux fuites de champs (`topologyParentAuto`/`topologyParentConfidence` non reportés entre cycles de surveillance, `topologyParentConfidence` non persisté dans le stockage LittleFS) |
-| v1.4.2  | Date et heure réelles des évènements dans le journal de redémarrage (page `/debug`), absentes jusqu'ici (seul l'uptime relatif était affiché) — nécessaires pour évaluer la fréquence des reboots ; capture d'un epoch NTP au dernier battement périodique avant la coupure (`resetEpoch`), complété par l'horloge interne déjà valide au démarrage suivant si elle a survécu au reset (`bootEpoch`) |
-| v1.4.3  | Correction d'un socket potentiellement non libéré dans le scan de ports (`PortScanner::_httpBanner()`/`_tcpBanner()`/`_httpGet()`) sur échec de `WiFiClient::connect()` — `client.stop()` appelé explicitement plutôt que de compter sur le destructeur RAII, suspecté contributeur d'un crash heap=0 après ~1h d'uptime (voir `docs/WARNINGS.md`) |
+| v1.4.2  | Date et heure réelles des évènements dans le journal de redémarrage (page `/debug`), absentes jusqu'ici (seul l'uptime relatif était affiché) - nécessaires pour évaluer la fréquence des reboots ; capture d'un epoch NTP au dernier battement périodique avant la coupure (`resetEpoch`), complété par l'horloge interne déjà valide au démarrage suivant si elle a survécu au reset (`bootEpoch`) |
+| v1.4.3  | Correction d'un socket potentiellement non libéré dans le scan de ports (`PortScanner::_httpBanner()`/`_tcpBanner()`/`_httpGet()`) sur échec de `WiFiClient::connect()` - `client.stop()` appelé explicitement plutôt que de compter sur le destructeur RAII, suspecté contributeur d'un crash heap=0 après ~1h d'uptime (voir `docs/WARNINGS.md`) |
 | v1.4.4  | Correction de deux incohérences sur la page `/debug` : titre d'entrée affichant un rang relatif au lieu du compteur de boot absolu (`debug.js`) ; instantané heap/uptime potentiellement obsolète ou nul sur un redémarrage volontaire (OTA), `service()` forcé juste avant `ESP.restart()` plutôt que de dépendre du tic périodique de 30 s (`boot_log.cpp`/`ota_manager.cpp`) |

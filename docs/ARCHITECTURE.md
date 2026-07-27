@@ -1,4 +1,4 @@
-# Architecture — Gateway Lab
+# Architecture - Gateway Lab
 
 Ce document explique comment le projet est structuré, pourquoi ces choix ont été faits,
 et comment les différentes parties s'articulent entre elles.
@@ -60,7 +60,7 @@ et comment les différentes parties s'articulent entre elles.
 
 ## Modules C++
 
-### `src/main.cpp` — Orchestrateur
+### `src/main.cpp` - Orchestrateur
 
 **Rôle** : initialiser les modules dans le bon ordre, rien de plus.
 
@@ -72,15 +72,15 @@ logique dans `main.cpp`.
 
 ---
 
-### `src/modules/wifi_manager.*` — Gestion WiFi
+### `src/modules/wifi_manager.*` - Gestion WiFi
 
 **Rôle** : connexion WiFi multi-réseaux, persistance NVS et portail de configuration.
 
 Hiérarchie de configuration (priorité décroissante) :
-1. Réseaux enregistrés en NVS (`Preferences`, namespace `"wifi"`) — configurés
+1. Réseaux enregistrés en NVS (`Preferences`, namespace `"wifi"`) - configurés
    via le portail web ou la page `/wifi`
 2. `DEFAULT_WIFI_SSID` / `DEFAULT_WIFI_PASSWORD` dans `include/secrets.h`
-   (développement uniquement, optionnel — fichier inclus via `__has_include`)
+   (développement uniquement, optionnel - fichier inclus via `__has_include`)
 3. Portail de configuration : point d'accès `GatewayLab-Setup` + `DNSServer`
    (captif) + `WebServer` dédié sur le port 80, actif uniquement quand aucun
    réseau ne répond
@@ -103,7 +103,7 @@ portail de configuration tourne, jusqu'au redémarrage suivant la connexion.
 
 ---
 
-### `src/modules/network_scanner.*` — Scanner réseau
+### `src/modules/network_scanner.*` - Scanner réseau
 
 **Rôle** : découvrir tous les équipements du réseau et construire l'inventaire.
 
@@ -114,7 +114,7 @@ Phase 1 : ARP sweep
   → Envoie des ARP Request sur chaque IP du sous-réseau (par lots de 5)
   → Lit la table ARP lwIP après chaque lot (capacité max : 10 entrées)
 
-Phase 2 : (retirée en v0.8.2 — voir HostnameResolver ci-dessous)
+Phase 2 : (retirée en v0.8.2 - voir HostnameResolver ci-dessous)
 
 Phase 3 : PTR DNS batch
   → Envoie des requêtes DNS inverse pour chaque IP découverte
@@ -144,16 +144,16 @@ Phase 8 : Self entry
 
 **Enrichissement DHCP passif** : l'étape finale `_enrichDevices()` consulte
 aussi, par MAC, la table tenue en continu par `DhcpSniffer` (cf.
-`src/modules/dhcp_sniffer.*` ci-dessous) — simple lecture mémoire, aucune
+`src/modules/dhcp_sniffer.*` ci-dessous) - simple lecture mémoire, aucune
 requête supplémentaire. Complète hostname/os si encore vides, sans jamais
 écraser une source plus fiable (SSDP, API, mDNS/PTR…).
 
 **Thread-safety** : `_results` (le vecteur de résultats) est protégé par un mutex
-FreeRTOS. `getResults()` retourne une copie — jamais une référence.
+FreeRTOS. `getResults()` retourne une copie - jamais une référence.
 
 ---
 
-### `src/modules/hostname_resolver.*` — Résolution de noms
+### `src/modules/hostname_resolver.*` - Résolution de noms
 
 **Rôle** : trouver le nom d'hôte de chaque équipement découvert par ARP.
 
@@ -169,14 +169,14 @@ Avec le batch : 50 requêtes simultanées × 500 ms = 0,5 seconde.
 
 **mDNS passif (retiré en v0.8.2)** : `224.0.0.251:5353` reste détenu
 exclusivement par le composant mDNS d'ESP-IDF (responder `MDNS.begin()`,
-voir `wifi_manager.cpp`) dès que le Wi-Fi est connecté — en pratique en
+voir `wifi_manager.cpp`) dès que le Wi-Fi est connecté - en pratique en
 permanence. Aucune API ESP-IDF publique ne permet d'observer passivement
 les annonces reçues par ce service partagé. `begin()`/`update()`/`end()`
 sont conservés comme no-op pour compatibilité. Voir `docs/WARNINGS.md`.
 
 ---
 
-### `src/modules/dhcp_sniffer.*` — Fingerprinting passif DHCP
+### `src/modules/dhcp_sniffer.*` - Fingerprinting passif DHCP
 
 **Rôle** : capter, sans jamais émettre de requête, les paquets DHCP
 broadcast des autres équipements pour en extraire hostname et OS déclarés.
@@ -184,27 +184,27 @@ broadcast des autres équipements pour en extraire hostname et OS déclarés.
 Module continu et indépendant de `NetworkScanner` :
 - `begin()` (appelé une fois le WiFi connecté, comme `timeSync`/`otaMgr`) :
   ouvre un socket UDP non bloquant lié sur `0.0.0.0:67`. Si le bind échoue
-  (port déjà occupé), le module se désactive silencieusement — log
+  (port déjà occupé), le module se désactive silencieusement - log
   d'avertissement uniquement, aucun impact sur le reste du firmware.
 - `loop()` (appelé depuis la boucle principale) : draine jusqu'à 4 paquets
   par appel, parse l'en-tête BOOTP fixe (`chaddr` = MAC client) puis les
-  options 12 (Host Name), 53 (Message Type — ne retient que
+  options 12 (Host Name), 53 (Message Type - ne retient que
   DISCOVER/REQUEST) et 60 (Vendor Class Identifier).
 - Stocke le résultat dans une table interne MAC → `DhcpFingerprint`
   (mutex FreeRTOS dédié), bornée à 64 entrées (éviction de la plus
   ancienne au-delà).
 - `lookup(mac)` : consultée uniquement par `NetworkScanner::_enrichDevices()`
-  — lecture mémoire, aucune dépendance temporelle avec le cycle de scan.
+  - lecture mémoire, aucune dépendance temporelle avec le cycle de scan.
 
 `osGuess` provient d'une table de signatures Vendor Class limitée et
 documentée (`MSFT*` → Windows, `android-dhcp*` → Android, `dhcpcd*`/
-`udhcp*` → Linux) — volontairement sans heuristique sur l'option 55
+`udhcp*` → Linux) - volontairement sans heuristique sur l'option 55
 (liste de paramètres demandés), jugée trop instable sans base de
 signatures externe. Voir `docs/PROTOCOLS.md`.
 
 ---
 
-### `src/modules/isp_detector.h` — Détection FAI (header-only)
+### `src/modules/isp_detector.h` - Détection FAI (header-only)
 
 **Rôle** : identifier les box Internet françaises par leurs signatures.
 
@@ -214,11 +214,11 @@ Analyse le hostname et l'OUI (fabricant MAC) pour détecter :
 - SFR : Box Plus, Box 8
 - Bouygues : Bbox Miami, Ultym
 
-100 % local — aucune requête réseau. Appliqué après la résolution hostname.
+100 % local - aucune requête réseau. Appliqué après la résolution hostname.
 
 ---
 
-### `src/modules/ssdp_scanner.*` — Scanner UPnP/SSDP
+### `src/modules/ssdp_scanner.*` - Scanner UPnP/SSDP
 
 **Rôle** : découvrir les équipements annoncés via le protocole UPnP.
 
@@ -234,7 +234,7 @@ Fonctionnement :
 
 ---
 
-### `src/modules/dns_sd_scanner.*` — Scanner DNS-SD
+### `src/modules/dns_sd_scanner.*` - Scanner DNS-SD
 
 **Rôle** : identifier les services exposés par chaque équipement du réseau.
 
@@ -242,21 +242,21 @@ Voir `docs/PROTOCOLS.md` pour le détail du protocole DNS-SD.
 
 Fonctionnement (depuis v0.8.2) :
 1. Pour chaque type de service connu, appelle `mdns_query_ptr()` (API C du
-   composant mDNS d'ESP-IDF, `<mdns.h>`) — passe par le service mDNS déjà
+   composant mDNS d'ESP-IDF, `<mdns.h>`) - passe par le service mDNS déjà
    initialisé par `MDNS.begin()`, aucun socket applicatif dédié
 2. Chaque résultat fournit directement hostname, TXT records et adresse(s)
-   IPv4 — pas de parsing DNS manuel
+   IPv4 - pas de parsing DNS manuel
 3. Construit une map IP → {services, model, hostname, category}
 4. Fusionne dans les NetworkDevice existants
 
 Avant v0.8.2, ce scanner ouvrait son propre socket multicast (mutualisé via
 `MdnsManager` depuis v0.8.1), qui entrait en conflit avec le socket
-exclusif du responder mDNS d'ESP-IDF — voir `docs/WARNINGS.md`. `MdnsManager`
+exclusif du responder mDNS d'ESP-IDF - voir `docs/WARNINGS.md`. `MdnsManager`
 est supprimé depuis v0.8.2, devenu inutile.
 
 ---
 
-### `src/modules/snmp_scanner.*`, `media_api_scanner.*` — Passe précise
+### `src/modules/snmp_scanner.*`, `media_api_scanner.*` - Passe précise
 
 **Rôle** : enrichir un seul équipement (réinterrogation ciblée) avec des
 protocoles plus coûteux, non utilisés lors du scan complet, et qui peuvent
@@ -265,13 +265,13 @@ protocoles plus coûteux, non utilisés lors du scan complet, et qui peuvent
 - `SnmpScanner` : GetRequest SNMP v1 (ASN.1 BER manuel) sur `sysDescr` (UDP 161,
   passe précise) + marche `GetNextRequest` sur la table de pontage
   `dot1dTpFdbTable` (`walkBridgeMacTable`, découverte automatique de
-  topologie périodique sur les routeurs/AP/répéteurs, v1.4.0 — voir
+  topologie périodique sur les routeurs/AP/répéteurs, v1.4.0 - voir
   `NetworkScanner::_discoverTopologyViaSnmp()`)
 - `MediaApiScanner` : sondes HTTP séquentielles Cast (`:8008`), Sonos (`:1400`),
   Roku (`:8060`), Samsung Smart TV (`:8001`)
 - `MqttScanner` : connexion TCP unicast à un broker MQTT (`:1883`), CONNECT
   anonyme + souscription `$SYS/broker/version` et `$SYS/broker/clients/connected`
-  — déclenché uniquement si le profil déduit (`SmartHome`/`Unknown`) a le
+  - déclenché uniquement si le profil déduit (`SmartHome`/`Unknown`) a le
   port MQTT ouvert
 
 Ces deux scanners sont appelés uniquement depuis `_runRescan(ip, deep)` dans
@@ -289,13 +289,13 @@ service exploitable, la passe s'arrête immédiatement. Sinon, le profil
 modules pertinents pour ce profil sont lancés. `WsDiscoveryScanner`
 (`ws_discovery_scanner.*`) n'est plus invoqué : c'est un protocole de
 diffusion multicast, structurellement incompatible avec une interrogation
-ciblée sur une seule IP — le module reste dans le code pour une éventuelle
+ciblée sur une seule IP - le module reste dans le code pour une éventuelle
 réintégration au scan complet, mais n'est appelé par aucune route
 actuellement (cf. `docs/PROTOCOLS.md`).
 
 ---
 
-### `src/modules/web_server.*` — Serveur HTTP
+### `src/modules/web_server.*` - Serveur HTTP
 
 **Rôle** : servir l'interface web et l'API REST.
 
@@ -316,7 +316,7 @@ Ce découplage permet de tester ou de remplacer le scanner sans modifier le serv
 
 ---
 
-### `src/modules/system_health.*` — Mode dégradé mémoire
+### `src/modules/system_health.*` - Mode dégradé mémoire
 
 **Rôle** : surveiller le heap libre et basculer en mode dégradé plutôt que
 de redémarrer automatiquement.
@@ -328,7 +328,7 @@ Appelé depuis `loop()` (`systemHealth.loop()`, non bloquant) :
   autour du seuil
 - `restartNow()` : redémarrage **manuel uniquement**, déclenché par
   `POST /api/system/restart` (bouton « Redémarrer l'appareil » de la page
-  Système) — le firmware ne redémarre jamais de lui-même sur condition
+  Système) - le firmware ne redémarre jamais de lui-même sur condition
   mémoire
 
 En mode dégradé, les points d'entrée suivants vérifient `systemHealth.isDegraded()`
@@ -338,12 +338,12 @@ et refusent l'opération (retour d'erreur explicite côté API) :
 - `DeviceHistory::addEvent()` (journalisation suspendue)
 
 L'inventaire déjà acquis reste consultable (`GET /api/devices`, `/api/history`,
-exports CSV/JSON) — seules les écritures et les opérations coûteuses en
+exports CSV/JSON) - seules les écritures et les opérations coûteuses en
 mémoire/CPU sont bloquées.
 
 ---
 
-### `src/utils/logger.h` — Journalisation (header-only)
+### `src/utils/logger.h` - Journalisation (header-only)
 
 **Rôle** : afficher des logs sur le port série avec niveaux de sévérité.
 
@@ -386,7 +386,7 @@ Avantages :
 
 ---
 
-## Données — `struct NetworkDevice`
+## Données - `struct NetworkDevice`
 
 Tous les modules partagent cette structure :
 
@@ -427,7 +427,7 @@ OUI table (MAC prefix)             (moins précis)
 octet = `2`, `6`, `A` ou `E`). Si l'adresse est aléatoire (cas fréquent des
 smartphones iOS/Android récents), la table OUI n'est pas consultée et
 l'équipement est classé `manufacturer="Unknown (Privacy Mode)"`,
-`category="Mobile/Aléatoire"` — ces champs restent ensuite enrichissables
+`category="Mobile/Aléatoire"` - ces champs restent ensuite enrichissables
 par les sources plus précises (mDNS, SSDP, etc.) ci-dessus.
 
 ---
@@ -460,5 +460,5 @@ Le scan réseau est sur le Core 0 pour co-localiser les appels lwIP (ARP, DNS, s
 | Ajouter un device UPnP | `src/modules/ssdp_scanner.cpp` (`_categorize()` ou `_enrich*()`) |
 | Ajouter un type de service DNS-SD | `src/modules/dns_sd_scanner.cpp` (table `SERVICE_TYPES[]`) |
 | Ajouter une sonde à la passe précise | `src/modules/network_scanner.cpp` (`_runRescan()`) + nouveau scanner dans `src/modules/` |
-| Modifier la version | `platformio.ini` (`PROJECT_VERSION`) — uniquement ici |
+| Modifier la version | `platformio.ini` (`PROJECT_VERSION`) - uniquement ici |
 | Ajouter un module entier | `src/modules/nouveau.*` + include dans `network_scanner.cpp` ou `main.cpp` |

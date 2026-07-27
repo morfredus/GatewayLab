@@ -1,4 +1,4 @@
-# Guide de démarrage — Gateway Lab
+# Guide de démarrage - Gateway Lab
 
 Ce guide explique comment installer, configurer et utiliser Gateway Lab
 en partant de zéro. Aucune connaissance avancée n'est requise.
@@ -64,14 +64,14 @@ L'extension PlatformIO pour VS Code offre une interface graphique pour compiler 
 
 ## Installation pas à pas
 
-### Étape 1 — Récupérer le code source
+### Étape 1 - Récupérer le code source
 
 ```bash
 git clone https://github.com/morfredus/Gateway_Lab.git
 cd Gateway_Lab
 ```
 
-### Étape 2 — Configurer le WiFi (optionnel pour le développement)
+### Étape 2 - Configurer le WiFi (optionnel pour le développement)
 
 Depuis la v0.3.0, **il n'est plus nécessaire de modifier le code pour configurer
 le WiFi** : un portail de configuration web s'en charge automatiquement au
@@ -96,7 +96,7 @@ réseau n'est encore enregistré dans la mémoire de l'ESP32 (NVS).
 
 > **Important** : Ne jamais commiter `secrets.h`. Ne jamais partager ce fichier.
 
-### Étape 3 — Générer les fichiers web
+### Étape 3 - Générer les fichiers web
 
 Les pages HTML sont embarquées directement dans le firmware.
 Leurs sources se trouvent dans `web_src/` : un fichier `.html` (markup), un
@@ -144,7 +144,7 @@ extra_scripts = pre:tools/custom_hooks.py
 Le hook exécute automatiquement `tools/minify_web.py` avant chaque build
 et interrompt la compilation si la génération échoue.
 
-### Étape 4 — Compiler et flasher
+### Étape 4 - Compiler et flasher
 
 Brancher la carte ESP32-S3 via USB, puis :
 
@@ -156,7 +156,7 @@ pio run --target upload
 > `pio run --target upload --upload-port /dev/ttyUSB0` (Linux/macOS)
 > ou `COM3` (Windows).
 
-### Étape 5 — Surveiller le démarrage
+### Étape 5 - Surveiller le démarrage
 
 ```bash
 pio device monitor
@@ -177,14 +177,14 @@ vous verrez à la place :
 
 ```
 === GatewayLab v0.3.0 ===
-[WiFi] Aucun réseau disponible — démarrage du portail de configuration
-[WiFi] Portail de configuration actif — SSID "GatewayLab-Setup" — http://192.168.4.1
+[WiFi] Aucun réseau disponible - démarrage du portail de configuration
+[WiFi] Portail de configuration actif - SSID "GatewayLab-Setup" - http://192.168.4.1
 ```
 
 Dans ce cas, suivez `docs/WIFI_SETUP.md` pour connecter l'ESP32 à votre WiFi
 depuis un téléphone ou un ordinateur, sans rien recompiler.
 
-### Étape 6 — Accéder à l'interface web
+### Étape 6 - Accéder à l'interface web
 
 Ouvrir un navigateur et aller sur :
 
@@ -209,7 +209,7 @@ Affiche les informations de connexion :
 
 Une cartouche **Diagnostics système** affiche également le heap libre, la
 PSRAM libre, l'usage LittleFS et les temps moyens de scan/passe précise
-(`GET /api/diagnostics`) — utile pour suivre l'impact mémoire et performance
+(`GET /api/diagnostics`) - utile pour suivre l'impact mémoire et performance
 du scan dans la durée.
 
 ### Page Équipements (`/scan`)
@@ -234,10 +234,10 @@ listes déroulantes Type/Fabricant se remplissent automatiquement à partir
 des équipements connus.
 
 Le menu **Données** ne propose que l'export de l'inventaire des équipements
-(Patch 1 — la Sauvegarde/Restauration des paramètres de fonctionnement a été
+(Patch 1 - la Sauvegarde/Restauration des paramètres de fonctionnement a été
 déplacée vers la page Système, voir plus bas) :
 
-- **Export CSV** / **Export JSON** — export de l'inventaire des
+- **Export CSV** / **Export JSON** - export de l'inventaire des
   équipements. Le CSV (`/api/devices/export.csv`, une ligne par équipement)
   a des dates lisibles, des colonnes en ligne/favori en `Yes`/`No`, et
   inclut les notes et le niveau de confiance ; le BOM UTF-8 en tête de
@@ -293,7 +293,7 @@ le firmware (depuis le Patch 4 / v1.0.4) :
 | Changements de champs | `changed`, `identification_improved` |
 
 `offline_brief` journalise une absence courte (<30 min) d'un équipement
-mobile — auparavant totalement silencieuse, ce qui faisait apparaître des
+mobile - auparavant totalement silencieuse, ce qui faisait apparaître des
 chaînes de reconnexions sans aucune déconnexion visible. Voir aussi le
 regroupement « connexion instable » ci-dessous.
 
@@ -311,7 +311,7 @@ séparées de moins de 20 minutes et **sans aucune déconnexion explicite**
 entre elles (ni `offline`, `disappeared`, `mobile_left`, ni `offline_brief`)
 sont fusionnées en une seule entrée « Connexion instable détectée », avec le
 nombre de reconnexions et la fenêtre de temps couverte. Le journal brut
-(`/history.json`, export JSON) n'est pas modifié — seul le rendu de la page
+(`/history.json`, export JSON) n'est pas modifié - seul le rendu de la page
 regroupe ces événements.
 
 ### Page Topologie (`/topology`)
@@ -337,7 +337,7 @@ dédiée) :
   (`GET`/`POST /api/monitor`, champ `enabled` + `intervalMinutes`,
   persistés en NVS). La surveillance se limite à une détection de présence
   (sweep ARP) : aucun scan rapide ou approfondi n'est déclenché
-  automatiquement (Patch 2) — pour une identification complète, lancer un
+  automatiquement (Patch 2) - pour une identification complète, lancer un
   scan manuel depuis la page Équipements ou une passe précise sur un
   équipement.
 - **Sauvegarde / Restauration** (Patch 1, déplacée depuis la page
@@ -349,11 +349,11 @@ dédiée) :
   réseaux WiFi du fichier sans jamais supprimer les réseaux déjà enregistrés.
 - Mise à jour du firmware : sélectionner le fichier `.bin`
   (`.pio/build/esp32s3_n16r8/firmware.bin` après `pio run`) et cliquer
-  **Mettre à jour** — envoyé via `POST /update` (inchangé)
+  **Mettre à jour** - envoyé via `POST /update` (inchangé)
 
 Voir `docs/WIFI_SETUP.md` pour le détail complet de la configuration WiFi.
 
-### Page Debug (`/debug`) — temporaire
+### Page Debug (`/debug`) - temporaire
 
 Page de débogage ajoutée en Patch 7 (v1.0.7) pour diagnostiquer les
 redémarrages inattendus (crash, watchdog, brownout) sans avoir besoin d'un
@@ -363,19 +363,19 @@ moniteur série branché au moment des faits.
 les derniers logs émis juste avant ce reset (conservés en RAM
 `RTC_NOINIT_ATTR`, qui survit à un reboot logiciel/crash/watchdog mais pas
 à une coupure d'alimentation) sont persistés dans `/bootlog.json` sur
-LittleFS — 10 derniers démarrages conservés (FIFO). La page liste ces
+LittleFS - 10 derniers démarrages conservés (FIFO). La page liste ces
 démarrages du plus récent au plus ancien, avec un bouton **Vider**.
 
 Étendu en Patch 8 (v1.0.8) avec, pour chaque démarrage enregistré :
 
-- `bootCount`/`crashCount` — compteurs cumulés persistés en NVS (survivent
+- `bootCount`/`crashCount` - compteurs cumulés persistés en NVS (survivent
   aussi à une coupure d'alimentation, contrairement au reste du module).
-- `temperature` — température interne du SoC au démarrage.
+- `temperature` - température interne du SoC au démarrage.
 - État connu juste avant le reset (le plus proche possible de "l'état au
   moment du crash") : `uptimeAtResetMs`, `freeHeapAtReset`,
   `largestBlockAtReset`, `lastTask` (voir `BootLog::setLastTask()`),
   `wifiStatus`/`wifiRssi`/`wifiIp`.
-- `lastStats` — dernier instantané périodique `RuntimeStats` (uptime, heap
+- `lastStats` - dernier instantané périodique `RuntimeStats` (uptime, heap
   libre, plus gros bloc libre, équipements connus, pages servies, appels
   API), rafraîchi toutes les `BOOT_LOG_STATS_INTERVAL_MS` (30 s par défaut,
   voir `include/app_config.h`) par `BootLog::service()` (appelée depuis
@@ -385,7 +385,7 @@ démarrages du plus récent au plus ancien, avec un bouton **Vider**.
   log, en plus du timestamp/niveau/tag/message.
 
 Limite connue : pas de capture de stack trace au moment d'un PANIC (le code
-applicatif ne tourne plus à cet instant) — voir le commentaire dédié dans
+applicatif ne tourne plus à cet instant) - voir le commentaire dédié dans
 `src/modules/boot_log.h`. La trace ESP-IDF reste visible sur le moniteur
 série, comme avant cette extension.
 
@@ -438,7 +438,7 @@ Le fichier `secrets.h` n'a pas encore été créé. Voir **Étape 2** ci-dessus.
 ### Le scan ne trouve aucun équipement
 
 - Vérifier que l'ESP32 est bien connecté au même réseau WiFi que les équipements à scanner
-- Attendre 5–10 secondes après le démarrage avant de lancer un scan
+- Attendre 5-10 secondes après le démarrage avant de lancer un scan
 - Le scan ARP ne fonctionne que sur le sous-réseau local (même réseau WiFi)
 
 ### La résolution des noms ne fonctionne pas
@@ -466,7 +466,7 @@ Si vous souhaitez modifier le projet :
 **Règles importantes :**
 - Chaque type de contenu va dans son propre fichier source : HTML dans
   `web_src/*.html`, CSS dans `web_src/styles.css`, JavaScript dans
-  `web_src/*.js` — jamais de `<style>` ou `<script>` inline dans le HTML
+  `web_src/*.js` - jamais de `<style>` ou `<script>` inline dans le HTML
 - Ne jamais modifier les fichiers `include/web_interface*.h` à la main
   (ils sont régénérés à chaque exécution de `minify_web.py`)
 - La version du firmware n'est définie qu'une seule fois, dans `platformio.ini`
@@ -478,7 +478,7 @@ Si vous souhaitez modifier le projet :
 
 ## Pour aller plus loin
 
-- `docs/ARCHITECTURE.md` — Comment le projet est construit et pourquoi
-- `docs/PROTOCOLS.md` — Les protocoles réseau utilisés expliqués simplement
-- `docs/WARNINGS.md` — Limitations connues et points de vigilance
-- `ROADMAP.md` — Fonctionnalités planifiées pour les prochaines versions
+- `docs/ARCHITECTURE.md` - Comment le projet est construit et pourquoi
+- `docs/PROTOCOLS.md` - Les protocoles réseau utilisés expliqués simplement
+- `docs/WARNINGS.md` - Limitations connues et points de vigilance
+- `ROADMAP.md` - Fonctionnalités planifiées pour les prochaines versions

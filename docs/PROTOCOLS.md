@@ -1,11 +1,11 @@
-# Protocoles réseau utilisés — Gateway Lab
+# Protocoles réseau utilisés - Gateway Lab
 
 Ce document explique les protocoles réseau mis en œuvre dans le projet,
 en partant des bases. Aucune connaissance préalable n'est requise.
 
 ---
 
-## ARP — Address Resolution Protocol
+## ARP - Address Resolution Protocol
 
 ### C'est quoi ?
 
@@ -46,14 +46,14 @@ lire la table avant qu'elle ne soit réécrasée.
 
 ---
 
-## DHCP — fingerprinting passif
+## DHCP - fingerprinting passif
 
 ### C'est quoi ?
 
 DHCP (Dynamic Host Configuration Protocol) est le protocole par lequel un
 équipement obtient automatiquement une adresse IP en rejoignant le réseau.
 Pour cela, il envoie un paquet **DHCPDISCOVER** (puis **DHCPREQUEST**) en
-**broadcast** sur `255.255.255.255:67` — visible par tous les équipements
+**broadcast** sur `255.255.255.255:67` - visible par tous les équipements
 du même réseau local, pas seulement par le serveur DHCP (la box).
 
 Ce paquet contient, en clair, des informations que l'équipement déclare
@@ -77,7 +77,7 @@ Smartphone → Tout le réseau (255.255.255.255:67) :
     chaddr (adresse MAC du client)    : A2:3B:...
 ```
 
-Gateway Lab écoute passivement ce trafic — il ne répond jamais aux
+Gateway Lab écoute passivement ce trafic - il ne répond jamais aux
 DHCPDISCOVER captés (il ne joue jamais le rôle de serveur DHCP) et n'émet
 aucune requête. Un simple socket UDP, lié en écoute sur le port serveur
 DHCP (67) en `INADDR_ANY`, suffit à lwIP pour délivrer ces broadcasts au
@@ -98,7 +98,7 @@ de tout scan, dès la connexion WiFi établie :
       (bornee a 64 entrees, eviction de la plus ancienne au-dela)
 3. NetworkScanner consulte cette table (simple lecture memoire, _enrichDevices())
    pour chaque equipement deja decouvert par ARP, et complete son hostname/os
-   s'ils sont encore vides — sans jamais ecraser une source plus fiable
+   s'ils sont encore vides - sans jamais ecraser une source plus fiable
 ```
 
 `osGuess` se limite volontairement à une petite table de signatures
@@ -108,7 +108,7 @@ avancé, est trop ambiguë/instable sans base de signatures externe pour
 être exploitée de façon fiable ici.
 
 **Particularité par rapport aux autres modules** : `DhcpSniffer` n'est
-**jamais** déclenché par un scan (complet ou ciblé) — il n'émet aucune
+**jamais** déclenché par un scan (complet ou ciblé) - il n'émet aucune
 requête, donc n'ajoute aucun coût réseau au scan complet ni à la passe
 précise. C'est une source d'enrichissement purement passive et continue,
 comparable dans son principe au mDNS passif historique (retiré en v0.8.2
@@ -118,7 +118,7 @@ port 67).
 
 ---
 
-## mDNS — Multicast DNS
+## mDNS - Multicast DNS
 
 ### C'est quoi ?
 
@@ -152,7 +152,7 @@ les enregistrements SRV lorsque disponible.
 
 ---
 
-## PTR DNS — Reverse DNS
+## PTR DNS - Reverse DNS
 
 ### C'est quoi ?
 
@@ -183,7 +183,7 @@ Ce batch parallèle est crucial : 50 requêtes séquentielles × 500 ms = 25 sec
 
 ---
 
-## SSDP / UPnP — Simple Service Discovery Protocol
+## SSDP / UPnP - Simple Service Discovery Protocol
 
 ### C'est quoi ?
 
@@ -202,7 +202,7 @@ TV / Fire Stick l'annoncent et y exposent `manufacturer=Amazon` dans le
 descripteur XML, ce qui permet de les classer en catégorie *Streaming* sans
 logique dédiée à Amazon (voir `SsdpScanner::_categorize()`).
 
-### Comment ça marche — Annonce spontanée (NOTIFY)
+### Comment ça marche - Annonce spontanée (NOTIFY)
 
 Quand un équipement UPnP démarre ou se connecte au réseau :
 
@@ -216,7 +216,7 @@ Freebox → Tout le réseau (239.255.255.250:1900) :
 
 Il dit : "Je suis là, et pour en savoir plus sur moi, consultez cette URL."
 
-### Comment ça marche — Recherche active (M-SEARCH)
+### Comment ça marche - Recherche active (M-SEARCH)
 
 On peut aussi provoquer les annonces en diffusant une recherche :
 
@@ -267,7 +267,7 @@ Gateway Lab fait un HTTP GET sur cette URL et parse le XML pour extraire ces inf
 
 ---
 
-## DNS-SD — DNS Service Discovery
+## DNS-SD - DNS Service Discovery
 
 ### C'est quoi ?
 
@@ -344,11 +344,11 @@ Tout cela arrive souvent dans un **seul paquet mDNS** (section "Additional").
 | Résultat obtenu | 1 identité par device (XML) | N services par device |
 | Métadonnées | friendlyName, manufacturer, modelName | TXT records (md=, fn=…) |
 | Devices compatibles | Box, NAS, TV, Smart Home (UPnP) | Apple, Google, Sonos, ESPHome, Linux… |
-| Complémentaires ? | ✅ Oui — sources différentes |
+| Complémentaires ? | ✅ Oui - sources différentes |
 
 ---
 
-## OUI — Organizationally Unique Identifier
+## OUI - Organizationally Unique Identifier
 
 ### C'est quoi ?
 
@@ -380,7 +380,7 @@ pour identifier le fabricant et la catégorie, sans aucune requête réseau.
 Certains équipements exposent une API HTTP locale permettant d'obtenir des informations
 détaillées sans authentification.
 
-### Philips Hue Bridge — `/api/config`
+### Philips Hue Bridge - `/api/config`
 
 ```
 GET http://192.168.1.x/api/config
@@ -396,7 +396,7 @@ Réponse :
 
 Pas de token requis. `BSB002` = Bridge v2 (carré blanc).
 
-### Synology DSM — `/webapi/query.cgi`
+### Synology DSM - `/webapi/query.cgi`
 
 ```
 GET http://192.168.1.x:5000/webapi/query.cgi?api=SYNO.API.Info&version=1&method=query
@@ -410,7 +410,7 @@ Réponse :
 
 Confirme que c'est bien un DSM. Le modèle exact est récupéré depuis le XML UPnP.
 
-### Freebox — `/api_version`
+### Freebox - `/api_version`
 
 ```
 GET http://192.168.1.x/api_version
@@ -449,7 +449,7 @@ PC Windows → Gateway Lab :
   Liste des noms NetBIOS enregistrés (nom de machine, groupe de travail…)
 ```
 
-Utilisé en repli quand mDNS/PTR n'ont donné aucun nom — efficace sur les PC
+Utilisé en repli quand mDNS/PTR n'ont donné aucun nom - efficace sur les PC
 Windows et les NAS Samba qui n'annoncent pas toujours en mDNS.
 
 ---
@@ -477,7 +477,7 @@ ciblées vers des API IoT non authentifiées connues :
 
 ---
 
-## SNMP — Simple Network Management Protocol
+## SNMP - Simple Network Management Protocol
 
 ### C'est quoi ?
 
@@ -492,7 +492,7 @@ une description texte libre de l'équipement, généralement explicite
 Implémenté entièrement en interne (encodage/décodage ASN.1 BER manuel d'une
 requête `GetRequest` SNMPv1), en requête unicast directe sur l'IP visée,
 uniquement lors de la **passe précise approfondie** (profil Imprimante ou
-Inconnu, une fois un service exploitable confirmé par le scan de ports) —
+Inconnu, une fois un service exploitable confirmé par le scan de ports) -
 jamais pendant le scan complet ni en diffusion réseau :
 
 ```
@@ -523,12 +523,12 @@ Chaque MAC ainsi retournée est rattachée automatiquement à l'équipement
 interrogé (`topologyParent`), sans jamais écraser un rattachement déclaré
 manuellement par l'utilisateur. Entièrement best-effort : la plupart des
 répéteurs mesh grand public (TP-Link Deco, Orbi, eero…) n'exposent pas
-d'agent SNMP et ne sont simplement jamais source de cette découverte — le
+d'agent SNMP et ne sont simplement jamais source de cette découverte - le
 rattachement manuel par glisser-déposer reste alors la seule option.
 
 ---
 
-## MQTT — broker (passe précise approfondie)
+## MQTT - broker (passe précise approfondie)
 
 ### C'est quoi ?
 
@@ -569,14 +569,14 @@ données du foyer plutôt que de l'identification du broker.
 `_runRescan(ip, deep)`, lors de la passe précise approfondie, et seulement
 si le profil déduit est `SmartHome` ou `Unknown` **et** que le port 1883 a
 été trouvé ouvert par le scan de ports ciblé. Jamais de diffusion
-multicast, jamais de scan systématique — une seule connexion TCP unicast
+multicast, jamais de scan systématique - une seule connexion TCP unicast
 vers l'IP visée. Le résultat (version du broker, nombre de clients
 connectés) enrichit le modèle et la catégorie (`Smart Hub`) de
 l'équipement, avec la source `MQTT`.
 
 ---
 
-## MQTT — broker (passe précise approfondie)
+## MQTT - broker (passe précise approfondie)
 
 ### C'est quoi ?
 
@@ -617,7 +617,7 @@ données du foyer plutôt que de l'identification du broker.
 `_runRescan(ip, deep)`, lors de la passe précise approfondie, et seulement
 si le profil déduit est `SmartHome` ou `Unknown` **et** que le port 1883 a
 été trouvé ouvert par le scan de ports ciblé. Jamais de diffusion
-multicast, jamais de scan systématique — une seule connexion TCP unicast
+multicast, jamais de scan systématique - une seule connexion TCP unicast
 vers l'IP visée. Le résultat (version du broker, nombre de clients
 connectés) enrichit le modèle et la catégorie (`Smart Hub`) de
 l'équipement, avec la source `MQTT`.
@@ -647,7 +647,7 @@ mais n'est actuellement appelé par aucune route ni aucun scan.
 Gateway Lab → Tout le réseau (239.255.255.250:3702) :
   SOAP <d:Probe/>
 Caméra ONVIF → Gateway Lab :
-  ProbeMatch — Types: "dn:NetworkVideoTransmitter", XAddrs: "http://192.168.1.x:..."
+  ProbeMatch - Types: "dn:NetworkVideoTransmitter", XAddrs: "http://192.168.1.x:..."
 ```
 
 ---
@@ -685,7 +685,7 @@ service `_matterc._udp` ; un appareil déjà appairé via `_matter._tcp`.
 ### Comment Gateway Lab l'utilise ?
 
 `DnsSdScanner` interroge désormais ces deux types de service au même titre
-que `_googlecast._tcp` ou `_homekit._tcp` — aucune requête supplémentaire,
+que `_googlecast._tcp` ou `_homekit._tcp` - aucune requête supplémentaire,
 juste deux entrées de plus dans la table des services interrogés.
 
 ---
@@ -694,23 +694,23 @@ juste deux entrées de plus dans la table des services interrogés.
 
 | Protocole | Port | Transport | Usage dans Gateway Lab |
 |---|---|---|---|
-| ARP | — | Ethernet L2 | Découverte des équipements (sweep) |
-| ICMP | — | IP | Repli si l'ARP ne répond pas (TTL → OS) |
-| DHCP | 67 | UDP broadcast 255.255.255.255 | Fingerprinting passif (hostname/OS) — écoute continue, jamais de requête |
+| ARP | - | Ethernet L2 | Découverte des équipements (sweep) |
+| ICMP | - | IP | Repli si l'ARP ne répond pas (TTL → OS) |
+| DHCP | 67 | UDP broadcast 255.255.255.255 | Fingerprinting passif (hostname/OS) - écoute continue, jamais de requête |
 | mDNS | 5353 | UDP multicast 224.0.0.251 | Résolution de noms `.local` |
 | DNS-SD | 5353 | UDP multicast 224.0.0.251 | Services (`_matter._tcp`, `_matterc._udp`, `_googlecast._tcp`…) |
 | DNS PTR | 53 | UDP → serveur DNS box | Résolution de noms DHCP |
 | SSDP | 1900 | UDP multicast 239.255.255.250 | Découverte UPnP |
-| WS-Discovery | 3702 | UDP multicast 239.255.255.250 | Découverte ONVIF — non invoqué actuellement (cf. ci-dessus) |
-| NetBIOS | 137 | UDP | Node Status — nom de machine Windows/Samba |
-| SNMP | 161 | UDP | `sysDescr` (fabricant/modèle, passe précise approfondie) + table de pontage (`dot1dTpFdbTable`, découverte automatique de topologie) — unicast |
+| WS-Discovery | 3702 | UDP multicast 239.255.255.250 | Découverte ONVIF - non invoqué actuellement (cf. ci-dessus) |
+| NetBIOS | 137 | UDP | Node Status - nom de machine Windows/Samba |
+| SNMP | 161 | UDP | `sysDescr` (fabricant/modèle, passe précise approfondie) + table de pontage (`dot1dTpFdbTable`, découverte automatique de topologie) - unicast |
 | TCP ports (scan) | 21/22/23/80/443/445/554/1883/3389/5000/8080/8123/8443/9100 | TCP | Bannières + API IoT (Shelly, Tasmota, FritzBox, Synology, Hue) |
-| TCP ports (passe précise) | 22/53/80/135/139/443/445/515/554/631/8080/8443/9100/5000 | TCP | `kRescanTargetPorts` — scan ciblé d'une seule IP, passe précise approfondie |
-| API Cast | 8008 | TCP | `/setup/eureka_info` — passe précise approfondie, unicast |
-| API Sonos | 1400 | TCP | `/xml/device_description.xml` — passe précise approfondie, unicast |
-| API Roku | 8060 | TCP | `/query/device-info` — passe précise approfondie, unicast |
-| API Samsung TV | 8001 | TCP | `/api/v2/` — passe précise approfondie, unicast |
-| MQTT (broker) | 1883 | TCP | CONNECT + `$SYS/broker/version`/`clients/connected` — passe précise approfondie, unicast |
+| TCP ports (passe précise) | 22/53/80/135/139/443/445/515/554/631/8080/8443/9100/5000 | TCP | `kRescanTargetPorts` - scan ciblé d'une seule IP, passe précise approfondie |
+| API Cast | 8008 | TCP | `/setup/eureka_info` - passe précise approfondie, unicast |
+| API Sonos | 1400 | TCP | `/xml/device_description.xml` - passe précise approfondie, unicast |
+| API Roku | 8060 | TCP | `/query/device-info` - passe précise approfondie, unicast |
+| API Samsung TV | 8001 | TCP | `/api/v2/` - passe précise approfondie, unicast |
+| MQTT (broker) | 1883 | TCP | CONNECT + `$SYS/broker/version`/`clients/connected` - passe précise approfondie, unicast |
 | HTTP | 80/443/49000/… | TCP | Descripteurs XML + APIs spécifiques |
 | ArduinoOTA | 3232 | UDP | Mise à jour firmware réseau |
 | HTTP (OTA web) | 80 | TCP | Mise à jour firmware navigateur |
