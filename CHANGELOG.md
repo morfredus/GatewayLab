@@ -7,6 +7,8 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.9.3] - 2026-07-28
+
 ### Modifié
 
 - **Documentation refactorisée.** Le README embarquait toute la référence (API
