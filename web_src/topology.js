@@ -18,7 +18,7 @@ function isAccessPointLike(d) {
 }
 
 // Choix automatique de la racine quand aucune n'est forcee par l'utilisateur :
-// la box operateur (categorie "Router", deduite par IspDetector/SSDP/OUI) —
+// la box operateur (categorie "Router", deduite par IspDetector/SSDP/OUI) -
 // jamais l'ESP32 lui-meme (categorie "Gateway" : un equipement du reseau
 // comme un autre du point de vue de la topologie, pas la racine).
 function autoPickRoot(devices) {
@@ -179,7 +179,7 @@ function setDragMsg(text, isError) {
 
 // Glisser-deposer : deplace visuellement le noeud (transform) pendant le
 // drag, puis au relachement determine la cible sous le pointeur par
-// hit-test sur la disposition calculee. Aucune lib externe — coordonnees
+// hit-test sur la disposition calculee. Aucune lib externe - coordonnees
 // SVG converties depuis les coordonnees ecran via le ratio viewBox/rect.
 function attachDragAndDrop(svg, layout, tree, onDrop) {
   var drag = null;

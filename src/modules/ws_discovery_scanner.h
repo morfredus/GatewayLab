@@ -1,5 +1,5 @@
 /**
- * WsDiscoveryScanner — Découverte WS-Discovery (ONVIF)
+ * WsDiscoveryScanner - Découverte WS-Discovery (ONVIF)
  *
  * Protocole utilisé par la quasi-totalité des caméras IP et imprimantes
  * compatibles ONVIF pour s'annoncer sur le réseau local, indépendamment

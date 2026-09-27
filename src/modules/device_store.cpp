@@ -1,5 +1,5 @@
 /**
- * DeviceStore — Implémentation
+ * DeviceStore - Implémentation
  *
  * Format de stockage : tableau JSON dans /devices.json sur LittleFS
  * Chaque objet : ip, mac, manufacturer, hostname, category, type, model, os, source, services
@@ -27,7 +27,7 @@ bool DeviceStore::begin() {
         return false;
     }
     _mounted = true;
-    Log::i(TAG, "LittleFS monté — espace total %u Ko, libre %u Ko",
+    Log::i(TAG, "LittleFS monté - espace total %u Ko, libre %u Ko",
            (unsigned)(LittleFS.totalBytes() / 1024),
            (unsigned)(LittleFS.usedBytes() == 0 ? LittleFS.totalBytes() / 1024
                                                  : (LittleFS.totalBytes() - LittleFS.usedBytes()) / 1024));
@@ -41,7 +41,7 @@ std::vector<NetworkDevice> DeviceStore::load() {
 
     File f = LittleFS.open(PATH, "r");
     if (!f) {
-        Log::i(TAG, "Pas de fichier %s — premier démarrage", PATH);
+        Log::i(TAG, "Pas de fichier %s - premier démarrage", PATH);
         return result;
     }
 
@@ -96,7 +96,7 @@ std::vector<NetworkDevice> DeviceStore::load() {
         d.topologyParentAuto  = obj["topologyParentAuto"]  | false;
         d.topologyParentConfidence = obj["topologyParentConfidence"] | 0;
         d.online       = false;
-        d.lastSeen     = 0;   // Inconnu — sera affiché comme "hors ligne"
+        d.lastSeen     = 0;   // Inconnu - sera affiché comme "hors ligne"
         if (!d.ip.isEmpty() || !d.mac.isEmpty())
             result.push_back(d);
     }

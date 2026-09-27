@@ -1,5 +1,5 @@
 /**
- * MediaApiScanner — Sondage des API HTTP propriétaires des appareils
+ * MediaApiScanner - Sondage des API HTTP propriétaires des appareils
  * multimédia/IoT grand public les plus courants.
  *
  * Contrairement à PortScanner::_probeIoTApis() (qui ne sonde que le port

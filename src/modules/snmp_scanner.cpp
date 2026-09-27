@@ -128,7 +128,7 @@ std::vector<uint32_t> SnmpScanner::_decodeOid(const uint8_t* buf, int len) {
     return arcs;
 }
 
-// GetNextRequest SNMPv1 — structure identique au GetRequest de _buildRequest()
+// GetNextRequest SNMPv1 - structure identique au GetRequest de _buildRequest()
 // mais avec un PDU-tag A1 et un OID dynamique (calcul des longueurs BER fait
 // au fur et a mesure, du varbind vers l'enveloppe).
 std::vector<uint8_t> SnmpScanner::_buildGetNextRequest(const std::vector<uint32_t>& oid) {
@@ -166,7 +166,7 @@ std::vector<uint8_t> SnmpScanner::_buildGetNextRequest(const std::vector<uint32_
 }
 
 // Le premier octet de tag OID (0x06) rencontre dans la reponse appartient
-// forcement au varbind retourne — aucun autre champ du paquet (version,
+// forcement au varbind retourne - aucun autre champ du paquet (version,
 // communaute, request-id/error-status/error-index) n'utilise ce tag.
 bool SnmpScanner::_parseGetNextResponse(const uint8_t* buf, int len,
                                          std::vector<uint32_t>& outOid,

@@ -1,4 +1,4 @@
-# web_src — Sources de l'interface web
+# web_src - Sources de l'interface web
 
 Ce dossier contient les **sources lisibles et maintenables** de l'interface web embarquée
 dans le firmware Gateway Lab.
@@ -45,7 +45,7 @@ data/oui.json          ──┘
 | `menu.html` | Bloc `<nav>` partagé, inliné via `<!-- include:menu.html -->` | ✅ injecté inline dans chaque page (avant minification) |
 | `styles.css` | CSS commun (reset, body, nav, footer…) | ✅ injecté inline dans chaque page |
 | `template.html` | Gabarit de référence documentaire | ❌ (non listé dans PAGES) |
-| `extracted/` | Sortie de `extract_web_sources.py` (récupération d'urgence) | — (non versionné, ne pas modifier à la main) |
+| `extracted/` | Sortie de `extract_web_sources.py` (récupération d'urgence) | - (non versionné, ne pas modifier à la main) |
 
 > La page OTA dédiée (`ota.html` / `ota.js` / `GET /update`) a été supprimée :
 > le formulaire de mise à jour firmware est désormais intégré à la page
@@ -91,7 +91,7 @@ place de `<script src="page.js"></script>`. Chaque page conserve un bloc
 
 Le fichier `menu.html` contient le bloc `<nav>` (liens identiques sur toutes
 les pages) ainsi qu'un petit script qui marque le lien actif
-(`class="active"`) en comparant `href` à `window.location.pathname` — il n'y
+(`class="active"`) en comparant `href` à `window.location.pathname` - il n'y
 a donc plus besoin de dupliquer ou de personnaliser ce bloc par page.
 
 ---

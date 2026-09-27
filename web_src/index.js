@@ -15,10 +15,10 @@ function refresh() {
   fetch('/api/status')
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      document.getElementById('ssid').textContent     = d.ssid || '—';
-      document.getElementById('ip').textContent       = d.ip   || '—';
+      document.getElementById('ssid').textContent     = d.ssid || '-';
+      document.getElementById('ip').textContent       = d.ip   || '-';
       document.getElementById('rssi').textContent     = d.rssi + ' dBm (' + rssiQuality(d.rssi) + ')';
-      document.getElementById('hostname').textContent = d.hostname ? d.hostname + '.local' : '—';
+      document.getElementById('hostname').textContent = d.hostname ? d.hostname + '.local' : '-';
       document.getElementById('uptime').textContent   = fmtUptime(d.uptime || 0);
       if (d.version) {
         document.getElementById('site-ver').textContent   = 'v' + d.version;
@@ -35,13 +35,13 @@ function refresh() {
     });
 }
 function fmtMs(ms) {
-  if (!ms) return '—';
+  if (!ms) return '-';
   if (ms < 1000) return ms + ' ms';
   return (ms / 1000).toFixed(1) + ' s';
 }
 
 function fmtBytes(b) {
-  if (b === undefined || b === null) return '—';
+  if (b === undefined || b === null) return '-';
   if (b < 1024) return b + ' o';
   return (b / 1024).toFixed(0) + ' Ko';
 }

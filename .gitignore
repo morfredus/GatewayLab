@@ -85,3 +85,7 @@ __pycache__/
 # Windows
 Thumbs.db
 ehthumbs.db
+
+# Secrets locaux : jamais versionnes
+secrets.json
+.env

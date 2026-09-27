@@ -7,6 +7,15 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.9.5] - 2026-09-27
+
+### Changed
+
+- Re-vendored the morfBeacon Arduino emitter (`third_party/morf/beacon-arduino`) to
+  morfBeacon 0.7.2 (comment punctuation only).
+- Em dashes replaced by `-` in the project's own files (comments, log messages,
+  embedded web pages). No functional change; the firmware builds unchanged.
+
 ## [1.9.4] - 2026-08-20
 
 ### Corrigé

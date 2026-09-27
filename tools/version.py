@@ -13,7 +13,7 @@ fichier VERSION a la racine fait autorite et est lu par CMake.
 Deux consequences. D'abord, aucun outil d'ecosysteme ne pouvait etablir
 l'inventaire des versions du parc, puisque deux projets sur quatorze publiaient
 la leur autrement. Ensuite, ajouter un fichier VERSION SANS ce script aurait
-cree deux sources de verite pour une meme donnee — le defaut que ce script
+cree deux sources de verite pour une meme donnee - le defaut que ce script
 existe precisement pour eviter.
 
 Le fichier VERSION fait desormais autorite ; platformio.ini ne porte plus la

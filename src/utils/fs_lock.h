@@ -1,11 +1,11 @@
 /**
- * fs_lock — Verrou global du système de fichiers LittleFS
+ * fs_lock - Verrou global du système de fichiers LittleFS
  *
  * LittleFS n'est PAS réentrant. Or plusieurs tâches FreeRTOS ouvrent, écrivent
  * et ferment des fichiers : le scan et le rescan approfondi (device_store,
  * device_history), les handlers web (favori / alias / notes, restauration), le
  * journal de redémarrage (boot_log). Deux séquences open→…→close qui se
- * chevauchent — même sur des fichiers DIFFÉRENTS — corrompent l'état interne
+ * chevauchent - même sur des fichiers DIFFÉRENTS - corrompent l'état interne
  * partagé de LittleFS, ce qui déclenche l'assert `lfs_file_close` /
  * `lfs_mlist_isopen` et fait paniquer l'appareil.
  *
@@ -35,7 +35,7 @@ inline SemaphoreHandle_t handle() {
     return m;
 }
 
-// Garde RAII : prend le verrou à la construction, le rend à la destruction —
+// Garde RAII : prend le verrou à la construction, le rend à la destruction -
 // donc à chaque sortie de fonction, y compris les returns anticipés.
 struct Guard {
     Guard()  { SemaphoreHandle_t m = handle(); if (m) xSemaphoreTakeRecursive(m, portMAX_DELAY); }

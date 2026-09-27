@@ -69,7 +69,7 @@ std::map<String, WsDiscoveryInfo> WsDiscoveryScanner::scan(uint32_t timeout_ms) 
         return results;
     }
 
-    // Requete SOAP "Probe" — minimaliste, sans filtre de types pour
+    // Requete SOAP "Probe" - minimaliste, sans filtre de types pour
     // recuperer tout appareil ONVIF/WS-Discovery compatible (camera,
     // imprimante, NAS…) quel que soit son role.
     const char* probe =
@@ -118,7 +118,7 @@ std::map<String, WsDiscoveryInfo> WsDiscoveryScanner::scan(uint32_t timeout_ms) 
             info.category = _inferCategory(info.types);
 
             results[ip] = info;
-            Log::i(TAG, "ProbeMatch %s — types=%s", ip.c_str(), info.types.c_str());
+            Log::i(TAG, "ProbeMatch %s - types=%s", ip.c_str(), info.types.c_str());
         } else {
             vTaskDelay(pdMS_TO_TICKS(20));
         }

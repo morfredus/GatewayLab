@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-HTML Validator — Gateway Lab V1
+HTML Validator - Gateway Lab V1
 
 Valide la structure HTML des pages sources dans web_src/ :
   - index.html, scan.html, wifi.html (pages réelles)
@@ -155,7 +155,7 @@ def validate_page(path: Path, is_real_page: bool) -> bool:
     html = path.read_text(encoding='utf-8')
     if MENU_HTML.exists():
         # Le menu de navigation partagé n'est inliné qu'au moment de la
-        # minification (tools/minify_web.py) — on le simule ici pour valider
+        # minification (tools/minify_web.py) - on le simule ici pour valider
         # la structure réellement servie par l'ESP32.
         html = re.sub(r'<!--\s*include:menu\.html\s*-->', MENU_HTML.read_text(encoding='utf-8'), html)
     page_ok = True
@@ -231,7 +231,7 @@ def validate_page(path: Path, is_real_page: bool) -> bool:
 # ---------------------------------------------------------------------------
 def run() -> bool:
     print("=" * 55)
-    print("Gateway Lab V1 — Validateur HTML")
+    print("Gateway Lab V1 - Validateur HTML")
     print("=" * 55)
     print(f"\n  Répertoire : {WEB_SRC_DIR.relative_to(PROJECT_ROOT)}")
 

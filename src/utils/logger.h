@@ -1,5 +1,5 @@
 /**
- * Logger — Journalisation série avec niveaux de criticité
+ * Logger - Journalisation série avec niveaux de criticité
  *
  * Utilisation :
  *   Log::i("MonModule", "Valeur = %d", x);   // Information
@@ -22,7 +22,7 @@
 #endif
 
 #ifdef BOOT_LOG_ENABLED
-#include "../modules/boot_log.h"   // [DEBOGAGE TEMPORAIRE] capture les logs avant reboot — voir boot_log.h
+#include "../modules/boot_log.h"   // [DEBOGAGE TEMPORAIRE] capture les logs avant reboot - voir boot_log.h
 #endif
 
 #ifdef TELNET_LOG_ENABLED
@@ -41,7 +41,7 @@ namespace detail {
         bootLog.capture(level, tag, buf);
 #endif
 #ifdef TELNET_LOG_ENABLED
-        // Même format que Serial — un client YAT en écoute UDP sur le port
+        // Même format que Serial - un client YAT en écoute UDP sur le port
         // voit exactement ce qu'affiche le moniteur série USB.
         char line[280];
         int n = snprintf(line, sizeof(line), "[%s][%s] %s\r\n", level, tag, buf);
@@ -50,7 +50,7 @@ namespace detail {
     }
 }
 
-// Niveau DEBUG — informations très détaillées pour le développement
+// Niveau DEBUG - informations très détaillées pour le développement
 __attribute__((format(printf, 2, 3)))
 inline void d(const char* tag, const char* fmt, ...) {
 #if LOG_LEVEL >= 4
@@ -58,7 +58,7 @@ inline void d(const char* tag, const char* fmt, ...) {
 #endif
 }
 
-// Niveau INFO — déroulement normal de l'application
+// Niveau INFO - déroulement normal de l'application
 __attribute__((format(printf, 2, 3)))
 inline void i(const char* tag, const char* fmt, ...) {
 #if LOG_LEVEL >= 3
@@ -66,7 +66,7 @@ inline void i(const char* tag, const char* fmt, ...) {
 #endif
 }
 
-// Niveau WARN — situation anormale mais non bloquante
+// Niveau WARN - situation anormale mais non bloquante
 __attribute__((format(printf, 2, 3)))
 inline void w(const char* tag, const char* fmt, ...) {
 #if LOG_LEVEL >= 2
@@ -74,7 +74,7 @@ inline void w(const char* tag, const char* fmt, ...) {
 #endif
 }
 
-// Niveau ERROR — erreur critique, fonctionnalité impactée
+// Niveau ERROR - erreur critique, fonctionnalité impactée
 __attribute__((format(printf, 2, 3)))
 inline void e(const char* tag, const char* fmt, ...) {
 #if LOG_LEVEL >= 1

@@ -1,5 +1,5 @@
 /**
- * BootLog — Implementation [MODULE TEMPORAIRE DE DEBOGAGE, voir boot_log.h]
+ * BootLog - Implementation [MODULE TEMPORAIRE DE DEBOGAGE, voir boot_log.h]
  */
 
 #include "boot_log.h"
@@ -25,7 +25,7 @@ static const char* TAG = "BootLog";
 // layout et produira des donnees corrompues (cf. incident Patch 7 -> 8).
 static const uint32_t kMagic = 0xB007106Cu;  // v3 (ajout lastEpochSec : date/heure de l'evenement)
 
-// Taille du buffer circulaire de logs — configurable via app_config.h
+// Taille du buffer circulaire de logs - configurable via app_config.h
 static const int kLines   = LOG_BUFFER_SIZE;
 static const int kLineLen = LOG_LINE_MAX_LEN;
 
@@ -96,13 +96,13 @@ static uint32_t _largestFreeBlock() {
 void BootLog::begin() {
     _mounted = LittleFS.begin(true);
     if (!_mounted) {
-        Log::e(TAG, "Echec de montage LittleFS — journal de redemarrage indisponible (rien ne sera ecrit dans /bootlog.json)");
+        Log::e(TAG, "Echec de montage LittleFS - journal de redemarrage indisponible (rien ne sera ecrit dans /bootlog.json)");
     }
 
     esp_reset_reason_t reason = esp_reset_reason();
     bool hadPreviousLines = (_rtc.magic == kMagic);   // count peut etre 0 si rien capture
 
-    // --- Compteurs persistants (NVS — survivent aussi a une coupure secteur) ---
+    // --- Compteurs persistants (NVS - survivent aussi a une coupure secteur) ---
     Preferences prefs;
     prefs.begin("bootlog", false);
     uint32_t bootCount  = prefs.getUInt("boot_count", 0) + 1;
@@ -128,7 +128,7 @@ void BootLog::begin() {
         JsonArray arr = doc.is<JsonArray>() ? doc.as<JsonArray>() : doc.to<JsonArray>();
 
         // Horodatage de l'evenement : l'horloge interne (time(nullptr)) n'est
-        // remise a zero que par une coupure d'alimentation/reset franc — un
+        // remise a zero que par une coupure d'alimentation/reset franc - un
         // redemarrage logiciel/crash/watchdog la laisse intacte. Si le boot
         // precedent avait synchronise le NTP, l'heure courante est donc deja
         // valide a cet instant, avant meme que ce nouveau boot ne reconnecte
@@ -148,7 +148,7 @@ void BootLog::begin() {
 
         if (hadPreviousLines) {
             // Dernieres informations connues AVANT ce reboot (heartbeat le
-            // plus recent du boot precedent) — le plus proche que l'on
+            // plus recent du boot precedent) - le plus proche que l'on
             // puisse avoir de "l'etat au moment du crash"
             entry["uptimeAtResetMs"]   = _rtc.lastUptimeMs;
             entry["resetEpoch"]        = _rtc.lastEpochSec;   // estimation a +/- BOOT_LOG_STATS_INTERVAL_MS
@@ -195,7 +195,7 @@ void BootLog::begin() {
     _rtc.temperatureC  = temperatureC;
     _rtc.wifiStatus    = (int8_t)WL_IDLE_STATUS;
 
-    Log::i(TAG, "Raison du dernier reset : %s (%d) — boot #%u, crash #%u, %.1f C",
+    Log::i(TAG, "Raison du dernier reset : %s (%d) - boot #%u, crash #%u, %.1f C",
            _reasonText(reason), (int)reason, (unsigned)bootCount, (unsigned)crashCount, temperatureC);
 }
 
@@ -227,12 +227,12 @@ void BootLog::service(bool force) {
 
 void BootLog::capture(const char* level, const char* tag, const char* msg) {
     if (_rtc.magic != kMagic) {
-        // Buffer pas encore initialise (capture appelee avant begin()) — ignore
+        // Buffer pas encore initialise (capture appelee avant begin()) - ignore
         return;
     }
     char* dst = _rtc.lines[_rtc.next];
     // Chaque ligne est un JSON compact auto-suffisant (timestamp, niveau,
-    // tag, heap libre, plus gros bloc libre, message) — la mise en
+    // tag, heap libre, plus gros bloc libre, message) - la mise en
     // securite des guillemets est faite automatiquement par ArduinoJson
     // lors de la serialisation finale de cette chaine dans getLogJson().
     snprintf(dst, kLineLen,

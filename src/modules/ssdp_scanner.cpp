@@ -1,11 +1,11 @@
 /**
- * SsdpScanner — Implémentation v0.0.8
+ * SsdpScanner - Implémentation v0.0.8
  *
  * Bibliothèques utilisées :
- *   WiFiUdp    — socket UDP multicast pour M-SEARCH / réponses SSDP
- *   WiFiClient — HTTP GET des descripteurs XML et APIs spécifiques
- *   ArduinoJson — parsing JSON Hue / Freebox (petit doc, stack safe)
- *   FreeRTOS   — vTaskDelay pour les attentes non bloquantes
+ *   WiFiUdp    - socket UDP multicast pour M-SEARCH / réponses SSDP
+ *   WiFiClient - HTTP GET des descripteurs XML et APIs spécifiques
+ *   ArduinoJson - parsing JSON Hue / Freebox (petit doc, stack safe)
+ *   FreeRTOS   - vTaskDelay pour les attentes non bloquantes
  */
 
 #include "ssdp_scanner.h"
@@ -22,7 +22,7 @@ static constexpr uint16_t    SSDP_PORT = 1900;
 SsdpScanner ssdpScanner;
 
 // ════════════════════════════════════════════════════════════════════════════
-// Helpers — décomposition d'URL
+// Helpers - décomposition d'URL
 // ════════════════════════════════════════════════════════════════════════════
 
 String SsdpScanner::_urlIp(const String& url) {
@@ -45,7 +45,7 @@ uint16_t SsdpScanner::_urlPort(const String& url) {
     int colon = url.indexOf(':', start);
     int slash  = url.indexOf('/', start);
     if (colon < 0) return 80;
-    if (slash > 0 && slash < colon) return 80;   // ':' dans le path — pas un port
+    if (slash > 0 && slash < colon) return 80;   // ':' dans le path - pas un port
     int portEnd = (slash > 0) ? slash : (int)url.length();
     int p = url.substring(colon + 1, portEnd).toInt();
     return (p > 0 && p < 65536) ? (uint16_t)p : 80;
@@ -60,7 +60,7 @@ String SsdpScanner::_urlPath(const String& url) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Helper — extraction d'un header HTTP depuis une réponse brute
+// Helper - extraction d'un header HTTP depuis une réponse brute
 // ════════════════════════════════════════════════════════════════════════════
 
 String SsdpScanner::_httpHeader(const String& resp, const String& header) {
@@ -83,13 +83,13 @@ String SsdpScanner::_httpHeader(const String& resp, const String& header) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Helper — extraction robuste d'un tag XML
+// Helper - extraction robuste d'un tag XML
 //
 // Gère :
 //   <tag>value</tag>          (standard)
 //   <ns:tag>value</ns:tag>    (namespace)
 //   <tag attr="x">value</tag> (attributs ignorés)
-// Ne plante pas sur du XML mal formé — retourne "" si absent.
+// Ne plante pas sur du XML mal formé - retourne "" si absent.
 // ════════════════════════════════════════════════════════════════════════════
 
 String SsdpScanner::_xmlTag(const String& xml, const String& tag) {
@@ -131,7 +131,7 @@ String SsdpScanner::_httpGet(const String& ip, uint16_t port,
         return "";
     }
 
-    // Requête HTTP/1.0 — pas de chunked transfer, connection fermée après body
+    // Requête HTTP/1.0 - pas de chunked transfer, connection fermée après body
     client.print("GET " + path + " HTTP/1.0\r\n"
                  "Host: " + ip + "\r\n"
                  "Connection: close\r\n"
@@ -171,7 +171,7 @@ String SsdpScanner::_httpGet(const String& ip, uint16_t port,
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Découverte SSDP — M-SEARCH multicast + collecte des réponses
+// Découverte SSDP - M-SEARCH multicast + collecte des réponses
 // ════════════════════════════════════════════════════════════════════════════
 
 std::vector<SsdpScanner::SsdpResponse> SsdpScanner::_discover(uint32_t timeout_ms) {
@@ -182,7 +182,7 @@ std::vector<SsdpScanner::SsdpResponse> SsdpScanner::_discover(uint32_t timeout_m
         return {};
     }
 
-    // Requête M-SEARCH — ST: ssdp:all pour découvrir tous les types UPnP
+    // Requête M-SEARCH - ST: ssdp:all pour découvrir tous les types UPnP
     const char* msearch =
         "M-SEARCH * HTTP/1.1\r\n"
         "HOST: 239.255.255.250:1900\r\n"
@@ -399,7 +399,7 @@ bool SsdpScanner::_isFreebox(const NetworkDevice& dev) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Enrichissement Hue Bridge — GET http://<ip>/api/config
+// Enrichissement Hue Bridge - GET http://<ip>/api/config
 // Champs extraits (sans authentification) : name, modelid, swversion, apiversion
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -435,7 +435,7 @@ void SsdpScanner::_enrichHue(NetworkDevice& dev) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Enrichissement Synology DSM — GET http://<ip>:5000/webapi/query.cgi
+// Enrichissement Synology DSM - GET http://<ip>:5000/webapi/query.cgi
 // Endpoint non authentifié retournant les infos API de base.
 // Le modèle est en général déjà dans le XML UPnP (modelName).
 // ════════════════════════════════════════════════════════════════════════════
@@ -467,7 +467,7 @@ void SsdpScanner::_enrichSynology(NetworkDevice& dev) {
         }
     }
 
-    // Modèle depuis le XML UPnP (ex: "DiskStation DS224+") — conserver
+    // Modèle depuis le XML UPnP (ex: "DiskStation DS224+") - conserver
     // Si le modèle contient "DS" ou "RS", l'extraire proprement
     String model = dev.model;
     if (model.indexOf("DiskStation") >= 0) {
@@ -485,7 +485,7 @@ void SsdpScanner::_enrichSynology(NetworkDevice& dev) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// Enrichissement Freebox — GET http://<ip>/api_version
+// Enrichissement Freebox - GET http://<ip>/api_version
 // Retourne sans authentification : device_name, device_type, firmware_version
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -568,10 +568,10 @@ NetworkDevice SsdpScanner::_parseDescription(const SsdpResponse& resp,
 std::vector<NetworkDevice> SsdpScanner::scan(uint32_t timeout_ms) {
     Log::i(TAG, "Démarrage scan SSDP (timeout M-SEARCH=%ums)", timeout_ms);
 
-    // Phase 1 — Découverte multicast
+    // Phase 1 - Découverte multicast
     auto responses = _discover(timeout_ms);
 
-    // Phase 2 — Récupération et parsing des descripteurs XML
+    // Phase 2 - Récupération et parsing des descripteurs XML
     std::vector<NetworkDevice> results;
     results.reserve(responses.size());
 
@@ -592,13 +592,13 @@ std::vector<NetworkDevice> SsdpScanner::scan(uint32_t timeout_ms) {
         NetworkDevice dev = _parseDescription(resp, xml);
         results.push_back(dev);
 
-        Log::i(TAG, "UPnP %s — %s (%s) [%s]",
+        Log::i(TAG, "UPnP %s - %s (%s) [%s]",
                dev.ip.c_str(),
                dev.hostname.isEmpty() ? "-" : dev.hostname.c_str(),
                dev.manufacturer.isEmpty() ? "-" : dev.manufacturer.c_str(),
                dev.category.c_str());
     }
 
-    Log::i(TAG, "Scan SSDP terminé — %d équipement(s) identifié(s)", (int)results.size());
+    Log::i(TAG, "Scan SSDP terminé - %d équipement(s) identifié(s)", (int)results.size());
     return results;
 }

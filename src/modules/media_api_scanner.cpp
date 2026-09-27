@@ -7,7 +7,7 @@ static const char* TAG = "MediaApi";
 MediaApiScanner mediaApiScanner;
 
 // ---------------------------------------------------------------------------
-// GET HTTP générique — lit jusqu'à maxLen octets de corps de réponse
+// GET HTTP générique - lit jusqu'à maxLen octets de corps de réponse
 // ---------------------------------------------------------------------------
 static String _httpGet(const String& ip, uint16_t port, const String& path,
                         uint32_t timeout_ms, size_t maxLen = 2048) {

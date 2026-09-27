@@ -1,12 +1,12 @@
 /**
- * WiFiManager — Implémentation
+ * WiFiManager - Implémentation
  *
  * Bibliothèques utilisées :
- *   WiFiMulti    — gestion de plusieurs réseaux, connexion au meilleur signal
- *   ESPmDNS      — résolution de noms sur le réseau local (gatewaylab.local)
- *   Preferences  — persistance NVS des réseaux enregistrés
+ *   WiFiMulti    - gestion de plusieurs réseaux, connexion au meilleur signal
+ *   ESPmDNS      - résolution de noms sur le réseau local (gatewaylab.local)
+ *   Preferences  - persistance NVS des réseaux enregistrés
  *   DNSServer +
- *   WebServer    — portail captif de configuration (mode point d'accès)
+ *   WebServer    - portail captif de configuration (mode point d'accès)
  */
 
 #include "wifi_manager.h"
@@ -33,7 +33,7 @@ static const char* NVS_KEY        = "networks";
 static const char* AP_SSID        = "GatewayLab-Setup";
 static const IPAddress AP_IP(192, 168, 4, 1);
 
-// Instance interne de WiFiMulti — non exposée hors de ce fichier
+// Instance interne de WiFiMulti - non exposée hors de ce fichier
 static WiFiMulti _multi;
 
 // Délai minimum entre deux tentatives de reconnexion automatique
@@ -56,7 +56,7 @@ static WebServer _portal(80);
 WiFiManager wifiMgr;
 
 // ---------------------------------------------------------------------------
-// Persistance NVS — liste des réseaux enregistrés, sérialisée en JSON
+// Persistance NVS - liste des réseaux enregistrés, sérialisée en JSON
 // ---------------------------------------------------------------------------
 static std::vector<WifiCredential> _loadNetworks() {
     std::vector<WifiCredential> list;
@@ -124,7 +124,7 @@ bool WiFiManager::removeNetwork(const String& ssid) {
 }
 
 // ---------------------------------------------------------------------------
-// Portail de configuration — page HTML servie en mode point d'accès
+// Portail de configuration - page HTML servie en mode point d'accès
 // Page volontairement autonome (CSS inline) : indépendante du pipeline
 // minify_web.py, car servie avant toute connexion réseau.
 // ---------------------------------------------------------------------------
@@ -193,7 +193,7 @@ static void _portalHandleRoot() {
     _portal.send_P(200, "text/html", PORTAL_PAGE);
 }
 
-// Scan des réseaux visibles — utilisé par la page de configuration pour
+// Scan des réseaux visibles - utilisé par la page de configuration pour
 // proposer une liste déroulante plutôt qu'une saisie manuelle uniquement
 static void _portalHandleScan() {
     int n = WiFi.scanNetworks();
@@ -206,7 +206,7 @@ static void _portalHandleScan() {
     _portal.send(200, "application/json", json);
 }
 
-// Enregistrement des identifiants saisis puis redémarrage — au prochain
+// Enregistrement des identifiants saisis puis redémarrage - au prochain
 // boot, begin() trouvera le réseau en NVS (priorité 1) et s'y connectera
 static void _portalHandleSave() {
     String ssid     = _portal.arg("ssid");
@@ -217,7 +217,7 @@ static void _portalHandleSave() {
     }
     wifiMgr.addNetwork(ssid, password);
     _portal.send(200, "application/json", "{\"status\":\"ok\"}");
-    Log::i(TAG, "Réseau \"%s\" enregistré via le portail — redémarrage", ssid.c_str());
+    Log::i(TAG, "Réseau \"%s\" enregistré via le portail - redémarrage", ssid.c_str());
     delay(500);
     ESP.restart();
 }
@@ -244,7 +244,7 @@ static void _startPortal() {
     _portal.onNotFound(_portalHandleNotFound);
     _portal.begin();
 
-    Log::i(TAG, "Portail de configuration actif — SSID \"%s\" — http://%s",
+    Log::i(TAG, "Portail de configuration actif - SSID \"%s\" - http://%s",
            AP_SSID, AP_IP.toString().c_str());
 }
 
@@ -260,7 +260,7 @@ static void _startMdns() {
 }
 
 // ---------------------------------------------------------------------------
-// Connexion STA — enregistre tous les réseaux fournis et attend jusqu'au
+// Connexion STA - enregistre tous les réseaux fournis et attend jusqu'au
 // timeout configuré ; WiFiMulti choisit celui au signal le plus fort
 // ---------------------------------------------------------------------------
 static bool _tryConnect(const std::vector<WifiCredential>& networks) {
@@ -291,12 +291,12 @@ void WiFiManager::begin(Callback cb) {
 #ifdef DEFAULT_WIFI_SSID
     if (networks.empty()) {
         networks.push_back({DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASSWORD});
-        Log::i(TAG, "Aucun réseau en NVS — utilisation de DEFAULT_WIFI_SSID (secrets.h)");
+        Log::i(TAG, "Aucun réseau en NVS - utilisation de DEFAULT_WIFI_SSID (secrets.h)");
     }
 #endif
 
     if (!networks.empty() && _tryConnect(networks)) {
-        Log::i(TAG, "Connecté à \"%s\" — IP %s — RSSI %d dBm",
+        Log::i(TAG, "Connecté à \"%s\" - IP %s - RSSI %d dBm",
                WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI());
         _startMdns();
         _wasConnected = true;
@@ -304,8 +304,8 @@ void WiFiManager::begin(Callback cb) {
         return;
     }
 
-    // Priorité 3 : aucun réseau disponible — portail de configuration
-    Log::w(TAG, "Aucun réseau disponible — démarrage du portail de configuration");
+    // Priorité 3 : aucun réseau disponible - portail de configuration
+    Log::w(TAG, "Aucun réseau disponible - démarrage du portail de configuration");
     if (cb) cb(false);
     _startPortal();
 }
@@ -324,12 +324,12 @@ void WiFiManager::loop() {
         // Tentative de reconnexion seulement si le délai de debounce est écoulé
         if (now - _lastReconnectAttempt >= RECONNECT_DEBOUNCE_MS) {
             _lastReconnectAttempt = now;
-            Log::w(TAG, "WiFi perdu — tentative de reconnexion...");
+            Log::w(TAG, "WiFi perdu - tentative de reconnexion...");
             _multi.run();   // Retourne immédiatement, la connexion est async
         }
     } else if (!_wasConnected) {
         // Transition déconnecté → connecté : relancer mDNS et tous les services
-        Log::i(TAG, "WiFi rétabli sur \"%s\" — IP %s",
+        Log::i(TAG, "WiFi rétabli sur \"%s\" - IP %s",
                WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
         _startMdns();
         if (_storedCb) _storedCb(true);

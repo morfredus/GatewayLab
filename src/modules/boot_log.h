@@ -1,5 +1,5 @@
 /**
- * BootLog — Journal de débogage des redémarrages [MODULE TEMPORAIRE DE DEBOGAGE]
+ * BootLog - Journal de débogage des redémarrages [MODULE TEMPORAIRE DE DEBOGAGE]
  *
  * Objectif : capturer le maximum d'informations avant un reboot (volontaire,
  * crash, watchdog, brownout...) sans avoir besoin d'un moniteur série branché
@@ -13,7 +13,7 @@
  *     tag, message, heap libre, plus gros bloc libre au moment du log).
  *   - Le même bloc RTC_NOINIT_ATTR conserve aussi un instantané périodique
  *     de l'état système (RuntimeStats), le dernier "task" connu (voir
- *     setLastTask()) et le dernier état WiFi observé — mis à jour par
+ *     setLastTask()) et le dernier état WiFi observé - mis à jour par
  *     service(), à appeler depuis loop().
  *   - Au démarrage suivant, begin() lit la raison du reset
  *     (esp_reset_reason) et, si le buffer précédent est valide, persiste
@@ -34,7 +34,7 @@
  *
  * Limite connue (trace d'appel / stack trace au PANIC) :
  *   Le framework Arduino n'expose pas de hook applicatif execute pendant un
- *   PANIC ESP-IDF — a cet instant, le code utilisateur (donc ce module) ne
+ *   PANIC ESP-IDF - a cet instant, le code utilisateur (donc ce module) ne
  *   tourne plus. Une vraie capture de backtrace necessiterait le composant
  *   ESP-IDF "esp_core_dump" (zone flash/RTC dediee + outil decodeur cote PC),
  *   hors de portee d'un module Arduino autonome a fichier unique. La trace
@@ -50,7 +50,7 @@
 #include <functional>
 
 // Instantané périodique de l'état système, rafraîchi toutes les
-// BOOT_LOG_STATS_INTERVAL_MS millisecondes par service() — survit en RTC.
+// BOOT_LOG_STATS_INTERVAL_MS millisecondes par service() - survit en RTC.
 struct RuntimeStats {
     uint32_t uptime       = 0;   // millis() au moment de l'instantané
     uint32_t freeHeap     = 0;   // ESP.getFreeHeap()
@@ -69,18 +69,18 @@ public:
     // le boot en cours.
     void begin();
 
-    // A appeler dans loop() — mise à jour peu coûteuse de l'uptime/heap a
+    // A appeler dans loop() - mise à jour peu coûteuse de l'uptime/heap a
     // chaque appel, et instantané complet (RuntimeStats + WiFi) toutes les
     // BOOT_LOG_STATS_INTERVAL_MS millisecondes. force=true ignore le délai
     // (à utiliser juste avant un redémarrage volontaire, ex. fin d'OTA).
     void service(bool force = false);
 
-    // Ajoute une ligne au buffer circulaire courant (appelé par Log::*) —
+    // Ajoute une ligne au buffer circulaire courant (appelé par Log::*) -
     // chaque ligne est un JSON compact incluant heap/bloc libre courants.
     void capture(const char* level, const char* tag, const char* msg);
 
     // Trace de la dernière "tâche" en cours (ex: "Scan réseau"), conservée
-    // en RTC et incluse dans l'entrée persistée au boot suivant — utile
+    // en RTC et incluse dans l'entrée persistée au boot suivant - utile
     // pour savoir ce que faisait le firmware juste avant un crash muet.
     void setLastTask(const String& task);
 
@@ -89,12 +89,12 @@ public:
     // bootLog.setDevicesCountProvider([] { return netScanner.deviceCount(); });)
     void setDevicesCountProvider(std::function<uint32_t()> provider);
 
-    // Compteurs cumulés exposés dans RuntimeStats — à appeler depuis
+    // Compteurs cumulés exposés dans RuntimeStats - à appeler depuis
     // WebServerModule (une page servie / un appel API traité).
     void notePageServed();
     void noteApiCall();
 
-    // Historique des boots persistés, du plus récent au plus ancien (JSON) —
+    // Historique des boots persistés, du plus récent au plus ancien (JSON) -
     // équivalent de LogManager::Dump() dans la nomenclature habituelle.
     String getLogJson() const;
 

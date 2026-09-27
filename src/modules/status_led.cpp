@@ -1,5 +1,5 @@
 /**
- * StatusLed — Implémentation
+ * StatusLed - Implémentation
  *
  * Bibliothèque utilisée : Adafruit_NeoPixel (un seul pixel, board_config.h::NEOPIXEL_PIN)
  */
@@ -19,7 +19,7 @@ static Adafruit_NeoPixel _pixel(1, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 StatusLed statusLed;
 
-// Couleurs (GRB géré par la bibliothèque — on raisonne en RGB)
+// Couleurs (GRB géré par la bibliothèque - on raisonne en RGB)
 static const uint32_t COLOR_BLUE   = 0x1040FF;
 static const uint32_t COLOR_GREEN  = 0x00C040;
 static const uint32_t COLOR_YELLOW = 0xC0A000;
@@ -48,7 +48,7 @@ void StatusLed::begin() {
     _pixel.setPixelColor(0, COLOR_OFF);
     _pixel.show();
 
-    Log::i(TAG, "NeoPixel initialisée — luminosité %u %%", (unsigned)_brightnessPct);
+    Log::i(TAG, "NeoPixel initialisée - luminosité %u %%", (unsigned)_brightnessPct);
 }
 
 void StatusLed::setBrightness(uint8_t percent) {
@@ -76,7 +76,7 @@ void StatusLed::_render() {
 
     switch (_state) {
         case LedState::Boot: {
-            // Pulse bleu — respiration sinusoïdale, période 1500 ms
+            // Pulse bleu - respiration sinusoïdale, période 1500 ms
             float phase = (now % 1500) / 1500.0f;
             float level = (sinf(phase * 2 * PI) + 1.0f) / 2.0f;   // 0..1
             uint8_t pct = (uint8_t)(_brightnessPct * level);

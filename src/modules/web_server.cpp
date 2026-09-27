@@ -1,10 +1,10 @@
 /**
- * WebServerModule — Implémentation
+ * WebServerModule - Implémentation
  *
  * Bibliothèques utilisées :
- *   WebServer    — serveur HTTP intégré à l'Arduino ESP32
- *   ArduinoJson  — sérialisation JSON pour les réponses /api/*
- *   ESPmDNS      — résolution de noms (gatewaylab.local)
+ *   WebServer    - serveur HTTP intégré à l'Arduino ESP32
+ *   ArduinoJson  - sérialisation JSON pour les réponses /api/*
+ *   ESPmDNS      - résolution de noms (gatewaylab.local)
  */
 
 #include "web_server.h"
@@ -24,13 +24,13 @@
 #include "../../include/web_interface_topology.h" // TOPOLOGY_PAGE (topologie reseau en PROGMEM)
 #include "../utils/logger.h"
 #ifdef BOOT_LOG_ENABLED
-#include "boot_log.h"                          // [DEBOGAGE TEMPORAIRE] Journal de redemarrage — voir boot_log.h
+#include "boot_log.h"                          // [DEBOGAGE TEMPORAIRE] Journal de redemarrage - voir boot_log.h
 #include "../../include/web_interface_debug.h" // DEBUG_PAGE (journal de redemarrage en PROGMEM)
 #endif
 
 static const char* TAG = "WebSrv";
 
-// Instance interne du serveur HTTP — non exposée hors de ce fichier
+// Instance interne du serveur HTTP - non exposée hors de ce fichier
 static WebServer _server(WEB_SERVER_PORT);
 
 // Instance globale exportée
@@ -161,12 +161,12 @@ void WebServerModule::begin(uint16_t port) {
         _server.send(200, "application/json", "{\"status\":\"ok\"}");
     });
 #ifdef BOOT_LOG_ENABLED
-    // [DEBOGAGE TEMPORAIRE] Page et API du journal de redemarrage — voir boot_log.h.
+    // [DEBOGAGE TEMPORAIRE] Page et API du journal de redemarrage - voir boot_log.h.
     // A retirer (ce bloc + la page web_src/debug.html/.js + le lien menu.html)
     // une fois le debogage termine.
     _on("/debug",        HTTP_GET, [this]() {
         // Evite qu'un navigateur garde en cache une ancienne version de la
-        // page pendant les tests successifs de ce module (Patch 8) — la
+        // page pendant les tests successifs de ce module (Patch 8) - la
         // page elle-meme change peu mais c'est gratuit a desactiver.
         _server.sendHeader("Cache-Control", "no-cache");
         _server.send_P(200, "text/html", DEBUG_PAGE);
@@ -412,7 +412,7 @@ void WebServerModule::_handleApiRestore() {
 
 // ---------------------------------------------------------------------------
 // Handler : sauvegarde des parametres de fonctionnement du projet (distincte
-// de /api/backup, qui sauvegarde l'inventaire des equipements) — reseaux
+// de /api/backup, qui sauvegarde l'inventaire des equipements) - reseaux
 // WiFi enregistres (SSID + mot de passe), luminosite NeoPixel, nom mDNS
 // (informatif : fixe a la compilation via MDNS_HOSTNAME, non restaurable).
 // ---------------------------------------------------------------------------
@@ -650,7 +650,7 @@ void WebServerModule::_handleApiSetMobility() {
 }
 
 // ---------------------------------------------------------------------------
-// POST /api/topology/parent — declare le parent reseau (AP/repeteur/switch
+// POST /api/topology/parent - declare le parent reseau (AP/repeteur/switch
 // en amont) d'un equipement, pour la cartographie de la page Topologie.
 // Parametres (form-urlencoded) : mac (ou ip) + parent (MAC du parent, vide
 // pour effacer la declaration).
@@ -676,7 +676,7 @@ void WebServerModule::_handleApiSetTopologyParent() {
 }
 
 // ---------------------------------------------------------------------------
-// GET /api/topology/root — MAC de la racine forcee de l'arbre de topologie
+// GET /api/topology/root - MAC de la racine forcee de l'arbre de topologie
 // ("" si automatique : box operateur).
 // ---------------------------------------------------------------------------
 void WebServerModule::_handleApiTopologyRootGet() {
@@ -685,7 +685,7 @@ void WebServerModule::_handleApiTopologyRootGet() {
 }
 
 // ---------------------------------------------------------------------------
-// POST /api/topology/root — force la racine de l'arbre de topologie a un
+// POST /api/topology/root - force la racine de l'arbre de topologie a un
 // equipement identifie par sa MAC, ou l'efface (parametre "mac" vide) pour
 // revenir a l'automatique (box operateur, categorie "Router").
 // ---------------------------------------------------------------------------
@@ -700,7 +700,7 @@ void WebServerModule::_handleApiTopologyRootPost() {
 
 // ---------------------------------------------------------------------------
 // Handler : tableau de bord reseau (presents/connus, evenements 24h, equipements
-// les moins stables) — surveillance continue (v1.0.0)
+// les moins stables) - surveillance continue (v1.0.0)
 // ---------------------------------------------------------------------------
 void WebServerModule::_handleApiNetworkHealth() {
     String json = (_hasScan && _scan.getNetworkHealthJson)

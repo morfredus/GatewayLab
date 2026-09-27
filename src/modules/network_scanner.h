@@ -1,5 +1,5 @@
 /**
- * NetworkScanner — Découverte des équipements connectés au réseau local
+ * NetworkScanner - Découverte des équipements connectés au réseau local
  *
  * Fonctionnement du scan (v0.1.0) :
  *   1. Chargement des devices connus depuis LittleFS (DeviceStore)
@@ -11,8 +11,8 @@
  *   4. Écoute mDNS passive pendant le sweep (HostnameResolver)
  *   5. Résolution des noms par PTR DNS batch
  *   6. Détection boxes FAI (Free, Orange, SFR, Bouygues)
- *   7. SSDP/UPnP — descripteur XML + APIs Hue/Synology/Freebox
- *   8. DNS-SD — 22 types de services (HTTP, SSH, AirPlay…)
+ *   7. SSDP/UPnP - descripteur XML + APIs Hue/Synology/Freebox
+ *   8. DNS-SD - 22 types de services (HTTP, SSH, AirPlay…)
  *   9. Sauvegarde dans LittleFS
  *
  * Le scan s'exécute dans une tâche FreeRTOS sur le Core 0 (même core que
@@ -72,12 +72,12 @@ struct NetworkDevice {
     String   mac;           // Adresse MAC  (ex: "B8:27:EB:AA:BB:CC")
 
     String   manufacturer;  // Fabricant déduit du MAC OUI ou de la détection FAI
-    String   hostname;      // Nom résolu (ex: "mon-pc", "livebox") — vide si inconnu
+    String   hostname;      // Nom résolu (ex: "mon-pc", "livebox") - vide si inconnu
 
     String   category;      // Type d'équipement : "Router", "IoT", "Mobile", "SBC"…
     String   type;          // Sous-type au sein de la catégorie : "Smart Speaker", "Smart Display"… ("" si non renseigné)
     String   model;         // Modèle détaillé si disponible (ex: "Freebox Ultra", "")
-    String   os;            // Système d'exploitation — usage futur, vide en v0.0.7
+    String   os;            // Système d'exploitation - usage futur, vide en v0.0.7
     String   source;        // Source de résolution : "mDNS" | "PTR" | "MAC" | "Self" | ""
     String   services;      // Services DNS-SD détectés, séparés par '|' (ex: "HTTP|SSH|SMB")
     String   openPorts;    // Ports TCP ouverts, séparés par '|' (ex: "80|443|22")
@@ -112,7 +112,7 @@ struct NetworkDevice {
     bool     topologyParentAuto = false; // true si topologyParent vient de la decouverte SNMP (table de pontage) plutot que d'un glisser-depose manuel - permet de le rafraichir/corriger automatiquement sans jamais ecraser un choix manuel
     uint8_t  topologyParentConfidence = 0; // 0 = non applicable (rattachement manuel ou inconnu) ; 1-100 = confiance dans le rattachement automatique (FDB Bridge MIB directe = elevee)
 
-    uint32_t lastSeen;      // millis() du dernier scan — converti en elapsed côté client
+    uint32_t lastSeen;      // millis() du dernier scan - converti en elapsed côté client
     bool     online;        // true si détecté lors du dernier scan
 };
 
@@ -128,7 +128,7 @@ inline bool isGenericCategory(const String& category) {
 
 class NetworkScanner {
 public:
-    // Initialisation du mutex de protection (idempotente — guard sur _mutex)
+    // Initialisation du mutex de protection (idempotente - guard sur _mutex)
     void begin();
 
     // Lancement du scan asynchrone (tâche FreeRTOS)
@@ -182,7 +182,7 @@ public:
     String devicesToCsv() const;
 
     // Lance la passe precise (asynchrone, tache FreeRTOS dediee) sur un seul
-    // equipement identifie par IP — pose des questions ciblees a CET
+    // equipement identifie par IP - pose des questions ciblees a CET
     // equipement, jamais une decouverte reseau globale : aucun module SSDP,
     // DNS-SD ou WS-Discovery (multicast, non ciblable par IP) n'est jamais
     // lance depuis une passe precise.
@@ -196,7 +196,7 @@ public:
     //     Printer, Streaming, SmartHome, Mobile, Unknown) est deduit des
     //     ports ouverts + informations deja connues, et seuls les modules
     //     cibles pertinents pour ce profil sont lances (NetBIOS, API
-    //     multimedia Cast/Sonos/Roku/Samsung, SNMP) — toujours en requete
+    //     multimedia Cast/Sonos/Roku/Samsung, SNMP) - toujours en requete
     //     unicast directe sur l'IP visee.
     // Retourne immediatement (true si la tache a demarre) - suivre
     // l'avancement via getRescanStatus().
@@ -219,10 +219,10 @@ public:
     void acknowledgeNewDevices();
 
     // ------------------------------------------------------------------
-    // Surveillance continue (v1.0.0) — Niveau 1
+    // Surveillance continue (v1.0.0) - Niveau 1
     // ------------------------------------------------------------------
 
-    // A appeler a chaque iteration de loop() — gere elle-meme la frequence
+    // A appeler a chaque iteration de loop() - gere elle-meme la frequence
     // (millis(), bornee par getMonitorInterval()). Tick leger : sweep ARP
     // seul (_sweepSubnet()) + mise a jour de presence/absence + bookkeeping
     // stabilite. Aucune decouverte SSDP/DNS-SD/WS-Discovery/SNMP/API n'est
@@ -299,7 +299,7 @@ private:
     void _resolveHostnames();
 
     // Injecte l'ESP32 lui-même dans _results
-    // L'ARP ne peut pas découvrir sa propre adresse — on l'ajoute manuellement
+    // L'ARP ne peut pas découvrir sa propre adresse - on l'ajoute manuellement
     void _addSelfEntry();
 
     // Fusionne les résultats du scan SSDP/UPnP dans _results
@@ -387,7 +387,7 @@ private:
     // Score de stabilite 0-100% pour les equipements fixes (ratio temps en
     // ligne / temps observe total, attenue par les reconnexions frequentes ;
     // 100 par defaut si l'historique est encore trop court pour juger).
-    // Retourne -1 ("N/A — non penalise") pour les equipements mobiles.
+    // Retourne -1 ("N/A - non penalise") pour les equipements mobiles.
     static int _stabilityScoreFor(const NetworkDevice& d);
 
     // Met en file d'attente differee un scan rapide/approfondi sur une IP
@@ -398,19 +398,19 @@ private:
 
     // Sweep periodique (RESCAN_SWEEP_INTERVAL_MINUTES) qui met en file un
     // scan approfondi pour chaque equipement en ligne reste sur une categorie
-    // generique ("IoT" ou "Identification en cours") — sans cela, un
+    // generique ("IoT" ou "Identification en cours") - sans cela, un
     // equipement qui n'a jamais ete revisite par l'utilisateur peut rester
     // bloque indefiniment, meme une fois le bug de categorie generique
     // (isGenericCategory) corrige. Appele depuis serviceMonitor().
     void _sweepUnidentified();
 
     // Decouverte automatique de la topologie par SNMP (table de pontage,
-    // dot1dTpFdbTable) — v1.4.0. Interroge chaque equipement de type
+    // dot1dTpFdbTable) - v1.4.0. Interroge chaque equipement de type
     // routeur/point d'acces/repeteur qui expose un agent SNMP en lecture
     // publique, recupere la liste des MAC qu'il pontage (donc rattachees a
     // lui), et complete topologyParent pour ces equipements quand il n'a pas
     // ete fixe manuellement (topologyParentAuto). Best-effort : ne fait rien
-    // si l'equipement ne repond pas (agent SNMP absent ou desactive — le cas
+    // si l'equipement ne repond pas (agent SNMP absent ou desactive - le cas
     // de la plupart des repeteurs mesh grand public type Deco/Orbi/eero).
     // Appele depuis serviceMonitor(), independamment de _sweepUnidentified().
     void _discoverTopologyViaSnmp();

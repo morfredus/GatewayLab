@@ -1,5 +1,5 @@
 /*
- * Gateway Lab V1 — Feuille de style globale
+ * Gateway Lab V1 - Feuille de style globale
  * ==========================================
  * Injectée inline dans chaque page par tools/minify_web.py.
  * Source : web_src/styles.css  →  include/web_interface*.h
@@ -40,11 +40,11 @@ body {
 }
 
 /* ════════════════════════════════════════════════════
-   2. MISE EN PAGE — CONTENEURS
+   2. MISE EN PAGE - CONTENEURS
    Largeur par défaut : 520px (gabarit de référence, non utilisée par
    une page active : toutes les pages partagent désormais .page-scan)
    .page-scan élargit à 960px : Équipements, Historique, Topologie,
-   Accueil, OTA, Paramètres — largeur strictement uniforme entre toutes
+   Accueil, OTA, Paramètres - largeur strictement uniforme entre toutes
    ces pages, y compris Équipements (tableau contenu dans .table-wrap,
    colonne Nom d'hôte tronquée sur deux lignes au besoin)
    ════════════════════════════════════════════════════ */
@@ -181,7 +181,7 @@ footer a:hover { text-decoration: underline; }
 
 
 /* ════════════════════════════════════════════════════
-   7. PAGE ACCUEIL — Informations réseau
+   7. PAGE ACCUEIL - Informations réseau
    ════════════════════════════════════════════════════ */
 
 .info-row {
@@ -209,7 +209,7 @@ footer a:hover { text-decoration: underline; }
 
 
 /* ════════════════════════════════════════════════════
-   8. PAGE ACCUEIL — Raccourcis
+   8. PAGE ACCUEIL - Raccourcis
    ════════════════════════════════════════════════════ */
 
 .shortcuts {
@@ -236,7 +236,7 @@ footer a:hover { text-decoration: underline; }
 
 
 /* ════════════════════════════════════════════════════
-   9. PAGE ÉQUIPEMENTS — Bouton scan & barre de progression
+   9. PAGE ÉQUIPEMENTS - Bouton scan & barre de progression
    ════════════════════════════════════════════════════ */
 
 .scan-btn {
@@ -336,7 +336,7 @@ footer a:hover { text-decoration: underline; }
   line-height: 1.4;
 }
 
-/* Bandeau de progression — passe précise, insérée sous la ligne de l'IP ciblée */
+/* Bandeau de progression - passe précise, insérée sous la ligne de l'IP ciblée */
 #rescan-progress-row td {
   padding: 0.4rem 0.5rem 0.6rem;
   border-bottom: 1px solid #ffffff0a;
@@ -378,7 +378,7 @@ footer a:hover { text-decoration: underline; }
 
 
 /* ════════════════════════════════════════════════════
-   10. PAGE ÉQUIPEMENTS — Tableau
+   10. PAGE ÉQUIPEMENTS - Tableau
    ════════════════════════════════════════════════════ */
 
 .table-wrap { overflow-x: auto; }
@@ -455,7 +455,7 @@ tr:hover td      { background: #ffffff06; }
 
 
 /* ════════════════════════════════════════════════════
-   11. PAGE ÉQUIPEMENTS — Badges
+   11. PAGE ÉQUIPEMENTS - Badges
    ════════════════════════════════════════════════════ */
 
 /* Fabricant */
@@ -526,7 +526,7 @@ tr:hover td      { background: #ffffff06; }
 
 
 /* ════════════════════════════════════════════════════
-   12. PAGE ÉQUIPEMENTS — Badges de services DNS-SD
+   12. PAGE ÉQUIPEMENTS - Badges de services DNS-SD
    ════════════════════════════════════════════════════ */
 
 .svc-list {
@@ -585,7 +585,7 @@ tr:hover td      { background: #ffffff06; }
 .port-other  { background: #111827; color: #9aacc2; border-color: #1f2937; }
 
 /* ════════════════════════════════════════════════════
-   13. PAGE ÉQUIPEMENTS — Barre de statistiques
+   13. PAGE ÉQUIPEMENTS - Barre de statistiques
    ════════════════════════════════════════════════════ */
 
 .stats-bar {
@@ -610,11 +610,11 @@ tr:hover td      { background: #ffffff06; }
 .status-online  { color: #4ade80; font-size: 0.9rem; line-height: 1; cursor: default; }
 .status-offline { color: #64748b; font-size: 0.9rem; line-height: 1; cursor: default; }
 
-/* Ligne de device hors ligne — atténuée */
+/* Ligne de device hors ligne - atténuée */
 tr.row-offline td { opacity: 0.55; }
 
 /* ════════════════════════════════════════════════════
-   13b. PAGE ACCUEIL — Cartouche diagnostics (heap/PSRAM/FS/temps)
+   13b. PAGE ACCUEIL - Cartouche diagnostics (heap/PSRAM/FS/temps)
    ════════════════════════════════════════════════════ */
 
 .diag-bar {
@@ -633,7 +633,7 @@ tr.row-offline td { opacity: 0.55; }
 .diag-item { white-space: nowrap; }
 
 /* ════════════════════════════════════════════════════
-   13c. PAGE ÉQUIPEMENTS — Favoris et notes utilisateur
+   13c. PAGE ÉQUIPEMENTS - Favoris et notes utilisateur
    ════════════════════════════════════════════════════ */
 
 .actions-cell { white-space: nowrap; text-align: right; }
@@ -728,7 +728,7 @@ tr.row-offline td { opacity: 0.55; }
 .notes-add-btn:hover { background: #06b6d4; }
 
 /* ════════════════════════════════════════════════════
-   14. PAGE OTA — Formulaire upload firmware
+   14. PAGE OTA - Formulaire upload firmware
    ════════════════════════════════════════════════════ */
 
 label {
@@ -795,7 +795,7 @@ input[type=file] {
 .section-title:not(:first-of-type) { margin-top: 0.5rem; }
 
 /* ════════════════════════════════════════════════════
-   15. PAGE HISTORIQUE — Vue chronologique
+   15. PAGE HISTORIQUE - Vue chronologique
    ════════════════════════════════════════════════════ */
 
 .hist-filters {
@@ -844,7 +844,7 @@ input[type=file] {
 .hist-changed       .hist-title { color: #facc15; }
 
 /* ════════════════════════════════════════════════════
-   16. PAGE ÉQUIPEMENTS — Alias utilisateur
+   16. PAGE ÉQUIPEMENTS - Alias utilisateur
    ════════════════════════════════════════════════════ */
 
 .alias-edit {
@@ -893,7 +893,7 @@ input[type=file] {
 .conf-low    { background: rgba(248, 113, 113, 0.15); color: #f87171; }
 
 /* ════════════════════════════════════════════════════
-   18. PAGE PARAMÈTRES — Réseau WiFi (/wifi)
+   18. PAGE PARAMÈTRES - Réseau WiFi (/wifi)
    ════════════════════════════════════════════════════ */
 
 #wifi-list .alias-edit {
@@ -905,7 +905,7 @@ input[type=file] {
 #wifi-form input { margin-bottom: 0.9rem; }
 
 /* ════════════════════════════════════════════════════
-   19. PAGE TOPOLOGIE — Arbre réseau (/topology)
+   19. PAGE TOPOLOGIE - Arbre réseau (/topology)
    ════════════════════════════════════════════════════ */
 
 .topo-root-row {

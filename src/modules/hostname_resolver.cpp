@@ -1,9 +1,9 @@
 /**
- * HostnameResolver — Implémentation
+ * HostnameResolver - Implémentation
  *
  * Bibliothèques utilisées :
- *   WiFiUdp  — socket UDP pour l'écoute mDNS multicast et les requêtes PTR DNS
- *   WiFi     — accès au serveur DNS du réseau (WiFi.dnsIP())
+ *   WiFiUdp  - socket UDP pour l'écoute mDNS multicast et les requêtes PTR DNS
+ *   WiFi     - accès au serveur DNS du réseau (WiFi.dnsIP())
  *
  * Format des paquets DNS (RFC 1035 / RFC 6762 pour mDNS) :
  *   Header (12 octets) : ID(2) Flags(2) QDCOUNT(2) ANCOUNT(2) NSCOUNT(2) ARCOUNT(2)
@@ -23,21 +23,21 @@ static const char* TAG = "Resolver";
 static constexpr uint16_t DNS_PORT       = 53;
 static constexpr uint32_t PTR_TIMEOUT_MS = 500;   // Fenêtre d'attente batch PTR
 
-// Compteur d'ID DNS — incrémenté à chaque requête pour matcher les réponses
+// Compteur d'ID DNS - incrémenté à chaque requête pour matcher les réponses
 static uint16_t _dnsIdCounter = 0x3000;
 
 // Instance globale exportée
 HostnameResolver hostnameResolver;
 
 // ---------------------------------------------------------------------------
-// mDNS passif — retiré en v0.8.2
+// mDNS passif - retiré en v0.8.2
 //
 // 224.0.0.251:5353 reste exclusivement détenu par le composant mDNS d'ESP-IDF
 // (responder démarré via MDNS.begin(), voir wifi_manager.cpp) dès qu'il est
-// actif — ce qui est permanent en pratique. Aucun socket applicatif tiers ne
+// actif - ce qui est permanent en pratique. Aucun socket applicatif tiers ne
 // peut le rejoindre, et il n'existe pas d'API ESP-IDF publique pour écouter
 // passivement les annonces reçues par ce service partagé. begin()/update()/
-// end() sont donc des no-op conservés pour compatibilité — voir
+// end() sont donc des no-op conservés pour compatibilité - voir
 // docs/WARNINGS.md.
 // ---------------------------------------------------------------------------
 
@@ -172,7 +172,7 @@ String HostnameResolver::_parsePtrResponse(const uint8_t* buf, int len,
         pos = next + 4;
     }
 
-    // Lire les réponses — chercher le premier PTR (type 12)
+    // Lire les réponses - chercher le premier PTR (type 12)
     for (uint16_t r = 0; r < anCnt && pos < len; r++) {
         int nameEnd;
         _decodeDnsName(buf, len, pos, nameEnd);
@@ -255,7 +255,7 @@ void HostnameResolver::batchPtrDns(const std::vector<String>& ips) {
 }
 
 // ---------------------------------------------------------------------------
-// Résolution publique — priorité mDNS > PTR DNS
+// Résolution publique - priorité mDNS > PTR DNS
 // ---------------------------------------------------------------------------
 String HostnameResolver::resolve(const String& ip, HostnameSource& out_source) const {
     auto it = _mdnsCache.find(ip);

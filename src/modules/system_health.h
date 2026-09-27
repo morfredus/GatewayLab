@@ -1,10 +1,10 @@
 /**
- * SystemHealth — Garde-fou mémoire et mode dégradé
+ * SystemHealth - Garde-fou mémoire et mode dégradé
  *
  * Surveille le heap libre (loop() à appeler sans interruption, non bloquant).
  * Sous HEAP_CRITICAL_BYTES, bascule en mode dégradé plutôt que de redémarrer
  * automatiquement : l'utilisateur garde l'accès en lecture à l'inventaire déjà
- * acquis et décide lui-même du redémarrage (bouton "Redémarrer" — page
+ * acquis et décide lui-même du redémarrage (bouton "Redémarrer" - page
  * Paramètres). Sort du mode dégradé avec hystérésis (HEAP_RECOVERY_MARGIN)
  * si le heap se libère (ex: redémarrage du serveur web, fin d'un pic).
  *
@@ -24,7 +24,7 @@ class SystemHealth {
 public:
     void begin();
 
-    // À appeler à chaque tour de loop() — non bloquant
+    // À appeler à chaque tour de loop() - non bloquant
     void loop();
 
     bool          isDegraded() const { return _degraded; }

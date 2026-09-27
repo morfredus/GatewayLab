@@ -12,9 +12,9 @@ function refreshWifiStatus() {
     badge.textContent = d.connected ? 'Connecté' : 'Déconnecté';
     badge.className = 'badge ' + (d.connected ? 'badge-ok' : 'badge-warn');
 
-    document.getElementById('wifi-ssid').textContent = d.ssid || '—';
-    document.getElementById('wifi-ip').textContent   = d.ip   || '—';
-    document.getElementById('wifi-rssi').textContent = d.rssi ? (d.rssi + ' dBm') : '—';
+    document.getElementById('wifi-ssid').textContent = d.ssid || '-';
+    document.getElementById('wifi-ip').textContent   = d.ip   || '-';
+    document.getElementById('wifi-rssi').textContent = d.rssi ? (d.rssi + ' dBm') : '-';
     document.getElementById('footer-ts').textContent =
       'Actualisé : ' + new Date().toLocaleTimeString();
 
@@ -169,7 +169,7 @@ document.getElementById('restore-file').addEventListener('change', function() {
 });
 
 function fmtBytes(b) {
-  if (b === undefined || b === null) return '—';
+  if (b === undefined || b === null) return '-';
   if (b < 1024) return b + ' o';
   return (b / 1024).toFixed(0) + ' Ko';
 }
@@ -182,7 +182,7 @@ function refreshHealth() {
     if (d.degraded) {
       badge.textContent = 'Mode dégradé';
       badge.className = 'badge badge-warn';
-      msg.textContent = 'Mémoire critique — nouveaux scans, rescans, notes et modifications de '
+      msg.textContent = 'Mémoire critique - nouveaux scans, rescans, notes et modifications de '
         + 'configuration désactivés. L\'inventaire déjà acquis reste consultable. '
         + (d.degradedReason || '') + '.';
     } else {
@@ -192,9 +192,9 @@ function refreshHealth() {
     }
     document.getElementById('sys-heap').textContent    = fmtBytes(d.freeHeap);
     document.getElementById('sys-psram').textContent   = fmtBytes(d.freePsram);
-    document.getElementById('sys-devices').textContent = (d.deviceCount !== undefined ? d.deviceCount : '—')
-      + ' / ' + (d.maxDevices !== undefined ? d.maxDevices : '—');
-    document.getElementById('sys-history').textContent = (d.historyCount !== undefined ? d.historyCount : '—')
+    document.getElementById('sys-devices').textContent = (d.deviceCount !== undefined ? d.deviceCount : '-')
+      + ' / ' + (d.maxDevices !== undefined ? d.maxDevices : '-');
+    document.getElementById('sys-history').textContent = (d.historyCount !== undefined ? d.historyCount : '-')
       + ' événement' + (d.historyCount === 1 ? '' : 's');
   }).catch(function() {});
 }
@@ -239,7 +239,7 @@ document.getElementById('ota-form').addEventListener('submit', function(e) {
     bar.style.width = '100%';
     if (xhr.status === 200 && xhr.responseText.indexOf('FAIL') === -1) {
       msg.style.color = '#10b981';
-      msg.textContent = 'Firmware vérifié — redémarrage en cours…';
+      msg.textContent = 'Firmware vérifié - redémarrage en cours…';
       waitForOtaReboot();
     } else {
       msg.style.color = '#ef4444';
@@ -270,7 +270,7 @@ function waitForOtaReboot() {
       .then(function(r) {
         if (r.ok) {
           msg.style.color = '#10b981';
-          msg.textContent = 'Redémarrage terminé — retour à l\'accueil…';
+          msg.textContent = 'Redémarrage terminé - retour à l\'accueil…';
           setTimeout(function() { window.location.href = '/'; }, 800);
         } else {
           setTimeout(poll, 1000);

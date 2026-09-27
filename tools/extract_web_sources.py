@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Web Sources Extractor — Gateway Lab V1
+Web Sources Extractor - Gateway Lab V1
 
 Outil de récupération d'urgence : extrait le HTML/JS embarqué depuis les
 headers PROGMEM (include/web_interface*.h) et les écrit dans
@@ -22,7 +22,7 @@ Avertissement :
     Le JavaScript inline est cependant ressorti dans un fichier .js séparé,
     référencé depuis le HTML extrait via <script src="...">.
 
-Requirements (optionnels — fallback si absent) :
+Requirements (optionnels - fallback si absent) :
     pip install jsbeautifier
 """
 
@@ -100,17 +100,17 @@ def _split_script(html: str, js_filename: str) -> tuple[str, str]:
 
 def run(force: bool = False) -> bool:
     print("=" * 55)
-    print("Gateway Lab V1 — Extracteur de sources web")
+    print("Gateway Lab V1 - Extracteur de sources web")
     print("=" * 55)
 
     if not force:
-        print("\n  Mode prévisualisation (dry-run) — aucun fichier écrit.")
+        print("\n  Mode prévisualisation (dry-run) - aucun fichier écrit.")
         print("  Relancer avec --force pour écrire dans web_src/extracted/.")
 
     if HAS_JSBEAUTIFIER:
-        print("\n  jsbeautifier disponible — HTML/JS reformatés")
+        print("\n  jsbeautifier disponible - HTML/JS reformatés")
     else:
-        print("\n  jsbeautifier absent — HTML/JS extraits tels quels (minifiés)")
+        print("\n  jsbeautifier absent - HTML/JS extraits tels quels (minifiés)")
         print("  (pip install jsbeautifier pour un résultat lisible)")
 
     print()
@@ -127,7 +127,7 @@ def run(force: bool = False) -> bool:
         print(f"  [{header_path.name}]  →  {html_dest.relative_to(PROJECT_ROOT)} + {js_dest.name}")
 
         if not header_path.exists():
-            print(f"    ERREUR : fichier introuvable — ignoré")
+            print(f"    ERREUR : fichier introuvable - ignoré")
             ok = False
             continue
 

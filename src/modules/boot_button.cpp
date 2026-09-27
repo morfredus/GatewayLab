@@ -1,5 +1,5 @@
 /**
- * BootButton — Implémentation
+ * BootButton - Implémentation
  */
 
 #include "boot_button.h"
@@ -37,11 +37,11 @@ void BootButton::loop() {
         _pressed = raw;
 
         if (_pressed) {
-            // Front descendant — début d'un appui
+            // Front descendant - début d'un appui
             _pressStartMs = now;
             _holdFired    = false;
         } else if (!_holdFired) {
-            // Front montant — appui court relâché avant le seuil de maintien
+            // Front montant - appui court relâché avant le seuil de maintien
             if (_cb.onShortPress) _cb.onShortPress();
         }
     }

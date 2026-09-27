@@ -1,5 +1,5 @@
 /**
- * SsdpScanner — Découverte UPnP/SSDP des équipements réseau
+ * SsdpScanner - Découverte UPnP/SSDP des équipements réseau
  *
  * Fonctionnement (v0.0.8) :
  *   1. Envoi M-SEARCH multicast UDP → 239.255.255.250:1900

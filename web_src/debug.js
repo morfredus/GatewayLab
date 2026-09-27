@@ -1,4 +1,4 @@
-// Page temporaire de débogage — voir docs/DEVELOPMENT.md pour la retirer.
+// Page temporaire de débogage - voir docs/DEVELOPMENT.md pour la retirer.
 
 function esc(s) {
   if (!s) return '';
@@ -10,7 +10,7 @@ var CRASH_REASON_CODES = [4, 5, 6, 7, 9]; // PANIC, INT_WDT, TASK_WDT, WDT, BROW
 
 // Date/heure de l'evenement : resetEpoch (heartbeat le plus recent avant le
 // reboot, +/- 30 s) est plus proche de l'instant du crash que bootEpoch
-// (capture a la reprise) — prefere donc resetEpoch quand disponible.
+// (capture a la reprise) - prefere donc resetEpoch quand disponible.
 function formatEventDate(e) {
   var epoch = e.resetEpoch || e.bootEpoch || 0;
   if (!epoch) return 'Heure inconnue (NTP non synchronisé à cet instant)';
@@ -33,7 +33,7 @@ function renderEntry(e, index, total) {
 
   var stats = e.lastStats;
   var statsLine = stats ?
-    'Dernier instantané — uptime ' + Math.round(stats.uptime / 1000) + ' s, heap ' + stats.freeHeap +
+    'Dernier instantané - uptime ' + Math.round(stats.uptime / 1000) + ' s, heap ' + stats.freeHeap +
     ' o, bloc max ' + stats.largestBlock + ' o, équipements ' + stats.devicesCount +
     ', pages servies ' + stats.pagesServed + ', appels API ' + stats.apiCalls
     : '';
@@ -41,7 +41,7 @@ function renderEntry(e, index, total) {
   return '<div class="hist-entry ' + cls + '">' +
            '<span class="hist-icon">🔁</span>' +
            '<div class="hist-body">' +
-             '<div class="hist-title">Boot #' + esc(e.bootCount) + ' — ' + esc(e.resetReason) + '</div>' +
+             '<div class="hist-title">Boot #' + esc(e.bootCount) + ' - ' + esc(e.resetReason) + '</div>' +
              '<div class="hist-detail">' + meta.join(' · ') + '</div>' +
              (statsLine ? '<div class="hist-detail">' + esc(statsLine) + '</div>' : '') +
              (lines ? '<div class="hist-detail">' + lines + '</div>' : '<div class="hist-detail">(aucun log capturé avant ce reset)</div>') +

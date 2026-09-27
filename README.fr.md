@@ -2,7 +2,7 @@
 
 *Lire dans une autre langue : [English](README.md) · **Français** (ce document).*
 
-![Version](https://img.shields.io/badge/version-1.9.4-blue)
+![Version](https://img.shields.io/badge/version-1.9.5-blue)
 ![Platform](https://img.shields.io/badge/platform-ESP32--S3-orange)
 ![Framework](https://img.shields.io/badge/framework-Arduino%20%2F%20PlatformIO-00979D)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -76,7 +76,7 @@ Guide détaillé : [INSTALLATION.md](INSTALLATION.md) · Guide développeur : [d
 
 ## Matériel cible
 
-**ESP32-S3 DevKitC-1 N16R8** — 16 Mo Flash, 8 Mo PSRAM, dual core 240 MHz.
+**ESP32-S3 DevKitC-1 N16R8** - 16 Mo Flash, 8 Mo PSRAM, dual core 240 MHz.
 
 ---
 
@@ -99,8 +99,8 @@ Guide détaillé : [INSTALLATION.md](INSTALLATION.md) · Guide développeur : [d
 
 ## Contraintes de développement
 
-- `include/board_config.h` — ne pas modifier
-- `include/secrets.h` — ne jamais committer
+- `include/board_config.h` - ne pas modifier
+- `include/secrets.h` - ne jamais committer
 - CSS uniquement dans `web_src/styles.css`
 - HTML uniquement dans `web_src/*.html` (jamais de `<style>` ou `<script>` inline)
 - JavaScript uniquement dans `web_src/*.js`

@@ -1,5 +1,5 @@
 /**
- * MqttScanner — Sondage cible d'un broker MQTT (port 1883)
+ * MqttScanner - Sondage cible d'un broker MQTT (port 1883)
  *
  * Beaucoup d'installations domotiques (Home Assistant, Zigbee2MQTT,
  * Tasmota, ESPHome...) s'appuient sur un broker MQTT local, souvent sans

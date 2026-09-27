@@ -2,7 +2,7 @@
  * DeviceHistory - Implementation
  *
  * Le fichier est entierement relu/reecrit a chaque ajout (FIFO simple).
- * MAX_ENTRIES (app_config.h) borne le volume relu/reecrit a chaque appel —
+ * MAX_ENTRIES (app_config.h) borne le volume relu/reecrit a chaque appel -
  * en mode degrade (systemHealth.isDegraded()), les nouveaux evenements sont
  * refuses pour ne pas aggraver la pression memoire.
  */
@@ -85,7 +85,7 @@ void DeviceHistory::addEvent(const String& mac, const String& ip, const String& 
                               const String& oldValue, const String& newValue) {
     if (!_mounted) return;
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Evenement ignore — mode degrade (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Evenement ignore - mode degrade (%s)", systemHealth.reason().c_str());
         return;
     }
 

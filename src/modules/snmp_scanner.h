@@ -1,11 +1,11 @@
 /**
- * SnmpScanner — Interrogation SNMP v1 (GET sysDescr)
+ * SnmpScanner - Interrogation SNMP v1 (GET sysDescr)
  *
  * De nombreuses imprimantes, switches, routeurs, NAS et onduleurs exposent
  * un agent SNMP en lecture publique (communaute "public" par defaut, encore
  * tres repandue sur le materiel grand public/PME non durci). L'objet
  * sysDescr (OID 1.3.6.1.2.1.1.1.0) contient en texte clair le fabricant et
- * le modele exact de l'equipement — une source bien plus precise qu'un
+ * le modele exact de l'equipement - une source bien plus precise qu'un
  * banner HTTP generique ou qu'un OUI MAC ambigu.
  *
  * Protocole : un seul paquet UDP/161 (GetRequest SNMPv1 encode en ASN.1 BER)
@@ -27,11 +27,11 @@ public:
 
     // Parcourt la table de pontage (Bridge MIB, dot1dTpFdbTable, OID
     // 1.3.6.1.2.1.17.4.3.1.1) d'un equipement par une suite de requetes
-    // GetNextRequest SNMPv1 — l'index de cette table est l'adresse MAC
+    // GetNextRequest SNMPv1 - l'index de cette table est l'adresse MAC
     // elle-meme, donc chaque reponse donne directement une MAC pontee par
     // l'equipement interroge (donc rattachee a lui sur le reseau). Retourne
     // un ensemble vide si l'equipement ne repond pas (pas d'agent SNMP, ou
-    // MIB non supportee — le cas frequent des repeteurs mesh grand public).
+    // MIB non supportee - le cas frequent des repeteurs mesh grand public).
     std::vector<String> walkBridgeMacTable(const String& ip, uint32_t timeout_ms = 300, int maxEntries = 64);
 
 private:

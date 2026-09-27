@@ -1,16 +1,16 @@
 /**
- * DnsSdScanner — Implémentation (réécrite en v0.8.2, plancher de requête
+ * DnsSdScanner - Implémentation (réécrite en v0.8.2, plancher de requête
  * corrigé en v0.8.3)
  *
  * Bibliothèque : mdns.h (composant mDNS ESP-IDF, déjà initialisé par
- * ESPmDNS/MDNS.begin() — voir wifi_manager.cpp). Aucun socket dédié : les
+ * ESPmDNS/MDNS.begin() - voir wifi_manager.cpp). Aucun socket dédié : les
  * requêtes passent par le service mDNS déjà actif, ce qui élimine tout
  * risque de conflit de bind sur 224.0.0.251:5353 (voir docs/WARNINGS.md).
  *
  * v0.8.3 : le plancher de fenêtre d'attente par type de service était fixé
  * à 100 ms, trop court face au délai aléatoire de réponse de 20-120 ms
  * imposé par la RFC 6762 §6 sur les enregistrements partagés (cas des PTR
- * de découverte de service) — résultat observé : scan systématiquement
+ * de découverte de service) - résultat observé : scan systématiquement
  * vide malgré des services DNS-SD réellement présents sur le réseau (Hue,
  * Echo, Synology…). Voir MIN_QUERY_TIMEOUT_MS ci-dessous.
  */
@@ -29,7 +29,7 @@ DnsSdScanner dnsSdScanner;
 // Table des types de services DNS-SD à interroger
 //
 // Colonnes : type, label UI, suggestion de catégorie ("" = pas de suggestion,
-// non utilisée directement — voir _inferCategory(), basée sur les labels)
+// non utilisée directement - voir _inferCategory(), basée sur les labels)
 // ════════════════════════════════════════════════════════════════════════════
 
 struct ServiceEntry {
@@ -141,7 +141,7 @@ String DnsSdScanner::_inferCategory(const String& services) {
 // avant de répondre à une question portant sur un enregistrement partagé
 // (cas des PTR de découverte de service) afin d'éviter une rafale de
 // réponses simultanées. Un plancher de 100 ms laissait une marge quasi
-// nulle pour l'aller-retour réseau au-delà de ce délai — résultat observé :
+// nulle pour l'aller-retour réseau au-delà de ce délai - résultat observé :
 // zéro IP résolue malgré la présence d'objets DNS-SD réels sur le réseau
 // (Hue, Echo, Synology…). Porter le plancher à 300 ms absorbe ce délai
 // aléatoire avec une marge confortable.
@@ -221,7 +221,7 @@ std::map<String, DnsSdInfo> DnsSdScanner::scan(uint32_t timeout_ms) {
         kv.second.category = _inferCategory(kv.second.services);
     }
 
-    Log::i(TAG, "DNS-SD terminé — %d IP(s) résolue(s)", (int)result.size());
+    Log::i(TAG, "DNS-SD terminé - %d IP(s) résolue(s)", (int)result.size());
 
 #if LOG_LEVEL >= 4
     for (const auto& kv : result) {

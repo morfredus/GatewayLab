@@ -1,5 +1,5 @@
 /**
- * WiFiManager — Connexion WiFi multi-réseaux, NVS et portail de configuration
+ * WiFiManager - Connexion WiFi multi-réseaux, NVS et portail de configuration
  *
  * Hiérarchie de configuration (priorité décroissante) :
  *   1. Réseaux enregistrés en NVS (Preferences, namespace "wifi")
@@ -12,7 +12,7 @@
  *     démarrés : l'utilisateur saisit son WiFi via navigateur, les
  *     identifiants sont enregistrés en NVS, puis l'ESP32 redémarre.
  *   - loop() surveille la connexion (mode normal) ou sert le portail
- *     (mode point d'accès) — appeler sans interruption.
+ *     (mode point d'accès) - appeler sans interruption.
  *
  * Portabilité : dépend uniquement de secrets.h (optionnel) et app_config.h.
  */
@@ -34,7 +34,7 @@ public:
     // connected = true si la connexion a réussi, false sinon
     using Callback = std::function<void(bool connected)>;
 
-    // Connexion WiFi initiale — bloquante jusqu'à WIFI_CONNECT_TIMEOUT ms
+    // Connexion WiFi initiale - bloquante jusqu'à WIFI_CONNECT_TIMEOUT ms
     // par réseau connu. Si aucun réseau ne répond, démarre le portail de
     // configuration : cb(false) est alors appelé une seule fois, puis
     // begin() ne revient pas tant que l'utilisateur n'a pas configuré le WiFi
@@ -52,15 +52,15 @@ public:
     int8_t  rssi()        const;  // Force du signal en dBm (négatif, proche de 0 = fort)
     String  hostname()    const;  // Nom mDNS (depuis MDNS_HOSTNAME dans app_config.h)
 
-    // Réseaux enregistrés en NVS (mots de passe inclus — usage serveur uniquement)
+    // Réseaux enregistrés en NVS (mots de passe inclus - usage serveur uniquement)
     std::vector<WifiCredential> savedNetworks() const;
 
     // Ajoute un réseau, ou met à jour son mot de passe s'il existe déjà
     bool addNetwork(const String& ssid, const String& password);
 
-    // Supprime un réseau enregistré — false si le SSID est inconnu
+    // Supprime un réseau enregistré - false si le SSID est inconnu
     bool removeNetwork(const String& ssid);
 };
 
-// Instance globale — accessible depuis n'importe quel module via #include
+// Instance globale - accessible depuis n'importe quel module via #include
 extern WiFiManager wifiMgr;

@@ -1,5 +1,5 @@
 /**
- * DnsSdScanner — Découverte de services DNS-SD (RFC 6763 / RFC 6762 mDNS)
+ * DnsSdScanner - Découverte de services DNS-SD (RFC 6763 / RFC 6762 mDNS)
  *
  * DNS-SD (DNS Service Discovery) permet de trouver les *services* exposés par
  * chaque équipement du réseau : HTTP, SSH, SMB, AirPlay, HomeKit, Chromecast…
@@ -10,21 +10,21 @@
  *   lieu d'ouvrir un socket multicast dédié. Avant v0.8.2, ce scanner ouvrait
  *   son propre `WiFiUDP` sur 224.0.0.251:5353, qui entrait en conflit avec le
  *   socket exclusif du composant mDNS d'ESP-IDF (déjà actif en permanence dès
- *   que `MDNS.begin()` a réussi) — voir docs/WARNINGS.md.
+ *   que `MDNS.begin()` a réussi) - voir docs/WARNINGS.md.
  *
  *   1. Pour chaque type de service connu, interroger `mdns_query_ptr()` avec
  *      une fenêtre d'au moins 300 ms (RFC 6762 §6 : délai aléatoire de
- *      réponse 20-120 ms sur les enregistrements partagés — voir
+ *      réponse 20-120 ms sur les enregistrements partagés - voir
  *      `MIN_QUERY_TIMEOUT_MS` dans dns_sd_scanner.cpp, corrigé en v0.8.3
  *      après un scan retournant systématiquement zéro résultat)
  *   2. Chaque résultat fournit directement hostname, port, TXT records et
- *      adresse(s) IPv4 — pas de parsing DNS manuel nécessaire
+ *      adresse(s) IPv4 - pas de parsing DNS manuel nécessaire
  *   3. Retourner une map IP → DnsSdInfo (services, modèle, catégorie, hostname)
  *
  * Non bloquant pour le reste du firmware : le scan tourne dans la tâche
  * FreeRTOS dédiée du scanner réseau (voir docs/WARNINGS.md). `timeout_ms`
  * est une cible répartie entre les types de service interrogés, plancher à
- * 300 ms chacun — la durée réelle peut donc dépasser `timeout_ms` lorsque le
+ * 300 ms chacun - la durée réelle peut donc dépasser `timeout_ms` lorsque le
  * nombre de types de service est élevé.
  *
  * Types de services interrogés (home network) :
@@ -48,7 +48,7 @@
 // hostname : cible du record SRV (ex: "nas.local")
 // category : suggestion de catégorie déduite des services trouvés
 struct DnsSdInfo {
-    String   services;   // "HTTP|SSH|AirPlay" — séparateur '|'
+    String   services;   // "HTTP|SSH|AirPlay" - séparateur '|'
     String   model;      // Depuis le TXT record (md=, fn=, model=...)
     String   hostname;   // Depuis le SRV record target
     String   category;   // Suggestion basée sur les services détectés
@@ -59,7 +59,7 @@ public:
     // Lancer un scan DNS-SD complet.
     // Retourne une map IP → DnsSdInfo à fusionner dans NetworkDevice.
     // timeout_ms : fenêtre d'écoute totale cible, répartie entre les types de
-    // service (plancher de 300 ms chacun — la durée réelle peut dépasser
+    // service (plancher de 300 ms chacun - la durée réelle peut dépasser
     // timeout_ms, voir dns_sd_scanner.cpp).
     std::map<String, DnsSdInfo> scan(uint32_t timeout_ms = 9000);
 

@@ -1,7 +1,7 @@
 // Tous les types d'evenements emis par DeviceHistory cote firmware (network_scanner.cpp).
 // Depuis v1.0.0, la surveillance continue (_monitorTick) emet reconnected/disappeared/
 // mobile_left/mobile_returned/identification_improved en plus de new/online/offline/changed
-// utilises par un scan complet — chaque type doit avoir une entree ici pour s'afficher.
+// utilises par un scan complet - chaque type doit avoir une entree ici pour s'afficher.
 var EVENT_LABEL = {
   'new':                     { icon: '🆕', text: 'Nouvel équipement',        cls: 'hist-new' },
   'online':                  { icon: '🟢', text: 'Reconnecté',               cls: 'hist-online' },
@@ -16,7 +16,7 @@ var EVENT_LABEL = {
   'unstable_connection':     { icon: '⚠️', text: 'Connexion instable détectée', cls: 'hist-unstable' }
 };
 
-// Categorie de filtre (case a cocher) associee a chaque type d'evenement reel —
+// Categorie de filtre (case a cocher) associee a chaque type d'evenement reel -
 // plusieurs types peuvent partager la meme case (ex: reconnected/mobile_returned
 // sous "Reconnexions").
 var EVENT_FILTER_CATEGORY = {
@@ -55,7 +55,7 @@ function renderEntry(e) {
     meta = EVENT_LABEL.unstable_connection;
     var span = Math.round((e._unstable.toEpoch - e._unstable.fromEpoch) / 60) || 1;
     detail = '<div class="hist-detail">' + e._unstable.count + ' reconnexions en ' + span +
-              ' min, sans déconnexion explicite observée — connexion probablement instable.</div>';
+              ' min, sans déconnexion explicite observée - connexion probablement instable.</div>';
   } else if (e.event === 'changed' || e.event === 'identification_improved') {
     var fieldName = FIELD_LABEL[e.field] || e.field;
     detail = '<div class="hist-detail">' + esc(fieldName) + ' : <span class="hist-old">' +

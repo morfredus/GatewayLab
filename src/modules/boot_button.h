@@ -1,5 +1,5 @@
 /**
- * BootButton — Bouton BOOT (board_config.h::BUTTON_BOOT_PIN), actif à LOW
+ * BootButton - Bouton BOOT (board_config.h::BUTTON_BOOT_PIN), actif à LOW
  *
  * Détection non bloquante (loop() à appeler sans interruption) :
  *   Appui court (< 3 s)   -> onShortPress  (lance un scan)

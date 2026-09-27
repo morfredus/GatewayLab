@@ -1,5 +1,5 @@
 /**
- * IspDetector — Identification des boxes des principaux FAI français
+ * IspDetector - Identification des boxes des principaux FAI français
  *
  * Détecte et enrichit les champs manufacturer, model et category pour :
  *   - Free      : Freebox Ultra / Pop / Révolution / Delta / Mini 4K
@@ -8,7 +8,7 @@
  *   - Bouygues  : Bbox / Bbox Miami / Bbox Ultym
  *
  * Sources de détection par priorité décroissante :
- *   1. hostname (mDNS .local ou PTR DNS) — le plus précis
+ *   1. hostname (mDNS .local ou PTR DNS) - le plus précis
  *   2. manufacturer OUI (déjà renseigné par la table OUI)
  *
  * Règles :

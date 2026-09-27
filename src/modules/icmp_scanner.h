@@ -1,5 +1,5 @@
 /**
- * IcmpScanner — Sonde ICMP echo (ping) pour découverte complémentaire
+ * IcmpScanner - Sonde ICMP echo (ping) pour découverte complémentaire
  *
  * Utilisé en complément de l'ARP sweep pour trouver les équipements
  * qui ne répondent pas aux ARP Request (filtrage pare-feu, IoT limités…).

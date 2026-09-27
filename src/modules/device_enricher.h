@@ -173,7 +173,7 @@ inline void applyDeviceEnrichment(NetworkDevice& d) {
  * Detection des points d'acces / repeteurs mesh WiFi (ex: TP-Link Deco,
  * Google Nest WiFi, Orbi...) a partir du hostname. Contrairement a
  * applyDeviceEnrichment(), renseigne `type` (absent de EnrichPattern) sans
- * jamais ecraser une categorie deja deduite par l'OUI/SSDP — seul `type` est
+ * jamais ecraser une categorie deja deduite par l'OUI/SSDP - seul `type` est
  * complete pour distinguer ces equipements des autres "Network Equipment".
  */
 inline void applyMeshDetection(NetworkDevice& d) {

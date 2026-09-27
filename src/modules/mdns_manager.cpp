@@ -1,5 +1,5 @@
 /**
- * MdnsManager — Implémentation
+ * MdnsManager - Implémentation
  */
 
 #include "mdns_manager.h"
@@ -23,7 +23,7 @@ bool MdnsManager::acquire() {
     xSemaphoreTake(_mutex, portMAX_DELAY);
 
     if (!_open) {
-        // SO_REUSEADDR activé par beginMulticast — coexistence avec le stack ESPmDNS
+        // SO_REUSEADDR activé par beginMulticast - coexistence avec le stack ESPmDNS
         if (_udp.beginMulticast(MDNS_GROUP, MDNS_PORT)) {
             _open = true;
             Log::i(TAG, "Socket mDNS partagé ouvert (224.0.0.251:5353)");

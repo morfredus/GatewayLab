@@ -1,5 +1,5 @@
 /**
- * IcmpScanner — Implémentation
+ * IcmpScanner - Implémentation
  *
  * Utilise les raw sockets BSD (AF_INET / SOCK_RAW / IPPROTO_ICMP)
  * disponibles via lwIP sur l'ESP32 Arduino.
@@ -41,7 +41,7 @@ static uint16_t _checksum(const uint8_t* buf, size_t len) {
 uint8_t IcmpScanner::_pingOne(const String& ip, uint32_t timeout_ms) {
     int sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (sock < 0) {
-        Log::w(TAG, "socket() échoué — droits insuffisants ?");
+        Log::w(TAG, "socket() échoué - droits insuffisants ?");
         return 0;
     }
 
@@ -84,7 +84,7 @@ uint8_t IcmpScanner::_pingOne(const String& ip, uint32_t timeout_ms) {
     close(sock);
 
     // buf[0..19] = IP header (20 octets), buf[8] = TTL, buf[20] = type ICMP
-    // Type 0 = echo reply — confirme que l'hôte est joignable
+    // Type 0 = echo reply - confirme que l'hôte est joignable
     if (n >= 28 && buf[20] == 0)
         return buf[8];   // TTL depuis l'en-tête IP
     return 0;

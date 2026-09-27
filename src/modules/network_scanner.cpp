@@ -1,14 +1,14 @@
 /**
- * NetworkScanner — Implémentation v0.0.7
+ * NetworkScanner - Implémentation v0.0.7
  *
  * Bibliothèques utilisées :
- *   lwip/etharp.h     — etharp_get_entry(), etharp_request()
- *   lwip/netif.h      — netif_default (interface réseau active)
- *   lwip/inet.h       — ip4addr_ntoa_r()
- *   FreeRTOS          — tâche asynchrone Core 0, mutex
- *   ArduinoJson       — sérialisation JSON sécurisée (champs échappés)
- *   HostnameResolver  — résolution mDNS + PTR DNS
- *   IspDetector       — détection des boxes FAI françaises
+ *   lwip/etharp.h     - etharp_get_entry(), etharp_request()
+ *   lwip/netif.h      - netif_default (interface réseau active)
+ *   lwip/inet.h       - ip4addr_ntoa_r()
+ *   FreeRTOS          - tâche asynchrone Core 0, mutex
+ *   ArduinoJson       - sérialisation JSON sécurisée (champs échappés)
+ *   HostnameResolver  - résolution mDNS + PTR DNS
+ *   IspDetector       - détection des boxes FAI françaises
  */
 
 #include "network_scanner.h"
@@ -31,7 +31,7 @@
 #include "device_enricher.h"     // Enrichissement par pattern matching sur le hostname
 #include "device_history.h"      // Journal chronologique des evenements (nouveaux/changements)
 #include "time_sync.h"           // Epoch NTP pour firstSeen/lastSeen
-#include "system_health.h"       // Mode degrade — refuse scans/notes/config si heap critique
+#include "system_health.h"       // Mode degrade - refuse scans/notes/config si heap critique
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>            // Diagnostics : espace utilise/libre
@@ -108,7 +108,7 @@ void NetworkScanner::_readArpTable() {
             eth_ptr->addr[0], eth_ptr->addr[1], eth_ptr->addr[2],
             eth_ptr->addr[3], eth_ptr->addr[4], eth_ptr->addr[5]);
 
-        // Déduplication par MAC — mise à jour si le MAC existe déjà. Un MAC connu
+        // Déduplication par MAC - mise à jour si le MAC existe déjà. Un MAC connu
         // a une nouvelle IP, c'est le MEME appareil qui a change d'adresse : on
         // archive l'ancienne IP au lieu de la perdre, et on ne cree pas de
         // doublon.
@@ -147,7 +147,7 @@ void NetworkScanner::_readArpTable() {
 }
 
 // ---------------------------------------------------------------------------
-// Sweep ARP du sous-réseau — 3 passes
+// Sweep ARP du sous-réseau - 3 passes
 //
 // Passe 1 : sweep complet par lots de 5, 100 ms entre chaque lot.
 //   Capture les équipements actifs qui répondent rapidement.
@@ -343,7 +343,7 @@ void NetworkScanner::_addSelfEntry() {
     self.lastSeen = millis();
     self.online   = true;
 
-    // Fabricant depuis l'OUI (Espressif Systems pour les ESP32) — la MAC de
+    // Fabricant depuis l'OUI (Espressif Systems pour les ESP32) - la MAC de
     // l'ESP32 lui-même n'est jamais aléatoire, mais on reste cohérent avec
     // lookupOui() qui ignore déjà ce cas.
     const OuiEntry* oui = lookupOui(mac);
@@ -361,7 +361,7 @@ void NetworkScanner::_addSelfEntry() {
 //   - S'il est déjà connu (même IP), on enrichit ses champs vides :
 //       manufacturer, model, category, os, source, hostname
 //   - S'il n'est pas encore dans la liste, on l'ajoute (équipement UPnP
-//     sans réponse ARP — cas rare mais possible sur certains réseaux)
+//     sans réponse ARP - cas rare mais possible sur certains réseaux)
 // ---------------------------------------------------------------------------
 void NetworkScanner::_applySsdpResult(NetworkDevice& d, const NetworkDevice& sdev) {
     // Enrichissement des champs vides uniquement (ne pas écraser
@@ -399,14 +399,14 @@ void NetworkScanner::_mergeSsdp() {
             break;
         }
         if (!found && !sdev.ip.isEmpty()) {
-            // Équipement UPnP inconnu de l'ARP — on l'ajoute directement
+            // Équipement UPnP inconnu de l'ARP - on l'ajoute directement
             _results.push_back(sdev);
             Log::i(TAG, "Nouvel équipement SSDP : %s (%s)",
                    sdev.ip.c_str(), sdev.manufacturer.c_str());
         }
     }
     xSemaphoreGive(_mutex);
-    Log::i(TAG, "SSDP fusionné — %u équipement(s) total", (unsigned)_results.size());
+    Log::i(TAG, "SSDP fusionné - %u équipement(s) total", (unsigned)_results.size());
 }
 
 // ---------------------------------------------------------------------------
@@ -475,17 +475,17 @@ void NetworkScanner::_mergeDnsSd() {
     }
     xSemaphoreGive(_mutex);
 
-    Log::i(TAG, "DNS-SD fusionné — %u résultat(s)", (unsigned)dnssdResults.size());
+    Log::i(TAG, "DNS-SD fusionné - %u résultat(s)", (unsigned)dnssdResults.size());
 }
 
 // ---------------------------------------------------------------------------
-// Tâche FreeRTOS — exécutée sur Core 0 (même core que lwIP / TCP stack)
+// Tâche FreeRTOS - exécutée sur Core 0 (même core que lwIP / TCP stack)
 // Stack 20 Ko : lwIP + DNS + std::map + HTTP client SSDP + XML parsing
 // ---------------------------------------------------------------------------
 void NetworkScanner::_task(void* self) {
     NetworkScanner* s = static_cast<NetworkScanner*>(self);
     s->_run();
-    // Marge de pile restante au plus bas — surveille le risque de stack overflow
+    // Marge de pile restante au plus bas - surveille le risque de stack overflow
     // sans avoir à deviner une taille de pile a priori (TAG "NetScan" sur Serial)
     Log::i("NetScan", "Marge pile min. tache scan: %u octets", (unsigned)uxTaskGetStackHighWaterMark(nullptr));
     vTaskDelete(nullptr);
@@ -531,7 +531,7 @@ void NetworkScanner::_run() {
 
     hostnameResolver.update();   // Traiter les derniers paquets mDNS
 
-    Log::i(TAG, "ARP terminé — %u équipement(s) détecté(s)", (unsigned)_results.size());
+    Log::i(TAG, "ARP terminé - %u équipement(s) détecté(s)", (unsigned)_results.size());
 
     // ── ICMP sweep sur les IP non trouvées par ARP ──────────────────────────
     // Collecte les IPs de la plage encore absentes de _results
@@ -600,11 +600,11 @@ void NetworkScanner::_run() {
     // Ajouter l'ESP32 lui-même (non détectable par ARP)
     _addSelfEntry();
 
-    // Scan SSDP/UPnP — enrichit les équipements existants et ajoute les
+    // Scan SSDP/UPnP - enrichit les équipements existants et ajoute les
     // équipements UPnP non détectés par ARP
     _mergeSsdp();
 
-    // Scan DNS-SD — identifie les services exposés par chaque équipement
+    // Scan DNS-SD - identifie les services exposés par chaque équipement
     _mergeDnsSd();
 
     // Scan TCP des ports communs + banner HTTP/SSH/FTP + API IoT
@@ -651,7 +651,7 @@ void NetworkScanner::_run() {
     }
     xSemaphoreGive(_mutex);
 
-    Log::i(TAG, "Scan complet — %u équipement(s) total (%u ms)", (unsigned)_results.size(), (unsigned)durMs);
+    Log::i(TAG, "Scan complet - %u équipement(s) total (%u ms)", (unsigned)_results.size(), (unsigned)durMs);
     _scanning   = false;
     _taskHandle = nullptr;
 }
@@ -776,7 +776,7 @@ int NetworkScanner::_confidenceFor(const NetworkDevice& d, String& label) {
                   (d.manufacturer == "Free" || d.manufacturer == "Orange" ||
                    d.manufacturer == "SFR"  || d.manufacturer == "Bouygues Telecom");
     if (ispBox) {
-        label = "Box FAI (DHCP) — Marque 100% · Categorie 100%";
+        label = "Box FAI (DHCP) - Marque 100% · Categorie 100%";
         return 100;
     }
 
@@ -1023,7 +1023,7 @@ void NetworkScanner::_scanPorts() {
     }
     xSemaphoreGive(_mutex);
 
-    Log::i(TAG, "Ports fusionnés — %u équipement(s) enrichis", (unsigned)scanResults.size());
+    Log::i(TAG, "Ports fusionnés - %u équipement(s) enrichis", (unsigned)scanResults.size());
 }
 
 // ---------------------------------------------------------------------------
@@ -1253,7 +1253,7 @@ void NetworkScanner::_updateHistory(const std::vector<NetworkDevice>& previous, 
             // Anti-doublon : une "passe précise" (rescan d'un seul équipement,
             // icône ⟲ de la page Équipement) passe par ce même code que le
             // scan complet et incrémenterait seenCount à chaque clic, en plus
-            // des scans réels — ce qui rend le compteur peu fiable si
+            // des scans réels - ce qui rend le compteur peu fiable si
             // l'utilisateur relance plusieurs passes rapprochées sur le même
             // équipement. Si l'équipement était déjà vu en ligne il y a moins
             // de 60s, on rafraîchit lastSeenEpoch mais on ne recompte pas une
@@ -1306,7 +1306,7 @@ void NetworkScanner::_updateHistory(const std::vector<NetworkDevice>& previous, 
                 // allowRequeue est faux lorsque cet appel provient d'une passe
                 // precise (_runRescan) : un scan rapide ne recueille volontairement
                 // que peu d'informations et ne fera jamais remonter la confiance
-                // au-dessus de 35% pour certains profils — sans cette garde, la
+                // au-dessus de 35% pour certains profils - sans cette garde, la
                 // passe se remettrait elle-meme en file indefiniment.
                 if (allowRequeue && (importantChange || confAfter < 35)) {
                     _queueQuickScanLocked(d.ip);
@@ -1337,7 +1337,7 @@ void NetworkScanner::_updateHistory(const std::vector<NetworkDevice>& previous, 
 
 // ---------------------------------------------------------------------------
 // Chargement des devices connus depuis LittleFS
-// Injectés avec online=false — seront mis à jour si découverts par ARP/ICMP
+// Injectés avec online=false - seront mis à jour si découverts par ARP/ICMP
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // Identite des appareils et deduplication
@@ -1505,7 +1505,7 @@ void NetworkScanner::_mergePersistedDevices() {
 }
 
 // ---------------------------------------------------------------------------
-// Borne haute du nombre d'équipements suivis — évite une croissance illimitée
+// Borne haute du nombre d'équipements suivis - évite une croissance illimitée
 // du heap (ex: appareils à MAC aléatoire vus une seule fois). Appelée avec
 // _mutex déjà acquis. Évince les entrées hors-ligne les moins récemment vues,
 // jamais les favoris ni les équipements actuellement en ligne.
@@ -1552,11 +1552,11 @@ ScanStats NetworkScanner::getStats() const {
 // API publique
 // ---------------------------------------------------------------------------
 void NetworkScanner::begin() {
-    if (_mutex) return;   // Idempotent — guard contre la double initialisation
+    if (_mutex) return;   // Idempotent - guard contre la double initialisation
     _mutex = xSemaphoreCreateMutex();
 
     // Restauration de la frequence de surveillance continue (NVS, namespace
-    // "monitor") — meme pattern que StatusLed::begin() pour la luminosite.
+    // "monitor") - meme pattern que StatusLed::begin() pour la luminosite.
     Preferences prefs;
     prefs.begin(MONITOR_NVS_NAMESPACE, true);
     uint8_t storedMinutes = prefs.getUChar(MONITOR_NVS_KEY, MONITOR_INTERVAL_DEFAULT_MINUTES);
@@ -1573,17 +1573,17 @@ void NetworkScanner::begin() {
     _topologyRootMac = topoPrefs.getString(TOPOLOGY_NVS_ROOT_KEY, "");
     topoPrefs.end();
 
-    Log::i(TAG, "Module initialisé — surveillance continue : %s, %u min",
+    Log::i(TAG, "Module initialisé - surveillance continue : %s, %u min",
            _monitorEnabled ? "activee" : "desactivee", (unsigned)_monitorIntervalMinutes);
 }
 
 void NetworkScanner::startScan() {
     if (_scanning) {
-        Log::w(TAG, "Scan déjà en cours — ignoré");
+        Log::w(TAG, "Scan déjà en cours - ignoré");
         return;
     }
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Scan refusé — mode dégradé (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Scan refusé - mode dégradé (%s)", systemHealth.reason().c_str());
         return;
     }
     _scanning = true;
@@ -1730,7 +1730,7 @@ String NetworkScanner::resultsToJson() const {
 // ---------------------------------------------------------------------------
 bool NetworkScanner::setAlias(const String& macOrIp, const String& alias) {
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Modification d'alias refusée — mode dégradé (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Modification d'alias refusée - mode dégradé (%s)", systemHealth.reason().c_str());
         return false;
     }
     bool found = false;
@@ -1752,7 +1752,7 @@ bool NetworkScanner::setAlias(const String& macOrIp, const String& alias) {
 // ---------------------------------------------------------------------------
 bool NetworkScanner::setFavorite(const String& macOrIp, bool favorite) {
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Modification de favori refusée — mode dégradé (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Modification de favori refusée - mode dégradé (%s)", systemHealth.reason().c_str());
         return false;
     }
     bool found = false;
@@ -1775,7 +1775,7 @@ bool NetworkScanner::setFavorite(const String& macOrIp, bool favorite) {
 bool NetworkScanner::addNote(const String& macOrIp, const String& text) {
     if (text.isEmpty()) return false;
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Note refusée — mode dégradé (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Note refusée - mode dégradé (%s)", systemHealth.reason().c_str());
         return false;
     }
     String trimmed = text.substring(0, MAX_NOTE_LENGTH);   // borne la taille d'une note
@@ -1860,7 +1860,7 @@ String NetworkScanner::diagnosticsToJson() const {
 // ---------------------------------------------------------------------------
 int NetworkScanner::resetDevices(bool keepAlias, bool keepManufacturer) {
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Reset des équipements refusé — mode dégradé (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Reset des équipements refusé - mode dégradé (%s)", systemHealth.reason().c_str());
         return 0;
     }
     int removed = 0;
@@ -1889,13 +1889,13 @@ void NetworkScanner::_setRescanProgress(const String& step, int percent) {
     _rescanStatus.step    = step;
     _rescanStatus.percent = percent;
     xSemaphoreGive(_mutex);
-    Log::i(TAG, "Rescan %s — %s (%d%%)", _rescanStatus.ip.c_str(), step.c_str(), percent);
+    Log::i(TAG, "Rescan %s - %s (%d%%)", _rescanStatus.ip.c_str(), step.c_str(), percent);
 }
 
 bool NetworkScanner::rescanDevice(const String& ip, bool deep) {
     if (_scanning) return false;
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Rescan refusé — mode dégradé (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Rescan refusé - mode dégradé (%s)", systemHealth.reason().c_str());
         return false;
     }
 
@@ -1924,7 +1924,7 @@ bool NetworkScanner::rescanDevice(const String& ip, bool deep) {
     _scanning = true;
     _rescanDeep = deep;
     xTaskCreatePinnedToCore(_rescanTask, "net_rescan", 24576, this, 1, &_rescanTaskHandle, 0);
-    Log::i(TAG, "Passe précise (%s, profil %s) lancée — %s", deep ? "approfondie" : "rapide", profile.c_str(), ip.c_str());
+    Log::i(TAG, "Passe précise (%s, profil %s) lancée - %s", deep ? "approfondie" : "rapide", profile.c_str(), ip.c_str());
     return true;
 }
 
@@ -2072,7 +2072,7 @@ void NetworkScanner::_runRescan(const String& ip, bool deep) {
                 // immediatement la passe approfondie, sans lancer d'autres
                 // modules (NetBIOS, API constructeur, SNMP...).
                 log.push_back("Aucun service exploitable détecté. Passe approfondie terminée.");
-                Log::i(TAG, "%s — aucun service exploitable, passe approfondie écourtée", ip.c_str());
+                Log::i(TAG, "%s - aucun service exploitable, passe approfondie écourtée", ip.c_str());
             } else {
                 // Etape 2 : le profil est redetermine maintenant que les ports
                 // ouverts de la cible sont connus - bien plus fiable que
@@ -2089,11 +2089,11 @@ void NetworkScanner::_runRescan(const String& ip, bool deep) {
                 xSemaphoreTake(_mutex, portMAX_DELAY);
                 _rescanStatus.profile = profile;
                 xSemaphoreGive(_mutex);
-                Log::i(TAG, "%s — profil déduit après scan de ports : %s (ports: %s)",
+                Log::i(TAG, "%s - profil déduit après scan de ports : %s (ports: %s)",
                        ip.c_str(), profile.c_str(), updated.openPorts.c_str());
 
                 // Modules specialises, declenches uniquement si le profil
-                // deduit en a l'utilite — jamais de decouverte multicast.
+                // deduit en a l'utilite - jamais de decouverte multicast.
                 bool wantNetBios = (profile == "Computer" || profile == "Unknown") &&
                                     (updated.openPorts.indexOf("NetBIOS") >= 0 ||
                                      updated.openPorts.indexOf("RPC") >= 0 ||
@@ -2158,7 +2158,7 @@ void NetworkScanner::_runRescan(const String& ip, bool deep) {
                                 if (d.category.isEmpty()) d.category = "Smart Hub";
                                 if (d.source.isEmpty() || d.source == "MAC") d.source = "MQTT";
                             } else if (mqttRes.authRequired) {
-                                Log::d(TAG, "%s — broker MQTT authentifie, aucune info $SYS", ip.c_str());
+                                Log::d(TAG, "%s - broker MQTT authentifie, aucune info $SYS", ip.c_str());
                             }
                             break;
                         }
@@ -2228,7 +2228,7 @@ void NetworkScanner::_runRescan(const String& ip, bool deep) {
 
     uint32_t durMs = millis() - _t0;
 
-    Log::i(TAG, "Rafraichissement cible terminé — %s (%s, %s, profil %s, %u ms)",
+    Log::i(TAG, "Rafraichissement cible terminé - %s (%s, %s, profil %s, %u ms)",
            ip.c_str(), isOnline ? "en ligne" : "hors ligne", deep ? "approfondi" : "rapide",
            profile.c_str(), (unsigned)durMs);
 
@@ -2316,7 +2316,7 @@ String NetworkScanner::backupToJson() const {
 
 bool NetworkScanner::restoreFromJson(const String& json) {
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Restauration refusée — mode dégradé (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Restauration refusée - mode dégradé (%s)", systemHealth.reason().c_str());
         return false;
     }
     JsonDocument doc;
@@ -2395,7 +2395,7 @@ static String csvField(const String& s) {
 }
 
 // Date lisible (heure locale, synchronisee par NTP) pour l'export CSV uniquement
-// — le JSON garde les epochs bruts pour rester exploitable par /api/restore.
+// - le JSON garde les epochs bruts pour rester exploitable par /api/restore.
 static String csvDate(uint32_t epoch) {
     if (epoch == 0) return "";
     time_t t = (time_t)epoch;
@@ -2455,7 +2455,7 @@ String NetworkScanner::devicesToCsv() const {
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// Classification mobile/fixe — l'override utilisateur (mobilityOverride)
+// Classification mobile/fixe - l'override utilisateur (mobilityOverride)
 // gagne toujours. A defaut, on infere depuis category/type : categories
 // typiquement portees sur soi ou facilement deplacees (smartphone, tablette,
 // montre connectee, portable) -> mobile ; categories typiquement fixes
@@ -2492,7 +2492,7 @@ bool NetworkScanner::_isMobileDevice(const NetworkDevice& d) {
 }
 
 // ---------------------------------------------------------------------------
-// Score de stabilite 0-100% — uniquement pertinent pour les equipements fixes
+// Score de stabilite 0-100% - uniquement pertinent pour les equipements fixes
 // (les mobiles ne sont jamais penalises, cf. spec : retour -1 = "N/A").
 //
 // Heuristique volontairement simple :
@@ -2505,7 +2505,7 @@ bool NetworkScanner::_isMobileDevice(const NetworkDevice& d) {
 //     toutes les 10 minutes mais reste online la plupart du temps).
 // ---------------------------------------------------------------------------
 int NetworkScanner::_stabilityScoreFor(const NetworkDevice& d) {
-    if (_isMobileDevice(d)) return -1;   // N/A — jamais penalise
+    if (_isMobileDevice(d)) return -1;   // N/A - jamais penalise
 
     uint32_t totalSeconds = d.totalOnlineSeconds + d.totalOfflineSeconds;
     // Moins d'1h d'observation cumulee : pas assez d'historique pour juger
@@ -2528,7 +2528,7 @@ int NetworkScanner::_stabilityScoreFor(const NetworkDevice& d) {
 }
 
 // ---------------------------------------------------------------------------
-// File d'attente differee (scan rapide / approfondi) — protegee par _mutex,
+// File d'attente differee (scan rapide / approfondi) - protegee par _mutex,
 // dedupliquee. Drainee par _drainPendingScans() une entree a la fois pour
 // eviter toute "tempete" de rescans simultanes.
 // ---------------------------------------------------------------------------
@@ -2675,18 +2675,18 @@ void NetworkScanner::_drainPendingScans() {
 
     if (ip.isEmpty()) return;   // Rien a drainer ce tick
 
-    // Une seule passe demarree par drain — evite les tempetes de rescans.
+    // Une seule passe demarree par drain - evite les tempetes de rescans.
     // rescanDevice() refuse lui-meme si _scanning est devenu vrai entre-temps.
     rescanDevice(ip, deep);
 }
 
 // ---------------------------------------------------------------------------
-// Tick de surveillance continue — sweep ARP seul + mise a jour de presence/
+// Tick de surveillance continue - sweep ARP seul + mise a jour de presence/
 // absence/compteurs de stabilite. Jamais de SSDP/DNS-SD/WS-Discovery/SNMP/API
 // ici : uniquement ARP (deja implemente par _sweepSubnet(), reutilise as-is).
 // ---------------------------------------------------------------------------
 void NetworkScanner::_monitorTick() {
-    // Etat de reference avant le tick — pour detecter les transitions
+    // Etat de reference avant le tick - pour detecter les transitions
     std::vector<NetworkDevice> previousState;
     {
         xSemaphoreTake(_mutex, portMAX_DELAY);
@@ -2694,7 +2694,7 @@ void NetworkScanner::_monitorTick() {
         xSemaphoreGive(_mutex);
     }
 
-    // Réinitialiser l'état "en ligne" avant le sweep — cf. _run() : sans ce
+    // Réinitialiser l'état "en ligne" avant le sweep - cf. _run() : sans ce
     // reset, online ne redescend jamais à false entre deux ticks.
     {
         xSemaphoreTake(_mutex, portMAX_DELAY);
@@ -2702,7 +2702,7 @@ void NetworkScanner::_monitorTick() {
         xSemaphoreGive(_mutex);
     }
 
-    // Sweep ARP-only (3 passes, identique au scan complet) — reutilise
+    // Sweep ARP-only (3 passes, identique au scan complet) - reutilise
     // tel quel, aucune nouvelle decouverte de service.
     _sweepSubnet();
 
@@ -2746,7 +2746,7 @@ void NetworkScanner::_monitorTick() {
         }
 
         if (isNewDevice) {
-            // Nouvel equipement jamais vu — point 2 de la spec : etat
+            // Nouvel equipement jamais vu - point 2 de la spec : etat
             // "Identification en cours". Aucun scan automatique declenche ici :
             // la surveillance continue se limite a la presence (ARP), l'identification
             // approfondie reste a l'initiative de l'utilisateur (scan complet ou rescan manuel).
@@ -2767,7 +2767,7 @@ void NetworkScanner::_monitorTick() {
         }
 
         if (d.online && !wasOnline) {
-            // Reapparition — point 3 : equipement connu qui revient. seenCount
+            // Reapparition - point 3 : equipement connu qui revient. seenCount
             // n'est pas touche ici : il compte les scans complets (_run()),
             // pas les ticks de surveillance continue (cf. _updateHistory()).
             d.presenceCount++;
@@ -2781,7 +2781,7 @@ void NetworkScanner::_monitorTick() {
                 d.mobileAwayNotified = false;
             } else if (mobile && d.lastDisconnectEpoch > 0 && epoch > 0 &&
                        (epoch - d.lastDisconnectEpoch) * 1000UL < MOBILE_AWAY_SHORT_MS) {
-                // Absence courte d'un mobile — pas de penalite, pas d'evenement bruyant
+                // Absence courte d'un mobile - pas de penalite, pas d'evenement bruyant
                 deviceHistory.addEvent(d.mac, d.ip, label, "reconnected");
             } else {
                 // Reconnexion "normale" (fixe, ou mobile absent moyennement longtemps)
@@ -2791,18 +2791,18 @@ void NetworkScanner::_monitorTick() {
 
             // Cumul du temps hors ligne ecoule depuis la derniere deconnexion
             // (sauf absence mobile courte, deja exclue de la penalite ci-dessus
-            // au niveau evenement — on cumule neanmoins le temps reel observe
+            // au niveau evenement - on cumule neanmoins le temps reel observe
             // pour les equipements fixes, qui doivent rester comparables)
             if (!mobile && epoch > 0 && d.lastDisconnectEpoch > 0 && epoch > d.lastDisconnectEpoch) {
                 d.totalOfflineSeconds += (epoch - d.lastDisconnectEpoch);
             }
 
-            // Changement de champ important detecte sur cette reapparition —
+            // Changement de champ important detecte sur cette reapparition -
             // signale a titre informatif uniquement : la surveillance continue
             // ne declenche plus de scan automatique (presence ARP seule).
 
         } else if (d.online && wasOnline) {
-            // Toujours en ligne — cumul du temps en ligne depuis le dernier
+            // Toujours en ligne - cumul du temps en ligne depuis le dernier
             // tick. seenCount n'est pas touche ici : il compte les scans
             // complets (_run()), pas les ticks de surveillance continue
             // (cf. _updateHistory()).
@@ -2812,7 +2812,7 @@ void NetworkScanner::_monitorTick() {
             }
 
             // Identification ameliorée : confiance en hausse significative
-            // (suivi informatif uniquement — aucun scan approfondi automatique :
+            // (suivi informatif uniquement - aucun scan approfondi automatique :
             // celui-ci reste a l'initiative de l'utilisateur)
             String labelBefore, labelAfter;
             int confBefore = _confidenceFor(*prev, labelBefore);
@@ -2822,16 +2822,16 @@ void NetworkScanner::_monitorTick() {
                                         String(confBefore) + "%", String(confAfter) + "%");
             }
 
-            d.lastDisconnectEpoch = 0;   // Toujours en ligne — pas de deconnexion en cours
+            d.lastDisconnectEpoch = 0;   // Toujours en ligne - pas de deconnexion en cours
 
         } else if (!d.online && wasOnline) {
-            // Passage hors ligne — point 9 : traitement special mobile
+            // Passage hors ligne - point 9 : traitement special mobile
             d.lastDisconnectEpoch = epoch;
 
             if (mobile) {
                 // Absence courte (<30 min) : aucune penalite, mais on logge un evenement
                 // discret (offline_brief) pour garder une trace symetrique au "reconnected"
-                // qui suivra — sans quoi l'historique n'affiche que des reconnexions en
+                // qui suivra - sans quoi l'historique n'affiche que des reconnexions en
                 // chaine sans jamais de deconnexion visible.
                 uint32_t awayMs = (prev->lastSeen > 0) ? (nowMs - prev->lastSeen) : 0;
                 if (awayMs >= MOBILE_AWAY_LONG_MS && !d.mobileAwayNotified) {
@@ -2848,7 +2848,7 @@ void NetworkScanner::_monitorTick() {
                 deviceHistory.addEvent(d.mac, d.ip, label, "disappeared");
             }
         } else {
-            // Toujours hors ligne — cumul du temps hors ligne pour les fixes,
+            // Toujours hors ligne - cumul du temps hors ligne pour les fixes,
             // sauf si l'absence mobile est encore "courte" (pas de penalite)
             if (!mobile && epoch > 0 && prev->lastSeenEpoch > 0) {
                 // On cumule uniquement depuis le dernier tick (pas depuis la
@@ -2882,7 +2882,7 @@ void NetworkScanner::serviceMonitor() {
     bool due = (_lastMonitorTickMs == 0) || (nowMs - _lastMonitorTickMs >= intervalMs);
     if (due) {
         if (_scanning) {
-            // Scan complet ou rescan en cours — on saute ce tick. On reporte
+            // Scan complet ou rescan en cours - on saute ce tick. On reporte
             // l'echeance d'un intervalle complet (comme pour le mode degrade
             // ci-dessous) plutot que de relancer le tick aussitot le scan en
             // cours termine : sans cela, le scan automatique au demarrage
@@ -2892,22 +2892,22 @@ void NetworkScanner::serviceMonitor() {
             Log::d(TAG, "Surveillance continue : tick ignore (scan en cours)");
             _lastMonitorTickMs = nowMs;
         } else if (systemHealth.isDegraded()) {
-            Log::w(TAG, "Surveillance continue refusee — mode degrade (%s)", systemHealth.reason().c_str());
+            Log::w(TAG, "Surveillance continue refusee - mode degrade (%s)", systemHealth.reason().c_str());
             _lastMonitorTickMs = nowMs;   // Evite de boucler en continu en mode degrade
         } else {
             _monitorTick();
         }
     }
 
-    // Sweep periodique des equipements non identifies — ne fait que mettre
+    // Sweep periodique des equipements non identifies - ne fait que mettre
     // en file, sans jamais lancer de scan directement (drainage ci-dessous).
     if (!_scanning) _sweepUnidentified();
 
-    // Decouverte automatique de la topologie par SNMP — requetes UDP/161
+    // Decouverte automatique de la topologie par SNMP - requetes UDP/161
     // unicast directes, independantes du sweep ARP et de la file differee.
     if (!_scanning) _discoverTopologyViaSnmp();
 
-    // Drainage de la file d'attente differee — une seule entree par appel
+    // Drainage de la file d'attente differee - une seule entree par appel
     _drainPendingScans();
 }
 
@@ -2943,7 +2943,7 @@ bool NetworkScanner::getMonitorEnabled() const {
 
 bool NetworkScanner::setMobility(const String& macOrIp, const String& mode) {
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Modification de mobilite refusee — mode degrade (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Modification de mobilite refusee - mode degrade (%s)", systemHealth.reason().c_str());
         return false;
     }
     if (mode != "" && mode != "fixed" && mode != "mobile") return false;
@@ -2972,7 +2972,7 @@ bool NetworkScanner::setMobility(const String& macOrIp, const String& mode) {
 // ---------------------------------------------------------------------------
 bool NetworkScanner::setTopologyParent(const String& macOrIp, const String& parentMac) {
     if (systemHealth.isDegraded()) {
-        Log::w(TAG, "Modification de topologie refusee — mode degrade (%s)", systemHealth.reason().c_str());
+        Log::w(TAG, "Modification de topologie refusee - mode degrade (%s)", systemHealth.reason().c_str());
         return false;
     }
 
@@ -3013,7 +3013,7 @@ bool NetworkScanner::setTopologyParent(const String& macOrIp, const String& pare
 //
 // Par defaut (mac=""), la racine affichee est la box operateur (categorie
 // "Router", deduite par IspDetector/SSDP/OUI) et non l'ESP32 lui-meme
-// (categorie "Gateway" — c'est un equipement du reseau comme un autre du
+// (categorie "Gateway" - c'est un equipement du reseau comme un autre du
 // point de vue de la topologie, pas la racine). L'utilisateur peut forcer
 // n'importe quel autre equipement comme racine (ex. son propre routeur si
 // la box est en mode bridge derriere un routeur tiers).
@@ -3033,11 +3033,11 @@ String NetworkScanner::getTopologyRoot() const {
 }
 
 // ---------------------------------------------------------------------------
-// Donnees de sante reseau pour le tableau de bord — calcule les compteurs
+// Donnees de sante reseau pour le tableau de bord - calcule les compteurs
 // des 24 dernieres heures depuis l'historique, et identifie les equipements
 // les moins stables (5 equipements fixes au score le plus bas, hors mobiles
 // jamais penalises). Choix documente : on retient les 5 scores les plus bas
-// sans seuil minimum, meme si tous sont >=90 — utile pour suivre la tendance
+// sans seuil minimum, meme si tous sont >=90 - utile pour suivre la tendance
 // meme sur un reseau globalement sain.
 // ---------------------------------------------------------------------------
 String NetworkScanner::networkHealthToJson() const {
@@ -3072,13 +3072,13 @@ String NetworkScanner::networkHealthToJson() const {
         }
     }
 
-    // Equipements les moins stables (fixes uniquement — mobiles jamais penalises)
+    // Equipements les moins stables (fixes uniquement - mobiles jamais penalises)
     struct ScoredDevice { String label; int score; };
     std::vector<ScoredDevice> scored;
     for (const auto& d : copy) {
         if (d.ip.isEmpty() && d.mac.isEmpty()) continue;
         int score = _stabilityScoreFor(d);
-        if (score < 0) continue;   // Mobile — exclu du classement
+        if (score < 0) continue;   // Mobile - exclu du classement
         String label = !d.alias.isEmpty() ? d.alias : (!d.hostname.isEmpty() ? d.hostname : d.ip);
         scored.push_back({ label, score });
     }

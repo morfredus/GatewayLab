@@ -75,20 +75,20 @@ function portClass(p) {
 function sourceBadge(source) {
   if (!source || source === 'MAC') return '';
   var cfg = {
-    'mDNS':         { cls: 'source-mdns',     label: 'mDNS',      title: 'Nom résolu via mDNS — annonce .local de l\'appareil' },
-    'PTR':          { cls: 'source-ptr',       label: 'DNS↩',     title: 'DNS inverse (PTR) — nom fourni par le routeur / box' },
-    'Self':         { cls: 'source-self',      label: 'ESP32',     title: 'Cet appareil — Gateway Lab' },
-    'SSDP':         { cls: 'source-ssdp',      label: 'UPnP',      title: 'Découverte UPnP/SSDP — descripteur XML du device' },
+    'mDNS':         { cls: 'source-mdns',     label: 'mDNS',      title: 'Nom résolu via mDNS - annonce .local de l\'appareil' },
+    'PTR':          { cls: 'source-ptr',       label: 'DNS↩',     title: 'DNS inverse (PTR) - nom fourni par le routeur / box' },
+    'Self':         { cls: 'source-self',      label: 'ESP32',     title: 'Cet appareil - Gateway Lab' },
+    'SSDP':         { cls: 'source-ssdp',      label: 'UPnP',      title: 'Découverte UPnP/SSDP - descripteur XML du device' },
     'HueAPI':       { cls: 'source-hue',       label: 'Hue',       title: 'API Philips Hue Bridge (/api/config)' },
     'SynologyAPI':  { cls: 'source-synology',  label: 'DSM',       title: 'API Synology DSM (non authentifiée)' },
-    'FreeboxAPI':   { cls: 'source-freebox',   label: 'Freebox',   title: 'API Freebox (/api_version — non authentifiée)' },
+    'FreeboxAPI':   { cls: 'source-freebox',   label: 'Freebox',   title: 'API Freebox (/api_version - non authentifiée)' },
     'NetBIOS':      { cls: 'source-netbios',   label: 'NetBIOS',   title: 'Nom resolu via NetBIOS Node Status (UDP 137) - PC Windows / Samba' },
-    'SNMP':         { cls: 'source-snmp',      label: 'SNMP',      title: 'sysDescr SNMP (UDP 161) — fabricant/modèle en texte clair' },
+    'SNMP':         { cls: 'source-snmp',      label: 'SNMP',      title: 'sysDescr SNMP (UDP 161) - fabricant/modèle en texte clair' },
     'Cast':         { cls: 'source-cast',      label: 'Cast',      title: 'API Google Cast (/setup/eureka_info)' },
     'Sonos':        { cls: 'source-sonos',     label: 'Sonos',     title: 'API Sonos (/xml/device_description.xml)' },
     'Roku':         { cls: 'source-roku',      label: 'Roku',      title: 'API Roku (/query/device-info)' },
     'SamsungTV':    { cls: 'source-samsung',   label: 'Samsung',   title: 'API Samsung Smart TV (/api/v2/)' },
-    'MQTT':         { cls: 'source-mqtt',      label: 'MQTT',      title: 'Broker MQTT (port 1883) — CONNECT + topics $SYS/broker/*' },
+    'MQTT':         { cls: 'source-mqtt',      label: 'MQTT',      title: 'Broker MQTT (port 1883) - CONNECT + topics $SYS/broker/*' },
     'DHCP':         { cls: 'source-dhcp',      label: 'DHCP',      title: 'Nom resolu via fingerprinting DHCP passif (option 12, UDP 67)' }
   };
   var c = cfg[source];
@@ -172,8 +172,8 @@ function renderDevices(allDevices) {
   });
   tbody.innerHTML = devices.map(function(d) {
     var statusHtml = d.online
-      ? '<span class="status-online"  title="En ligne — vu lors du dernier scan">●</span>'
-      : '<span class="status-offline" title="Hors ligne — non vu lors du dernier scan">○</span>';
+      ? '<span class="status-online"  title="En ligne - vu lors du dernier scan">●</span>'
+      : '<span class="status-offline" title="Hors ligne - non vu lors du dernier scan">○</span>';
     var displayName = d.alias || d.hostname;
     var aliasKey = d.mac || d.ip;
     var editBtn = '<button class="alias-edit" title="Renommer cet équipement" ' +
@@ -191,7 +191,7 @@ function renderDevices(allDevices) {
           '</div>' +
           editBtn +
         '</div>'
-      : humanHtml + '<span class="none">—</span>' + editBtn;
+      : humanHtml + '<span class="none">-</span>' + editBtn;
     var svcHtml = (d.services && d.services.length)
       ? '<div class="svc-list">' + d.services.map(function(s) {
           return '<span class="svc-badge svc-' + svcClass(s) + '" title="Service DNS-SD : ' + esc(s) + '">' + esc(s) + '</span>';
@@ -207,20 +207,20 @@ function renderDevices(allDevices) {
         (d.model ? '<div class="mfr-model">' + esc(d.model) + '</div>' : '') +
         (d.os    ? '<div class="mfr-os">'    + esc(d.os)    + '</div>' : '') +
         svcHtml + portsHtml
-      : (svcHtml + portsHtml || '<span class="none">—</span>');
+      : (svcHtml + portsHtml || '<span class="none">-</span>');
     var catHtml = d.category
       ? '<span class="type-badge ' + categoryClass(d.category) + '">' + esc(d.category) + '</span>' +
         (d.type ? '<div class="subtype-tag">' + esc(d.type) + '</div>' : '') + confBadge(d)
-      : '<span class="none">—</span>' + confBadge(d);
+      : '<span class="none">-</span>' + confBadge(d);
     var seenHtml = d.online
       ? fmtSeen(d.elapsedMs)
       : '<span class="none" title="Non vu lors du dernier scan">hors ligne</span>';
     if (d.seenCount > 0)
       seenHtml += '<div class="seen-count" title="Nombre de scans où cet équipement a été vu en ligne">vu ' + d.seenCount + 'x</div>';
     var rescanBtn = d.ip
-      ? '<button class="rescan-btn" title="Scan rapide (2-5s) — confirme l\'identité et améliore la confiance" ' +
+      ? '<button class="rescan-btn" title="Scan rapide (2-5s) - confirme l\'identité et améliore la confiance" ' +
         'data-ip="' + esc(d.ip) + '" data-mode="quick" onclick="rescanDevice(this)">⟲</button>' +
-        '<button class="rescan-btn rescan-btn-deep" title="Scan approfondi (15-60s) — récupère un maximum d\'informations" ' +
+        '<button class="rescan-btn rescan-btn-deep" title="Scan approfondi (15-60s) - récupère un maximum d\'informations" ' +
         'data-ip="' + esc(d.ip) + '" data-mode="deep" onclick="rescanDevice(this)">⟲⟲</button>'
       : '';
     var favKey = d.mac || d.ip;
@@ -282,7 +282,7 @@ function fetchDevices() {
         btn.disabled = true;
         btn.textContent = 'Scan en cours…';
         info.style.display = 'block';
-        info.textContent = '⟳ Scan en cours : ARP → hostnames → UPnP/SSDP → DNS-SD → Ports TCP — résultats progressifs';
+        info.textContent = '⟳ Scan en cours : ARP → hostnames → UPnP/SSDP → DNS-SD → Ports TCP - résultats progressifs';
         // Matérialise la barre même si le scan a démarré ailleurs (ex: scan
         // automatique au boot) et non via un clic sur "Scanner" dans cette page.
         if (document.getElementById('progress-wrap').style.display !== 'block') startProgressAnim();
@@ -295,7 +295,7 @@ function fetchDevices() {
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
         var n = data.devices ? data.devices.length : 0;
         document.getElementById('footer-ts').textContent =
-          (n ? n + ' équipement(s) — ' : '') + 'Actualisé : ' + new Date().toLocaleTimeString('fr-FR');
+          (n ? n + ' équipement(s) - ' : '') + 'Actualisé : ' + new Date().toLocaleTimeString('fr-FR');
       }
     });
 }
@@ -404,7 +404,7 @@ function showRescanRow(afterRow, ip, mode, step, percent) {
   if (afterRow.nextSibling !== row) {
     afterRow.parentNode.insertBefore(row, afterRow.nextSibling);
   }
-  document.getElementById('rescan-row-text').textContent = rescanModeLabel(mode) + ' sur ' + ip + ' — ' + step;
+  document.getElementById('rescan-row-text').textContent = rescanModeLabel(mode) + ' sur ' + ip + ' - ' + step;
   document.getElementById('rescan-row-bar').style.width = (percent || 0) + '%';
   document.getElementById('rescan-row-pct').textContent = (percent || 0) + '%';
 }
@@ -412,7 +412,7 @@ function showRescanRow(afterRow, ip, mode, step, percent) {
 function showRescanLog(afterRow, ip, mode, log) {
   var row = document.getElementById(RESCAN_ROW_ID);
   if (!row) return;
-  document.getElementById('rescan-row-text').textContent = rescanModeLabel(mode) + ' sur ' + ip + ' — ' + (log || []).join(' · ');
+  document.getElementById('rescan-row-text').textContent = rescanModeLabel(mode) + ' sur ' + ip + ' - ' + (log || []).join(' · ');
   document.getElementById('rescan-row-bar').style.width = '100%';
   document.getElementById('rescan-row-pct').textContent = '100%';
 }
@@ -427,7 +427,7 @@ function pollRescanStatus(btn, prevHtml, ip, row, mode) {
     if (s.running) {
       var pct = s.percent || 0;
       btn.textContent = pct + '%';
-      btn.title = rescanModeLabel(mode) + ' en cours — ' + (s.step || '…');
+      btn.title = rescanModeLabel(mode) + ' en cours - ' + (s.step || '…');
       showRescanRow(row, ip, mode, s.step || '…', pct);
       setTimeout(function() { pollRescanStatus(btn, prevHtml, ip, row, mode); }, 500);
     } else {
@@ -452,7 +452,7 @@ function rescanDevice(btn) {
   btn.disabled = true;
   var prevHtml = btn.textContent;
   btn.textContent = '…';
-  btn.title = rescanModeLabel(mode) + ' en cours — Démarrage';
+  btn.title = rescanModeLabel(mode) + ' en cours - Démarrage';
   showRescanRow(row, ip, mode, 'Démarrage', 0);
   fetch('/api/devices/rescan', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'ip=' + encodeURIComponent(ip) + '&mode=' + encodeURIComponent(mode) })
     .then(function(r) { return r.json(); })

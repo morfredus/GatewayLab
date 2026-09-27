@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// morfBeacon — emetteur de presence pour cibles embarquees (ESP32 / Arduino)
+// morfBeacon - emetteur de presence pour cibles embarquees (ESP32 / Arduino)
 // Copyright (C) 2026 morfredus
 // SPDX-License-Identifier: GPL-3.0-only
 //
@@ -10,7 +10,7 @@
 // Pourquoi une seconde implementation
 // -----------------------------------
 // La bibliotheque Qt ne peut pas tourner sur un ESP32. La frontiere de
-// plateforme rend cette duplication inevitable — c'est la meme raison qui fait
+// plateforme rend cette duplication inevitable - c'est la meme raison qui fait
 // coexister un ecouteur C++ dans morfMonitor et un ecouteur Python dans
 // RaspberryDashboard.
 //

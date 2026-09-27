@@ -1,9 +1,9 @@
 /**
- * HostnameResolver — Résolution des noms d'hôtes des équipements réseau
+ * HostnameResolver - Résolution des noms d'hôtes des équipements réseau
  *
  * Depuis v0.8.2 : un seul mécanisme actif.
  *
- *   PTR DNS actif batch (seul mécanisme — port 53, unicast)
+ *   PTR DNS actif batch (seul mécanisme - port 53, unicast)
  *      Pour chaque IP, envoie une requête DNS PTR à `d.c.b.a.in-addr.arpa`
  *      au serveur DNS du réseau (routeur/box). Toutes les requêtes sont
  *      envoyées en parallèle ; une seule fenêtre d'attente de 500 ms couvre
@@ -13,7 +13,7 @@
  * L'écoute mDNS passive (224.0.0.251:5353) a été retirée en v0.8.2 : le
  * composant mDNS d'ESP-IDF (initialisé par `MDNS.begin()` dans
  * wifi_manager.cpp) garde ce socket exclusivement pour son propre
- * responder — aucun socket applicatif tiers ne peut le rejoindre, même
+ * responder - aucun socket applicatif tiers ne peut le rejoindre, même
  * avec SO_REUSEADDR (voir docs/WARNINGS.md). Il n'existe pas d'API
  * ESP-IDF publique pour écouter passivement les annonces mDNS reçues par
  * ce service ; begin()/update()/end() sont donc conservés comme no-op
@@ -29,12 +29,12 @@
 #include <map>
 #include <vector>
 
-// Source ayant produit le nom d'hôte — injectée dans NetworkDevice.source
+// Source ayant produit le nom d'hôte - injectée dans NetworkDevice.source
 enum class HostnameSource : uint8_t {
     None,        // Aucune résolution disponible
     MAC,         // Fabricant identifié par OUI seulement (pas de nom d'hôte)
     ReverseDNS,  // Requête PTR DNS (hostname DHCP/local du routeur)
-    MDNS,        // Annonce mDNS passive (.local) — priorité maximale
+    MDNS,        // Annonce mDNS passive (.local) - priorité maximale
 };
 
 // Retourne le label JSON pour une source de résolution
@@ -51,13 +51,13 @@ class HostnameResolver {
 public:
     // No-op depuis v0.8.2 (conservé pour compatibilité des appelants).
     // L'écoute mDNS passive est structurellement impossible tant qu'ESPmDNS
-    // garde 224.0.0.251:5353 — voir docs/WARNINGS.md.
+    // garde 224.0.0.251:5353 - voir docs/WARNINGS.md.
     void begin();
 
-    // No-op depuis v0.8.2 — voir begin().
+    // No-op depuis v0.8.2 - voir begin().
     void update();
 
-    // No-op depuis v0.8.2 — voir begin().
+    // No-op depuis v0.8.2 - voir begin().
     void end();
 
     // Envoie des requêtes PTR DNS en batch pour toutes les IP fournies,
@@ -94,5 +94,5 @@ private:
     std::map<String, String> _ptrCache;   // IP → hostname PTR DNS
 };
 
-// Instance globale — partagée entre NetworkScanner et tout futur module réseau
+// Instance globale - partagée entre NetworkScanner et tout futur module réseau
 extern HostnameResolver hostnameResolver;

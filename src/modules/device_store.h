@@ -1,5 +1,5 @@
 /**
- * DeviceStore — Persistance LittleFS des équipements connus
+ * DeviceStore - Persistance LittleFS des équipements connus
  *
  * Sauvegarde les NetworkDevice dans /devices.json entre les boots.
  * Au démarrage d'un scan, les devices connus sont chargés avec online=false.

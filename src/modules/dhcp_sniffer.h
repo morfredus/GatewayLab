@@ -1,5 +1,5 @@
 /**
- * DhcpSniffer — Fingerprinting passif DHCP (UDP 67)
+ * DhcpSniffer - Fingerprinting passif DHCP (UDP 67)
  *
  * Quand un equipement rejoint le reseau ou renouvelle son bail, il envoie
  * un DHCPDISCOVER/DHCPREQUEST en broadcast (255.255.255.255:67). Ce paquet
@@ -14,14 +14,14 @@
  *     pour etre fiable sans base de signatures externe)
  *
  * Particularite : ce module est purement **passif**. Aucune requete n'est
- * jamais emise, aucun port n'est sonde — un simple socket UDP ecoute le
+ * jamais emise, aucun port n'est sonde - un simple socket UDP ecoute le
  * port 67 (port serveur DHCP) en INADDR_ANY, ce qui suffit a lwIP pour
  * delivrer les broadcasts DHCP des autres clients du sous-reseau. Cela
  * fonctionne meme en l'absence de serveur DHCP local : le Gateway ne
  * repond jamais aux DISCOVER recus, il les observe uniquement.
  *
  * Consequence directe du caractere passif : ce module n'ajoute STRICTEMENT
- * rien au cout du scan complet ni de la passe precise — il tourne en
+ * rien au cout du scan complet ni de la passe precise - il tourne en
  * continu, independamment, et se contente d'enrichir une table MAC ->
  * empreinte que NetworkScanner consulte (lecture memoire uniquement) lors
  * de l'enrichissement final de chaque equipement deja decouvert par ARP.
@@ -42,7 +42,7 @@ class DhcpSniffer {
 public:
     // Ouvre le socket d'ecoute passive UDP/67. A appeler une fois le WiFi
     // connecte (comme les autres services reseau). Echec silencieux (log
-    // uniquement) si le port est indisponible — le reste du firmware n'en
+    // uniquement) si le port est indisponible - le reste du firmware n'en
     // depend pas.
     void begin();
 

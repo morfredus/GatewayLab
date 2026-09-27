@@ -1,7 +1,7 @@
 #pragma once
 
 // Dupliquez ce fichier en secrets.h pour le développement local.
-// include/secrets.h est ignoré par Git (.gitignore) — ne le committez jamais.
+// include/secrets.h est ignoré par Git (.gitignore) - ne le committez jamais.
 //
 // Depuis la v0.3.0, secrets.h n'est PLUS la méthode officielle de
 // configuration WiFi : un portail de configuration web s'en charge

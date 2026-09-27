@@ -1,9 +1,9 @@
 /**
- * OtaManager — Implémentation
+ * OtaManager - Implémentation
  *
  * Bibliothèques utilisées :
- *   ArduinoOTA — mise à jour réseau depuis PlatformIO ou Arduino IDE
- *   Update     — écriture du firmware en flash (utilisée pour la web OTA)
+ *   ArduinoOTA - mise à jour réseau depuis PlatformIO ou Arduino IDE
+ *   Update     - écriture du firmware en flash (utilisée pour la web OTA)
  */
 
 #include "ota_manager.h"
@@ -23,7 +23,7 @@ void OtaManager::begin(const char* hostname) {
     ArduinoOTA.setHostname(hostname);
 
     if (!_callbacksRegistered) {
-        // Callbacks d'état — enregistrés une seule fois pour éviter l'empilement
+        // Callbacks d'état - enregistrés une seule fois pour éviter l'empilement
         ArduinoOTA.onStart([]() {
             Log::i(TAG, "ArduinoOTA: réception du firmware...");
         });
@@ -34,7 +34,7 @@ void OtaManager::begin(const char* hostname) {
             Log::d(TAG, "Progression : %u%%", p * 100 / t);
         });
         ArduinoOTA.onError([](ota_error_t err) {
-            Log::e(TAG, "Erreur OTA [%u] — vérifiez la connexion réseau", (unsigned)err);
+            Log::e(TAG, "Erreur OTA [%u] - vérifiez la connexion réseau", (unsigned)err);
         });
         _callbacksRegistered = true;
     }
@@ -47,14 +47,14 @@ void OtaManager::begin(const char* hostname) {
 
 void OtaManager::loop() {
 #ifdef ENABLE_OTA
-    // Vérification des paquets OTA entrants — doit être appelé à chaque itération
+    // Vérification des paquets OTA entrants - doit être appelé à chaque itération
     // de loop() pour ne pas rater le début d'une mise à jour
     ArduinoOTA.handle();
 #endif
 }
 
 void OtaManager::registerRoutes(WebServer& server) {
-    // Le formulaire d'upload est intégré à la page /wifi (Système) —
+    // Le formulaire d'upload est intégré à la page /wifi (Système) -
     // seule la réception du fichier reste gérée ici.
     // Réception du fichier firmware .bin uploadé depuis le navigateur
     // Deux handlers : le premier s'exécute à la fin, le second pendant l'upload
@@ -73,7 +73,7 @@ void OtaManager::registerRoutes(WebServer& server) {
         [&server]() {
             HTTPUpload& upload = server.upload();
             if (upload.status == UPLOAD_FILE_START) {
-                Log::i(TAG, "Web OTA: début de réception — %s", upload.filename.c_str());
+                Log::i(TAG, "Web OTA: début de réception - %s", upload.filename.c_str());
                 // Démarrage de la mise à jour (taille inconnue = mise à jour en streaming)
                 if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
                     Update.printError(Serial);
@@ -86,7 +86,7 @@ void OtaManager::registerRoutes(WebServer& server) {
             } else if (upload.status == UPLOAD_FILE_END) {
                 // Finalisation et vérification de l'intégrité du firmware
                 if (Update.end(true)) {
-                    Log::i(TAG, "Web OTA: %u octets écrits — succès", upload.totalSize);
+                    Log::i(TAG, "Web OTA: %u octets écrits - succès", upload.totalSize);
                 } else {
                     Update.printError(Serial);
                 }

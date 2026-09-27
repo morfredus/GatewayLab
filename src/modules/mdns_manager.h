@@ -1,5 +1,5 @@
 /**
- * MdnsManager — Socket multicast mDNS partagé (224.0.0.251:5353, RFC 6762)
+ * MdnsManager - Socket multicast mDNS partagé (224.0.0.251:5353, RFC 6762)
  *
  * Avant v0.8.1, HostnameResolver et DnsSdScanner ouvraient chacun leur propre
  * WiFiUDP et appelaient indépendamment beginMulticast(224.0.0.251, 5353).
@@ -16,12 +16,12 @@
  * (acquire/release/send/poll) contre les accès concurrents entre tâches
  * FreeRTOS (scan principal vs. tâche de repasse précise).
  *
- * Limite connue : les paquets reçus ne sont pas dupliqués entre modules —
+ * Limite connue : les paquets reçus ne sont pas dupliqués entre modules -
  * chaque paquet est consommé par le premier appelant de poll(). En pratique
  * les deux modules ne lisent pas simultanément le même flux de réponses
  * (HostnameResolver écoute passivement des annonces spontanées, DnsSdScanner
  * lit les réponses à ses propres requêtes PTR), donc le risque de perte
- * croisée reste marginal — voir docs/WARNINGS.md.
+ * croisée reste marginal - voir docs/WARNINGS.md.
  */
 
 #pragma once
@@ -58,5 +58,5 @@ private:
     void _ensureMutex();
 };
 
-// Instance globale — partagée par HostnameResolver et DnsSdScanner
+// Instance globale - partagée par HostnameResolver et DnsSdScanner
 extern MdnsManager mdnsManager;

@@ -1,5 +1,5 @@
 /**
- * Gateway Lab — Point d'entrée principal
+ * Gateway Lab - Point d'entrée principal
  *
  * Rôle de ce fichier : orchestration uniquement.
  * Toute la logique métier est dans src/modules/.
@@ -21,10 +21,10 @@
 #include "modules/time_sync.h"         // Synchronisation NTP (firstSeen/lastSeen)
 #include "modules/status_led.h"        // Pilotage de la NeoPixel d'etat
 #include "modules/boot_button.h"       // Gestes du bouton BOOT (court/maintien 3s)
-#include "modules/system_health.h"     // Garde-fou heap — mode degrade (pas de redemarrage auto)
+#include "modules/system_health.h"     // Garde-fou heap - mode degrade (pas de redemarrage auto)
 #include "modules/dhcp_sniffer.h"      // Fingerprinting passif DHCP (UDP 67) - hostname/OS
 #ifdef BOOT_LOG_ENABLED
-#include "modules/boot_log.h"          // [DEBOGAGE TEMPORAIRE] Journal de redemarrage — voir boot_log.h
+#include "modules/boot_log.h"          // [DEBOGAGE TEMPORAIRE] Journal de redemarrage - voir boot_log.h
 #endif
 #ifdef TELNET_LOG_ENABLED
 #include "modules/telnet_log.h"        // Miroir UDP broadcast du moniteur série (YAT, etc.)
@@ -53,21 +53,21 @@ void setup() {
 
     systemHealth.begin();
 
-    // Montage LittleFS — doit être fait avant la connexion WiFi
+    // Montage LittleFS - doit être fait avant la connexion WiFi
     deviceStore.begin();
     deviceHistory.begin();
 
-    // NeoPixel d'etat — initialisee tot pour afficher le pulse bleu de demarrage
+    // NeoPixel d'etat - initialisee tot pour afficher le pulse bleu de demarrage
     // pendant toute la phase de connexion WiFi
     statusLed.begin();
     statusLed.setState(LedState::Boot);
 
-    // Scanner reseau — le mutex doit exister avant que le bouton BOOT (qui
+    // Scanner reseau - le mutex doit exister avant que le bouton BOOT (qui
     // peut declencher un scan) ne soit actif ; la tache de scan elle-meme
     // n'est lancee qu'a la demande (startScan())
     netScanner.begin();
 
-    // Bouton BOOT — appui court (scan) / maintien 3s (sauvegarde)
+    // Bouton BOOT - appui court (scan) / maintien 3s (sauvegarde)
     bootButton.begin({
         .onShortPress = [] {
 #ifdef BOOT_LOG_ENABLED
@@ -84,7 +84,7 @@ void setup() {
         },
     });
 
-    // Connexion WiFi — le callback est appelé une fois la connexion établie
+    // Connexion WiFi - le callback est appelé une fois la connexion établie
     // (ou en cas d'échec après WIFI_CONNECT_TIMEOUT millisecondes)
     wifiMgr.begin([](bool connected) {
         if (!connected) {
@@ -103,7 +103,7 @@ void setup() {
         dhcpSniffer.begin();
 
 #ifdef TELNET_LOG_ENABLED
-        // Miroir UDP broadcast du moniteur série — ouvrir un socket UDP sur
+        // Miroir UDP broadcast du moniteur série - ouvrir un socket UDP sur
         // le port 2323 dans YAT pour recevoir le log au lieu de l'USB. Doit
         // demarrer apres la connexion WiFi (necessite l'IP locale).
         telnetLog.begin(TELNET_LOG_PORT);
@@ -220,11 +220,11 @@ void setup() {
 
 void loop() {
 #ifdef BOOT_LOG_ENABLED
-    // Heartbeat + instantane periodique (RuntimeStats/WiFi) — voir boot_log.h
+    // Heartbeat + instantane periodique (RuntimeStats/WiFi) - voir boot_log.h
     bootLog.service();
 #endif
 
-    // Garde-fou mémoire — bascule en mode dégradé si le heap devient critique
+    // Garde-fou mémoire - bascule en mode dégradé si le heap devient critique
     // (voir modules/system_health.h) ; aucun redémarrage automatique.
     systemHealth.loop();
 
@@ -245,7 +245,7 @@ void loop() {
     webSrv.loop();
 #endif
 
-    // Surveillance continue (v1.0.0) — sweep ARP leger + drainage des rescans
+    // Surveillance continue (v1.0.0) - sweep ARP leger + drainage des rescans
     // differes, cadence interne geree par serviceMonitor() lui-meme
     netScanner.serviceMonitor();
 
@@ -253,12 +253,12 @@ void loop() {
     dhcpSniffer.loop();
 
 #ifdef TELNET_LOG_ENABLED
-    // Sans état en UDP — conservé pour l'API uniforme (no-op)
+    // Sans état en UDP - conservé pour l'API uniforme (no-op)
     telnetLog.loop();
 #endif
 
     // NetworkScanner n'a pas de loop() : il tourne en tâche FreeRTOS sur Core 0
-    // — on suit ses transitions ici pour piloter la LED d'etat
+    // - on suit ses transitions ici pour piloter la LED d'etat
     bool scanning = netScanner.isScanRunning();
     if (scanning && !_ledScanInProgress) {
         statusLed.setState(LedState::Scanning);

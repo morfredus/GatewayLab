@@ -17,12 +17,12 @@ void SystemHealth::loop() {
     if (!_degraded && freeHeap < HEAP_CRITICAL_BYTES) {
         _degraded = true;
         _reason   = "Memoire critique (" + String(freeHeap) + " octets libres)";
-        Log::e(TAG, "Mode degrade active — %s. Scans, notes et modifications refuses.", _reason.c_str());
+        Log::e(TAG, "Mode degrade active - %s. Scans, notes et modifications refuses.", _reason.c_str());
         return;
     }
 
     if (_degraded && freeHeap > (HEAP_CRITICAL_BYTES + HEAP_RECOVERY_MARGIN)) {
-        Log::i(TAG, "Mode degrade desactive — %u octets libres", (unsigned)freeHeap);
+        Log::i(TAG, "Mode degrade desactive - %u octets libres", (unsigned)freeHeap);
         _degraded = false;
         _reason   = "";
         return;

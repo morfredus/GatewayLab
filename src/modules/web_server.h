@@ -1,46 +1,46 @@
 /**
- * WebServerModule — Serveur HTTP et interface web de Gateway Lab
+ * WebServerModule - Serveur HTTP et interface web de Gateway Lab
  *
  * Routes exposées :
- *   GET  /             — Page d'accueil (HTML embarqué en PROGMEM)
- *   GET  /api/status   — État du système en JSON (WiFi, version, uptime...)
- *   GET  /api/devices  — Liste des équipements découverts + état du scan
- *   POST /api/scan     — Déclenchement d'un scan réseau
- *   POST /api/alias    — Definit l'alias utilisateur d'un equipement
- *   POST /api/devices/reset — RAZ des equipements connus (base vide)
- *   POST /api/devices/rescan — Rafraichit un seul equipement (parametre ip), asynchrone
- *   GET  /api/devices/rescan/status — Avancement de la passe precise en cours (polling)
- *   DELETE /api/history — Vide le journal chronologique
- *   GET  /history       — Page vue chronologique (HTML embarque en PROGMEM)
- *   GET  /topology      — Page topologie / cartographie reseau (HTML embarque en PROGMEM, vue simplifiee)
- *   GET  /api/history   — Journal chronologique des evenements en JSON
- *   GET  /api/backup    — Telechargement de la sauvegarde complete (JSON)
- *   POST /api/restore   — Restauration depuis une sauvegarde JSON
- *   GET  /api/devices/export.csv — Telechargement de l'inventaire au format CSV
- *   GET  /api/system/backup  — Sauvegarde des parametres de fonctionnement (JSON) :
+ *   GET  /             - Page d'accueil (HTML embarqué en PROGMEM)
+ *   GET  /api/status   - État du système en JSON (WiFi, version, uptime...)
+ *   GET  /api/devices  - Liste des équipements découverts + état du scan
+ *   POST /api/scan     - Déclenchement d'un scan réseau
+ *   POST /api/alias    - Definit l'alias utilisateur d'un equipement
+ *   POST /api/devices/reset - RAZ des equipements connus (base vide)
+ *   POST /api/devices/rescan - Rafraichit un seul equipement (parametre ip), asynchrone
+ *   GET  /api/devices/rescan/status - Avancement de la passe precise en cours (polling)
+ *   DELETE /api/history - Vide le journal chronologique
+ *   GET  /history       - Page vue chronologique (HTML embarque en PROGMEM)
+ *   GET  /topology      - Page topologie / cartographie reseau (HTML embarque en PROGMEM, vue simplifiee)
+ *   GET  /api/history   - Journal chronologique des evenements en JSON
+ *   GET  /api/backup    - Telechargement de la sauvegarde complete (JSON)
+ *   POST /api/restore   - Restauration depuis une sauvegarde JSON
+ *   GET  /api/devices/export.csv - Telechargement de l'inventaire au format CSV
+ *   GET  /api/system/backup  - Sauvegarde des parametres de fonctionnement (JSON) :
  *                              reseaux WiFi enregistres, luminosite NeoPixel, nom mDNS,
  *                              etat et frequence de la surveillance automatique
- *   POST /api/system/restore — Restauration des parametres de fonctionnement depuis une
+ *   POST /api/system/restore - Restauration des parametres de fonctionnement depuis une
  *                              sauvegarde JSON generee par /api/system/backup
- *   POST /api/favorite  — Marque/demarque un equipement comme favori
- *   POST /api/notes     — Ajoute une note datee a un equipement
- *   DELETE /api/notes   — Supprime une note d'un equipement (parametre ts)
- *   GET  /api/diagnostics — Heap/PSRAM/LittleFS + temps de scan moyens (JSON)
- *   GET  /api/led/brightness  — Luminosite NeoPixel courante (JSON)
- *   POST /api/led/brightness  — Definit la luminosite NeoPixel (parametre value, 0-100)
- *   GET  /wifi          — Page Parametres > Reseau WiFi (HTML embarque en PROGMEM)
- *   GET  /api/wifi      — Etat de connexion + reseaux enregistres (sans mots de passe)
- *   POST /api/wifi      — Ajoute ou met a jour un reseau (ssid + password)
- *   DELETE /api/wifi    — Supprime un reseau enregistre (parametre ssid)
- *   GET  /update       — Page de mise à jour OTA (formulaire upload)
- *   POST /update       — Réception et installation d'un firmware .bin
- *   POST /api/mobility — Force/efface la classification mobile/fixe d'un equipement
- *   GET  /api/network/health — Tableau de bord reseau (presents/connus, 24h, moins stables)
- *   GET  /api/monitor  — Etat de la surveillance continue (activee + frequence en minutes)
- *   POST /api/monitor  — Definit l'etat de la surveillance continue (parametres enabled, minutes 1-60)
- *   GET  /debug         — [DEBOGAGE TEMPORAIRE] Journal de redemarrage (raison + derniers logs)
- *   GET  /api/bootlog   — [DEBOGAGE TEMPORAIRE] Historique des boots en JSON (voir boot_log.h)
- *   DELETE /api/bootlog — [DEBOGAGE TEMPORAIRE] Vide l'historique des boots
+ *   POST /api/favorite  - Marque/demarque un equipement comme favori
+ *   POST /api/notes     - Ajoute une note datee a un equipement
+ *   DELETE /api/notes   - Supprime une note d'un equipement (parametre ts)
+ *   GET  /api/diagnostics - Heap/PSRAM/LittleFS + temps de scan moyens (JSON)
+ *   GET  /api/led/brightness  - Luminosite NeoPixel courante (JSON)
+ *   POST /api/led/brightness  - Definit la luminosite NeoPixel (parametre value, 0-100)
+ *   GET  /wifi          - Page Parametres > Reseau WiFi (HTML embarque en PROGMEM)
+ *   GET  /api/wifi      - Etat de connexion + reseaux enregistres (sans mots de passe)
+ *   POST /api/wifi      - Ajoute ou met a jour un reseau (ssid + password)
+ *   DELETE /api/wifi    - Supprime un reseau enregistre (parametre ssid)
+ *   GET  /update       - Page de mise à jour OTA (formulaire upload)
+ *   POST /update       - Réception et installation d'un firmware .bin
+ *   POST /api/mobility - Force/efface la classification mobile/fixe d'un equipement
+ *   GET  /api/network/health - Tableau de bord reseau (presents/connus, 24h, moins stables)
+ *   GET  /api/monitor  - Etat de la surveillance continue (activee + frequence en minutes)
+ *   POST /api/monitor  - Definit l'etat de la surveillance continue (parametres enabled, minutes 1-60)
+ *   GET  /debug         - [DEBOGAGE TEMPORAIRE] Journal de redemarrage (raison + derniers logs)
+ *   GET  /api/bootlog   - [DEBOGAGE TEMPORAIRE] Historique des boots en JSON (voir boot_log.h)
+ *   DELETE /api/bootlog - [DEBOGAGE TEMPORAIRE] Vide l'historique des boots
  *
  * Découplage via ScanProvider :
  *   WebServerModule ne connaît pas NetworkScanner directement.
@@ -97,12 +97,12 @@ public:
     // Démarrage du serveur HTTP sur le port spécifié
     void begin(uint16_t port = 80);
 
-    // Traitement des requêtes HTTP en attente — appeler dans loop()
+    // Traitement des requêtes HTTP en attente - appeler dans loop()
     void loop();
 
 private:
     // Enregistre une route en comptabilisant son appel dans BootLog::RuntimeStats
-    // (pagesServed pour les pages HTML, apiCalls pour /api/*) — voir boot_log.h.
+    // (pagesServed pour les pages HTML, apiCalls pour /api/*) - voir boot_log.h.
     // [DEBOGAGE TEMPORAIRE] : simple wrapper autour de _server.on(), a retirer
     // (revenir a des appels directs _server.on()) une fois le debogage termine.
     void _on(const char* path, HTTPMethod method, std::function<void()> handler);
