@@ -7,6 +7,13 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.9.6] - 2026-09-27
+
+### Removed
+
+- Two unreferenced images in `docs/pictures/` (`Gateway_Lab.png`,
+  `Ligne_decoupe_capture_ecran.png`): no document used them.
+
 ## [1.9.5] - 2026-09-27
 
 ### Changed
