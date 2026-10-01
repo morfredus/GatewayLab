@@ -7,6 +7,15 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.9.7] - 2026-10-01
+
+### Fixed
+
+- **Pinned the PlatformIO platform** to `espressif32@6.12.0` (was unpinned). A fresh
+  PlatformIO install pulls the latest platform (Arduino core 3.x / ESP-IDF 5), which broke
+  MeteoHub's build (changed ESP-NOW callback signature); same protection here, same pin as
+  MeteoHub and MeteoHubSensor. Build verified (flash 19 %).
+
 ## [1.9.6] - 2026-09-27
 
 ### Removed
