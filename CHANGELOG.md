@@ -7,6 +7,34 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.9.10] - 2026-10-03
+
+### Changed
+
+- **PlatformIO platform pinned to the official `espressif32@7.1.3`** (Arduino core 2.0.17).
+  Unpinned, `espressif32` resolves to a Tasmota fork whose `penv_setup.py` replaces the PlatformIO
+  core in `~/.platformio/penv` with pioarduino and swaps the Home front-end for a pioarduino one.
+  There is no official core 3.x platform: staying official means core 2.x. The source keeps
+  compiling on both cores (`ESP_ARDUINO_VERSION_MAJOR` guards).
+- Build verified on 7.1.3: `esp32s3_n16r8` flash 19.2 %. No more Windows "CreateProcess" command-line overflow
+  (the shorter `framework-arduinoespressif32` path of 7.1.x).
+- Not reflashed: the devices currently run builds made on the Tasmota platform (core 3.x).
+
+## [1.9.9] - 2026-10-03
+
+### Changed
+
+- `platformio.ini`: comment recording that the official PlatformIO platform is used and that
+  pioarduino is deliberately NOT used (flash 95 % instead of 66 %, corrupted PlatformIO cache).
+
+## [1.9.8] - 2026-10-03
+
+### Changed
+
+- **Unpinned the PlatformIO platform** (was `espressif32@6.12.0`) to stay aligned with
+  MeteoHub and MeteoHubSensor on Arduino core 3.x / ESP-IDF 5. Build verified (flash 16 %),
+  not flashed nor tested on hardware yet.
+
 ## [1.9.7] - 2026-10-01
 
 ### Fixed
