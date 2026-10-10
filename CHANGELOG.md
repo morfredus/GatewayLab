@@ -7,6 +7,57 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.10.1] - 2026-10-11
+
+### Fixed
+
+- The JavaScript/CSS fallback used when `rjsmin`/`rcssmin` are not installed was unsafe: it removed everything
+  after `//` (so `"http://..."` was truncated) and merged every line (so a line without a semicolon stuck
+  to the next one). Since the web resources are now generated at every build, a fresh clone without those
+  packages would have produced broken pages. The fallback is now `tools/webmin.py`, a dependency-free
+  minifier that reads the source like a lexer and returns it unchanged when it cannot read it safely
+  (`rjsmin`/`rcssmin` are still preferred when present).
+
+### Added
+
+- `tools/test_webmin.py`: runs 18 tricky JavaScript snippets in Node before and after minification and
+  compares the output, plus CSS and HTML structure checks.
+
+## [1.10.0] - 2026-10-11
+
+### Changed
+
+- The web resources are generated at every build. `tools/custom_hooks.py` is now listed in
+  `extra_scripts` (next to `tools/version.py`) and runs `tools/minify_web.py` before the
+  compilation; the build stops if the generation fails.
+- `tools/custom_hooks.py` rewritten: it never worked, and was never enabled. It hooked the `.elf`
+  link step (too late for the headers), called `python` from the PATH, and assigned
+  `env = Import("env")` (SCons returns nothing, so `env` became `None`). It now runs when the
+  script loads, with PlatformIO's own interpreter, UTF-8 forced for the child process.
+- `tools/minify_web.py` only writes a file when its content changes (otherwise every build would
+  touch the headers and recompile `web_server.cpp` and `network_scanner.cpp`), and writes the
+  source path with `/` on every OS (it was `web_src\index.html` on Windows).
+
+### Fixed
+
+- The `platformio.ini` comment and the docs said the generated headers were versioned in Git, which
+  did not match the intent: they are generated files. Comments and docs (`WARNINGS.md`,
+  `DEVELOPMENT.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md`, READMEs, `web_src/README.md`) now describe
+  the real workflow.
+
+### Removed
+
+- `include/web_interface*.h` and `include/oui_table.h` are no longer tracked: they are in
+  `.gitignore` and rebuilt by the first `pio run` of a fresh clone. Checked: regenerated files are
+  identical to the former ones, a clean build succeeds, a second build regenerates nothing and
+  recompiles nothing.
+
+### Added
+
+- `data/oui.json` is now tracked: it is the only source of the manufacturer table, and `data/` was
+  entirely ignored, so a fresh clone could not have rebuilt `oui_table.h`. The rest of `data/`
+  (`data/index.html`, a generated copy) stays ignored.
+
 ## [1.9.11] - 2026-10-03
 
 ### Fixed

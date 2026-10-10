@@ -36,7 +36,16 @@ temp/
 .arduino/
 arduino/
 hardware/
-data/
+
+# Dossier data/ : seule la SOURCE de la table des fabricants est versionnée ; data/index.html est
+# une copie générée par tools/minify_web.py (image LittleFS).
+data/*
+!data/oui.json
+
+# Ressources web générées à chaque compilation (tools/custom_hooks.py -> tools/minify_web.py).
+# Les sources versionnées sont web_src/ et data/oui.json.
+include/web_interface*.h
+include/oui_table.h
 
 # Fichiers compilés (binaires) pour le téléchargement
 *.hex

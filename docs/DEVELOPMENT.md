@@ -103,7 +103,8 @@ Leurs sources se trouvent dans `web_src/` : un fichier `.html` (markup), un
 fichier `.js` (script de la page) et un `styles.css` commun à toutes les
 pages. Un partiel partagé `web_src/menu.html` (la navigation commune) est
 inliné dans chaque page via le marqueur `<!-- include:menu.html -->`.
-Avant de compiler, il faut les transformer en headers C++ (`include/*.h`) :
+Elles sont transformées en headers C++ (`include/*.h`) **automatiquement avant chaque
+compilation** (voir plus bas). Pour les générer sans compiler :
 
 ```bash
 python tools/minify_web.py
@@ -124,25 +125,15 @@ sortie comme :
 OK
 ```
 
-## Automatisation de la génération des assets
+## Génération des assets web
 
-Par défaut, les assets web sont générés manuellement :
+Les assets web sont générés **à chaque compilation** : `tools/custom_hooks.py`, listé dans
+`extra_scripts` de `platformio.ini`, exécute `tools/minify_web.py` avant le build et interrompt la
+compilation si la génération échoue.
 
-```bash
-python tools/minify_web.py
-```
-
-Cette approche facilite le développement et permet de contrôler
-précisément les fichiers générés avant un commit.
-
-Une automatisation est disponible via :
-
-```ini
-extra_scripts = pre:tools/custom_hooks.py
-```
-
-Le hook exécute automatiquement `tools/minify_web.py` avant chaque build
-et interrompt la compilation si la génération échoue.
+Les en-têtes produits (`include/web_interface*.h`, `include/oui_table.h`) sont **ignorés par
+Git** : un clone neuf n'en contient pas, le premier `pio run` les crée. Seules les sources sont
+versionnées : `web_src/` et `data/oui.json`.
 
 ### Étape 4 - Compiler et flasher
 
@@ -408,9 +399,9 @@ débogage terminé. Pour la retirer entièrement :
 6. Supprimer `web_src/debug.html`, `web_src/debug.js` et l'entrée
    correspondante dans `tools/minify_web.py` (liste `PAGES`).
 7. Retirer le lien `<a href="/debug">Debug</a>` dans `web_src/menu.html`.
-8. Régénérer les headers (`python tools/minify_web.py`), qui supprimera
-   automatiquement `include/web_interface_debug.h` du build (le fichier
-   généré peut être supprimé manuellement).
+8. Recompiler (`pio run`) : les headers sont régénérés, mais l'ancien
+   `include/web_interface_debug.h` n'est pas supprimé tout seul. Le supprimer à la main
+   (il est ignoré par Git, donc sans conséquence pour le dépôt).
 
 Tous les ajouts liés à cette fonctionnalité sont signalés par le
 commentaire « DEBOGAGE TEMPORAIRE » dans le code, pour les repérer
@@ -456,9 +447,7 @@ Si vous souhaitez modifier le projet :
 ```
 1. Modifier web_src/*.html, web_src/*.js ou web_src/styles.css
            ↓
-2. python tools/minify_web.py    (régénère les headers C++)
-           ↓
-3. pio run --target upload       (compile et flashe)
+2. pio run --target upload       (régénère les headers C++, compile et flashe)
            ↓
 4. pio device monitor            (surveille les logs)
 ```
@@ -468,7 +457,7 @@ Si vous souhaitez modifier le projet :
   `web_src/*.html`, CSS dans `web_src/styles.css`, JavaScript dans
   `web_src/*.js` - jamais de `<style>` ou `<script>` inline dans le HTML
 - Ne jamais modifier les fichiers `include/web_interface*.h` à la main
-  (ils sont régénérés à chaque exécution de `minify_web.py`)
+  (ils sont régénérés à chaque compilation et ignorés par Git)
 - La version du firmware n'est définie qu'une seule fois, dans `platformio.ini`
 - En cas de perte des fichiers `web_src/`, `python tools/extract_web_sources.py
   --force` permet de les reconstruire (dans `web_src/extracted/`) à partir

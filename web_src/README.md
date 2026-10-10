@@ -113,6 +113,9 @@ a donc plus besoin de dupliquer ou de personnaliser ce bloc par page.
 
 ### 2. Régénérer les headers PROGMEM
 
+Automatique : `pio run` les régénère avant chaque compilation (`tools/custom_hooks.py`). Pour les
+générer sans compiler :
+
 ```bash
 python tools/minify_web.py
 ```
@@ -150,4 +153,4 @@ pio run --target upload
 ## Règle importante
 
 > **Ne jamais modifier directement les fichiers `include/web_interface*.h`.**
-> Ils sont générés automatiquement et seront écrasés au prochain `minify_web.py`.
+> Ils sont générés à chaque compilation, écrasés au prochain build, et ignorés par Git.

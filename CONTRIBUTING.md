@@ -43,13 +43,10 @@ After modifying:
 * data/oui.json
 * web_src/*.html
 
-run:
-
-```bash
-python tools/minify_web.py
-```
-
-before committing.
+just build (`pio run`): the web resources are generated before every compilation by
+`tools/custom_hooks.py`. The generated headers (`include/web_interface*.h`,
+`include/oui_table.h`) are ignored by Git: commit only the sources (`web_src/`,
+`data/oui.json`). To regenerate without building: `python tools/minify_web.py`.
 
 ## Philosophy
 

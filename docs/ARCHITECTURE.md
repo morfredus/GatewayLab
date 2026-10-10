@@ -452,9 +452,9 @@ Le scan réseau est sur le Core 0 pour co-localiser les appels lwIP (ARP, DNS, s
 
 | Objectif | Fichier(s) à modifier |
 |---|---|
-| Modifier l'interface web | `web_src/*.html` puis `python tools/minify_web.py` |
-| Modifier les styles | `web_src/styles.css` puis `python tools/minify_web.py` |
-| Ajouter un fabricant OUI | `data/oui.json` puis `python tools/minify_web.py` |
+| Modifier l'interface web | `web_src/*.html` puis `pio run` (les en-têtes sont régénérés) |
+| Modifier les styles | `web_src/styles.css` puis `pio run` |
+| Ajouter un fabricant OUI | `data/oui.json` puis `pio run` |
 | Modifier les timeouts | `include/app_config.h` |
 | Ajouter une box FAI | `src/modules/isp_detector.h` |
 | Ajouter un device UPnP | `src/modules/ssdp_scanner.cpp` (`_categorize()` ou `_enrich*()`) |

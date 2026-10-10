@@ -581,35 +581,53 @@ afin que le nouveau sous-réseau soit pris en compte.
 
 # Pipeline de génération
 
-## Headers générés versionnés
+## Headers générés, non versionnés
 
 Les fichiers :
 
 ```text
 include/web_interface.h
 include/web_interface_scan.h
+include/web_interface_history.h
+include/web_interface_wifi.h
+include/web_interface_topology.h
+include/web_interface_debug.h
 include/oui_table.h
 ```
 
-sont volontairement versionnés dans Git.
+sont **générés à chaque compilation** et **ignorés par Git** (voir `.gitignore`). Ils
+n'existent pas dans un clone neuf : le premier `pio run` les crée.
 
-Ils doivent être mis à jour après modification de :
+Les sources, elles, sont versionnées. Ce sont elles qu'on modifie :
 
 ```text
-web_src/index.html
-web_src/scan.html
-web_src/topology.html
+web_src/*.html
+web_src/*.js
+web_src/styles.css
 data/oui.json
 ```
 
+`data/oui.json` doit rester versionné : c'est la seule source de la table des fabricants. Le
+reste de `data/` (`data/index.html`) est une copie générée et reste ignoré.
+
 ---
 
-## Génération manuelle
+## Génération automatique
 
-Les scripts Python sont exécutés manuellement avant commit.
+Le script `tools/custom_hooks.py` est listé dans `extra_scripts` de `platformio.ini`, à côté de
+`tools/version.py`. Il lance `tools/minify_web.py` avant chaque compilation et **interrompt le
+build** si la génération échoue, plutôt que de compiler avec des pages périmées ou absentes.
 
-Le mécanisme `extra_scripts` de PlatformIO a été retiré pour garantir la portabilité
-et éviter certaines erreurs liées au contexte d'exécution SCons.
+Deux pièges à connaître :
+
+- Une section `platformio.ini` ne peut porter qu'**une seule** clé `extra_scripts` : les deux
+  scripts sont listés ensemble. Une seconde clé écraserait la première et `version.py` cesserait
+  de s'exécuter en silence.
+- Dans un script PlatformIO, écrire `Import("env")` seul. Écrire `env = Import("env")` met `env`
+  à `None` (SCons renvoie rien) : c'est la cause de l'ancienne erreur « contexte d'exécution SCons ».
+
+`minify_web.py` n'écrit un fichier que si son contenu change : sans cela, chaque build changerait
+la date des en-têtes et recompilerait `web_server.cpp` et `network_scanner.cpp`.
 
 ---
 

@@ -1,67 +1,63 @@
-"""
-custom_hooks.py
+"""custom_hooks.py - génère les ressources web avant CHAQUE compilation.
 
-Hook PlatformIO optionnel permettant d'automatiser la génération
-des ressources web avant la compilation du firmware.
+Ce que ça fait
+--------------
+Exécute tools/minify_web.py, qui produit à partir des sources versionnées :
 
-Fonctionnement :
-- Exécute tools/minify_web.py avant le build.
-- Génère les fichiers include/web_interface*.h.
-- Génère include/oui_table.h à partir de data/oui.json.
-- Interrompt la compilation en cas d'erreur.
+    web_src/*.html, *.js, styles.css  ->  include/web_interface*.h   (pages en PROGMEM)
+    data/oui.json                     ->  include/oui_table.h        (table des fabricants)
 
-Ce hook n'est pas activé pendant la phase de développement active.
-L'exécution manuelle reste privilégiée :
+Ces en-têtes ne sont PAS versionnés (ils sont ignorés par Git) : ils n'existent donc pas
+dans un clone neuf et se reconstruisent ici, à chaque `pio run`. Le build s'arrête si la
+génération échoue, plutôt que de compiler avec des pages périmées ou absentes.
 
-    python tools/minify_web.py
+Pourquoi à l'import du script, et pas dans une pré-action
+---------------------------------------------------------
+Un script `pre:` est exécuté par PlatformIO avant le début de la compilation : y lancer la
+génération garantit que les en-têtes existent AVANT que web_server.cpp et
+network_scanner.cpp ne les incluent. Une pré-action accrochée au .elf (version précédente
+de ce fichier) se déclenchait à l'édition de liens, donc trop tard.
 
-Activation :
-
-    extra_scripts = pre:tools/custom_hooks.py
-
-dans platformio.ini.
+Pourquoi sys.executable
+-----------------------
+La commande `python` du PATH peut ne pas exister ou pointer vers un autre interpréteur ;
+sys.executable est celui qui fait tourner PlatformIO. PYTHONIOENCODING force l'UTF-8 : le
+minificateur affiche des flèches que la console Windows (cp1252) ne sait pas écrire dans un tube.
 """
 
 import os
 import subprocess
-from SCons.Script import Import, ARGUMENTS  # type: ignore
+import sys
 
-# Récupération de l'environnement SCons
-env = Import("env")
+try:
+    Import("env")            # noqa: F821  (fourni par PlatformIO ; ne pas écrire « env = Import(...) »)
+except NameError:
+    raise SystemExit("Ce script doit être exécuté par PlatformIO (pio run).")
 
-def run_minify_script(source, target, env):
-    print("\n[⚡ PlatformIO Hook] Lancement STRICT avant compilation...")
-    
-    # Chemin vers ton script de minification
-    script_path = os.path.join(env['PROJECT_DIR'], "tools", "minify_web.py")
-    
-    if os.path.exists(script_path):
-        # Exécute minify_web.py avant la compilation.
-        # Le build est interrompu si une erreur est détectée.
-        result = subprocess.run(["python", script_path], capture_output=True, text=True)
-        
-        if result.returncode == 0:
-            print("[✅ Success] Minification terminée.\n")
-            if result.stdout:
-                print(result.stdout)
-        else:
-            print("[❌ Error] Erreur de minification :")
-            print(result.stderr)
-            env.Exit(1) # On stoppe TOUT si la minification échoue
-    else:
-        print(f"[❌ Error] Script introuvable : {script_path}\n")
+_PROJECT_DIR = env["PROJECT_DIR"]                                  # noqa: F821
+_SCRIPT = os.path.join(_PROJECT_DIR, "tools", "minify_web.py")
 
-# Exécute automatiquement la génération des fichiers web avant
-# la compilation du firmware.
-#
-# Cette étape produit les headers C++ à partir des fichiers
-# présents dans web_src/ et data/.
-#
-# Le hook est déclenché suffisamment tôt pour garantir que le
-# firmware utilise toujours les dernières versions générées.
-env.AddPreAction("$BUILD_DIR/${PROGNAME}.elf", run_minify_script)
+if not os.path.isfile(_SCRIPT):
+    raise SystemExit(f"Script de minification introuvable : {_SCRIPT}")
 
-# Variante possible :
-# Déclenchement à partir d'un fichier source précis.
-# Conservée ici uniquement comme référence.
-# env.AddPreAction("src/main.cpp", run_minify_script)
+_result = subprocess.run(
+    [sys.executable, _SCRIPT],
+    cwd=_PROJECT_DIR,
+    capture_output=True,
+    text=True,
+    encoding="utf-8",
+    errors="replace",
+    env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+)
+
+if _result.returncode != 0:
+    # Sortie complète seulement en cas d'échec ; la console Windows peut refuser certains
+    # caractères, d'où le remplacement plutôt qu'une exception qui masquerait la vraie erreur.
+    for _stream in (_result.stdout, _result.stderr):
+        sys.stdout.write((_stream or "").encode("ascii", "replace").decode("ascii"))
+    raise SystemExit("La génération des ressources web a échoué (tools/minify_web.py) : build interrompu.")
+
+_written = _result.stdout.count("(ecrit)")
+_same = _result.stdout.count("(inchange)")
+# ASCII seulement : la console Windows (cp1252) abîme les accents dans la sortie de PlatformIO.
+print(f"Ressources web : {_written} fichier(s) regenere(s), {_same} inchange(s)")

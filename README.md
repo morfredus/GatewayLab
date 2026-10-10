@@ -2,7 +2,7 @@
 
 *Read in another language: **English** (this document) · [Français](README.fr.md).*
 
-![Version](https://img.shields.io/badge/version-1.9.11-blue)
+![Version](https://img.shields.io/badge/version-1.10.1-blue)
 ![Platform](https://img.shields.io/badge/platform-ESP32--S3-orange)
 ![Framework](https://img.shields.io/badge/framework-Arduino%20%2F%20PlatformIO-00979D)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -105,7 +105,7 @@ Detailed guide: [INSTALLATION.md](INSTALLATION.md) · Developer guide: [docs/DEV
 - HTML only in `web_src/*.html` (never an inline `<style>` or `<script>`)
 - JavaScript only in `web_src/*.js`
 - Versioning only in `platformio.ini` via `PROJECT_VERSION`
-- After any change to `web_src/` or `data/oui.json` → re-run `python tools/minify_web.py`
+- After any change to `web_src/` or `data/oui.json` → just build: `pio run` regenerates the (git-ignored) headers
 
 Full web pipeline and project structure: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
