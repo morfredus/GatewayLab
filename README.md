@@ -2,7 +2,7 @@
 
 *Read in another language: **English** (this document) · [Français](README.fr.md).*
 
-![Version](https://img.shields.io/badge/version-1.10.1-blue)
+![Version](https://img.shields.io/badge/version-1.10.2-blue)
 ![Platform](https://img.shields.io/badge/platform-ESP32--S3-orange)
 ![Framework](https://img.shields.io/badge/framework-Arduino%20%2F%20PlatformIO-00979D)
 ![License](https://img.shields.io/badge/license-MIT-green)

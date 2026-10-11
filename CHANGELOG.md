@@ -7,6 +7,13 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.10.2] - 2026-10-11
+
+### Fixed
+
+- `/status` now publishes `metrics` (`free_heap_b`, `free_block_b`) like MeteoHub, so morfMonitor
+  can plot GatewayLab's heap curve on its Diagnostic page.
+
 ## [1.10.1] - 2026-10-11
 
 ### Fixed

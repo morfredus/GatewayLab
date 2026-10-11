@@ -99,10 +99,17 @@ void WebServerModule::begin(uint16_t port) {
     // compatible morfbeacon/1, qui rend GatewayLab lisible par un observateur
     // du parc exactement comme un service Linux ou Windows.
     _on("/status",     HTTP_GET,  [this]() {
+        // Metriques de sante VOLATILES (comme MeteoHub) : morfMonitor en tire la
+        // courbe heap sur 48 h. Le declin de free_block_b annonce une fragmentation
+        // avant le figeage ; uptime_s est deja emis par buildStatusJson.
+        char metrics[80];
+        snprintf(metrics, sizeof(metrics),
+                 "{\"free_heap_b\":%u,\"free_block_b\":%u}",
+                 (unsigned)ESP.getFreeHeap(), (unsigned)ESP.getMaxAllocHeap());
         _server.send(200, "application/json",
                      morfbeacon::buildStatusJson(presence, "/", "GatewayLab",
                                                  "Inventaire et topologie du reseau local.",
-                                                 String(),                       // metrics : deja dans le heartbeat
+                                                 String(metrics),                // metrics de sante (heap)
                                                  FPSTR(GATEWAYLAB_API_JSON)));    // api offerte au parc
     });
     _on("/api/status", HTTP_GET,  [this]() { _handleApiStatus(); });
