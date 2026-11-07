@@ -2,7 +2,7 @@
 
 *Lire dans une autre langue : [English](README.md) · **Français** (ce document).*
 
-![Version](https://img.shields.io/badge/version-1.10.2-blue)
+![Version](https://img.shields.io/badge/version-1.11.0-blue)
 ![Platform](https://img.shields.io/badge/platform-ESP32--S3-orange)
 ![Framework](https://img.shields.io/badge/framework-Arduino%20%2F%20PlatformIO-00979D)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -60,6 +60,35 @@ Vue simplifiée de la passerelle, des points d'accès détectés et des équipem
 Configuration WiFi, surveillance automatique, NeoPixel d'état, sauvegarde/restauration, OTA et état système.
 
 ![Système](docs/pictures/Gateway_Lab_Systeme.png)
+
+---
+
+## Sécuriser la carte (jeton optionnel)
+
+Par défaut, la carte accepte les mises à jour du firmware et les changements de Wi-Fi de n'importe quel
+poste du réseau local. Pour les protéger, ajouter cette ligne à `include/secrets.h` (jamais versionné) :
+
+```cpp
+#define GATEWAYLAB_AUTH_TOKEN "une-longue-chaine-aleatoire"
+```
+
+Avec le jeton défini :
+
+- la mise à jour web du firmware (`/update`), la modification des réseaux Wi-Fi, la restauration des
+  paramètres, la restauration de l'inventaire et le redémarrage exigent l'en-tête `X-Auth-Token`
+  (l'interface web demande le jeton une fois par onglet) ;
+- ArduinoOTA utilise la même chaîne comme mot de passe (ajouter `--auth=une-longue-chaine-aleatoire`
+  aux `upload_flags` de l'environnement PlatformIO pour les envois sans fil) ; un
+  `GATEWAYLAB_OTA_PASSWORD` distinct peut le remplacer pour ArduinoOTA seulement ;
+- la sauvegarde des paramètres contient les mots de passe Wi-Fi uniquement sur demande (`?full=1`)
+  avec un jeton valide.
+
+Sans jeton, le comportement précédent est conservé, un avertissement est écrit dans le journal à chaque
+démarrage, la sauvegarde des paramètres ne liste que les SSID (aucun mot de passe) et la restauration des
+paramètres ignore les réseaux Wi-Fi. Dans tous les cas, toute requête d'écriture (POST, PUT, PATCH, DELETE)
+dont l'en-tête `Origin` diffère de l'en-tête `Host` est refusée avec `403 cross_origin_forbidden` : une page
+web visitée depuis le LAN ne peut pas agir sur la carte. Les scripts et outils qui n'envoient pas
+d'en-tête `Origin` ne sont pas concernés.
 
 ---
 

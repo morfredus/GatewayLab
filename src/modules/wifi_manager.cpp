@@ -20,6 +20,7 @@
 #include <ArduinoJson.h>
 #include "app_config.h"    // WIFI_CONNECT_TIMEOUT, MDNS_HOSTNAME, ENABLE_MDNS
 #include "../utils/logger.h"
+#include "../utils/request_guard.h"   // controle d'origine (CSRF) du portail
 
 // secrets.h est optionnel : seul DEFAULT_WIFI_SSID/PASSWORD y est défini,
 // utilisé uniquement en développement quand aucun réseau n'est en NVS.
@@ -36,9 +37,25 @@ static const IPAddress AP_IP(192, 168, 4, 1);
 // Instance interne de WiFiMulti - non exposée hors de ce fichier
 static WiFiMulti _multi;
 
-// Délai minimum entre deux tentatives de reconnexion automatique
+// Reconnexion automatique (mode station) : délai PROGRESSIF entre deux tentatives. Un routeur
+// qui redémarre met souvent plusieurs minutes : marteler toutes les 30 s ne sert à rien et
+// la tentative de WiFiMulti::run() bloque la boucle principale quelques secondes à chaque fois.
+// 30 s -> 60 s -> 120 s -> 240 s -> plafond 300 s ; remis à 30 s dès que la connexion revient.
 static constexpr unsigned long RECONNECT_DEBOUNCE_MS = 30000;
+static constexpr unsigned long RECONNECT_MAX_MS      = 300000;
+static unsigned long _reconnectDelayMs     = RECONNECT_DEBOUNCE_MS;
 static unsigned long _lastReconnectAttempt = 0;
+
+// Portail de configuration (mode AP) : après un échec au boot, le portail ne doit pas rester
+// définitif (coupure de courant de la box au redémarrage de la carte, par exemple). Le WiFi
+// est retenté en arrière-plan avec un délai croissant : 2, 5 puis 10 minutes (plafond).
+static constexpr unsigned long AP_RETRY_DELAYS_MS[] = {120000UL, 300000UL, 600000UL};
+static constexpr size_t        AP_RETRY_STEPS = sizeof(AP_RETRY_DELAYS_MS) / sizeof(AP_RETRY_DELAYS_MS[0]);
+static size_t        _apRetryStep   = 0;
+static unsigned long _apNextRetryAt = 0;
+// Quand un client est connecté au portail (quelqu'un saisit son WiFi), on repousse la tentative
+// pour ne pas lui couper la page en pleine saisie.
+static constexpr unsigned long AP_RETRY_BUSY_DEFER_MS = 30000;
 
 // Callback conservé pour le rappeler lors d'une reconnexion automatique
 static WiFiManager::Callback _storedCb;
@@ -123,6 +140,16 @@ bool WiFiManager::removeNetwork(const String& ssid) {
     return _saveNetworks(list);
 }
 
+// Réseaux à essayer : NVS d'abord (portail web), valeurs de développement de secrets.h
+// seulement si la NVS est vide. Partagé par begin() et par les nouvelles tentatives du portail.
+static std::vector<WifiCredential> _collectNetworks() {
+    std::vector<WifiCredential> networks = _loadNetworks();
+#ifdef DEFAULT_WIFI_SSID
+    if (networks.empty()) networks.push_back({DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASSWORD});
+#endif
+    return networks;
+}
+
 // ---------------------------------------------------------------------------
 // Portail de configuration - page HTML servie en mode point d'accès
 // Page volontairement autonome (CSS inline) : indépendante du pipeline
@@ -197,18 +224,30 @@ static void _portalHandleRoot() {
 // proposer une liste déroulante plutôt qu'une saisie manuelle uniquement
 static void _portalHandleScan() {
     int n = WiFi.scanNetworks();
-    String json = "[";
+    // ArduinoJson échappe les guillemets, antislashs et caractères de contrôle d'un SSID :
+    // la concaténation à la main produisait un JSON invalide (donc une liste vide) pour un
+    // réseau nommé par exemple « Chez "Paul" ».
+    JsonDocument doc;
+    JsonArray arr = doc.to<JsonArray>();
     for (int i = 0; i < n; i++) {
-        if (i) json += ",";
-        json += "{\"ssid\":\"" + WiFi.SSID(i) + "\",\"rssi\":" + String(WiFi.RSSI(i)) + "}";
+        JsonObject o = arr.add<JsonObject>();
+        o["ssid"] = WiFi.SSID(i);
+        o["rssi"] = WiFi.RSSI(i);
     }
-    json += "]";
+    WiFi.scanDelete();   // libère les résultats du scan (RAM)
+    String json;
+    serializeJson(doc, json);
     _portal.send(200, "application/json", json);
 }
 
 // Enregistrement des identifiants saisis puis redémarrage - au prochain
 // boot, begin() trouvera le réseau en NVS (priorité 1) et s'y connectera
 static void _portalHandleSave() {
+    // CSRF : une page web visitée par un client connecté au portail ne peut pas y écrire un réseau
+    if (!reqguard::originAllowed(_portal.header("Origin").c_str(), _portal.hostHeader().c_str())) {
+        _portal.send(403, "application/json", "{\"error\":\"cross_origin_forbidden\"}");
+        return;
+    }
     String ssid     = _portal.arg("ssid");
     String password = _portal.arg("password");
     if (ssid.isEmpty()) {
@@ -242,7 +281,12 @@ static void _startPortal() {
     _portal.on("/scan", HTTP_GET,  _portalHandleScan);
     _portal.on("/save", HTTP_POST, _portalHandleSave);
     _portal.onNotFound(_portalHandleNotFound);
+    static const char* kPortalHeaders[] = {"Origin"};
+    _portal.collectHeaders(kPortalHeaders, 1);
     _portal.begin();
+
+    _apRetryStep   = 0;
+    _apNextRetryAt = millis() + AP_RETRY_DELAYS_MS[0];
 
     Log::i(TAG, "Portail de configuration actif - SSID \"%s\" - http://%s",
            AP_SSID, AP_IP.toString().c_str());
@@ -263,36 +307,95 @@ static void _startMdns() {
 // Connexion STA - enregistre tous les réseaux fournis et attend jusqu'au
 // timeout configuré ; WiFiMulti choisit celui au signal le plus fort
 // ---------------------------------------------------------------------------
-static bool _tryConnect(const std::vector<WifiCredential>& networks) {
-    WiFi.mode(WIFI_STA);
+// WiFiMulti::addAP() n'évite pas les doublons : sans ce filtre, chaque nouvelle tentative du
+// portail ajouterait une seconde fois les mêmes réseaux à la liste.
+static void _addApOnce(const WifiCredential& c) {
+    static std::vector<String> known;
+    String key = c.ssid + '\n' + c.password;
+    for (const auto& k : known) if (k == key) return;
+    known.push_back(key);
+    _multi.addAP(c.ssid.c_str(), c.password.c_str());
+}
+
+// keepPortal = true : tentative faite pendant que le portail est actif (mode AP+STA). Le
+// portail et le DNS captif continuent d'être servis pendant l'attente au lieu d'être gelés.
+static bool _tryConnect(const std::vector<WifiCredential>& networks, bool keepPortal = false) {
+    WiFi.mode(keepPortal ? WIFI_AP_STA : WIFI_STA);
     for (const auto& c : networks) {
-        _multi.addAP(c.ssid.c_str(), c.password.c_str());
+        _addApOnce(c);
     }
 
     Log::i(TAG, "Connexion en cours...");
     unsigned long start = millis();
     while (_multi.run() != WL_CONNECTED &&
            millis() - start < WIFI_CONNECT_TIMEOUT) {
-        delay(500);
+        if (keepPortal) {
+            // 10 x 50 ms = 500 ms, comme le delay(500) du mode normal, mais portail vivant
+            for (int i = 0; i < 10; i++) {
+                _dns.processNextRequest();
+                _portal.handleClient();
+                delay(50);
+            }
+        } else {
+            delay(500);
+        }
         Serial.print('.');
     }
     Serial.println();
     return WiFi.isConnected();
 }
 
+// Nouvelle tentative de connexion depuis le portail : bascule en mode station si un réseau
+// connu est (re)apparu. Appelée par loop() en mode AP.
+static void _portalRetryTick() {
+    unsigned long now = millis();
+    if ((long)(now - _apNextRetryAt) < 0) return;
+
+    // Quelqu'un est connecté au portail : ne pas lui couper la page, repousser.
+    if (WiFi.softAPgetStationNum() > 0) {
+        _apNextRetryAt = now + AP_RETRY_BUSY_DEFER_MS;
+        return;
+    }
+
+    std::vector<WifiCredential> networks = _collectNetworks();
+    if (!networks.empty()) {
+        Log::i(TAG, "Portail actif - nouvelle tentative de connexion WiFi...");
+        if (_tryConnect(networks, true)) {
+            Log::i(TAG, "Réseau retrouvé : \"%s\" - IP %s - fermeture du portail",
+                   WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());
+            _dns.stop();
+            _portal.stop();
+            WiFi.softAPdisconnect(true);   // coupe le point d'accès, garde la station
+            WiFi.mode(WIFI_STA);
+            _apMode = false;
+            _wasConnected = true;
+            _reconnectDelayMs = RECONNECT_DEBOUNCE_MS;
+            _startMdns();
+            // Mêmes services que lors d'une connexion réussie au boot (web, NTP, OTA...) :
+            // leurs begin() sont idempotents, ils sont déjà rappelés à chaque reconnexion.
+            if (_storedCb) _storedCb(true);
+            return;
+        }
+        // Echec : on reste en portail seul (la tentative a pu laisser le mode AP+STA)
+        WiFi.disconnect(false);
+        WiFi.mode(WIFI_AP);
+    }
+
+    // Prochain essai plus tard : 2 min, 5 min, puis toutes les 10 min.
+    if (_apRetryStep + 1 < AP_RETRY_STEPS) _apRetryStep++;
+    _apNextRetryAt = millis() + AP_RETRY_DELAYS_MS[_apRetryStep];
+}
+
 void WiFiManager::begin(Callback cb) {
     _storedCb = cb;
 
-    // Priorité 1 : réseaux enregistrés en NVS (configurés via le portail web)
-    std::vector<WifiCredential> networks = _loadNetworks();
-
-    // Priorité 2 : valeurs de développement (include/secrets.h), seulement
-    // si aucun réseau n'a encore été configuré par l'utilisateur
+    // Priorité 1 : réseaux enregistrés en NVS (configurés via le portail web).
+    // Priorité 2 : valeurs de développement (include/secrets.h), seulement si aucun réseau
+    // n'a encore été configuré par l'utilisateur.
+    std::vector<WifiCredential> networks = _collectNetworks();
 #ifdef DEFAULT_WIFI_SSID
-    if (networks.empty()) {
-        networks.push_back({DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASSWORD});
+    if (_loadNetworks().empty() && !networks.empty())
         Log::i(TAG, "Aucun réseau en NVS - utilisation de DEFAULT_WIFI_SSID (secrets.h)");
-    }
 #endif
 
     if (!networks.empty() && _tryConnect(networks)) {
@@ -314,6 +417,7 @@ void WiFiManager::loop() {
     if (_apMode) {
         _dns.processNextRequest();
         _portal.handleClient();
+        _portalRetryTick();   // le portail n'est pas définitif : retente le WiFi avec backoff
         return;
     }
 
@@ -322,12 +426,16 @@ void WiFiManager::loop() {
     if (!connected) {
         unsigned long now = millis();
         // Tentative de reconnexion seulement si le délai de debounce est écoulé
-        if (now - _lastReconnectAttempt >= RECONNECT_DEBOUNCE_MS) {
+        if (now - _lastReconnectAttempt >= _reconnectDelayMs) {
             _lastReconnectAttempt = now;
-            Log::w(TAG, "WiFi perdu - tentative de reconnexion...");
+            const unsigned long next = min(_reconnectDelayMs * 2, RECONNECT_MAX_MS);
+            Log::w(TAG, "WiFi perdu - tentative de reconnexion (suivante dans %lu s)...",
+                   next / 1000);
             _multi.run();   // Retourne immédiatement, la connexion est async
+            _reconnectDelayMs = next;   // backoff progressif
         }
     } else if (!_wasConnected) {
+        _reconnectDelayMs = RECONNECT_DEBOUNCE_MS;   // connexion rétablie : backoff remis à zéro
         // Transition déconnecté → connecté : relancer mDNS et tous les services
         Log::i(TAG, "WiFi rétabli sur \"%s\" - IP %s",
                WiFi.SSID().c_str(), WiFi.localIP().toString().c_str());

@@ -14,6 +14,10 @@
  *   - loop() surveille la connexion (mode normal) ou sert le portail
  *     (mode point d'accès) - appeler sans interruption.
  *
+ * Le portail n'est pas définitif : tant qu'il est actif, loop() retente la connexion aux réseaux
+ * connus (après 2, 5 puis toutes les 10 minutes) et repasse en mode station si l'un d'eux
+ * réapparaît. En mode station, la reconnexion automatique espace ses essais (30 s à 5 min).
+ *
  * Portabilité : dépend uniquement de secrets.h (optionnel) et app_config.h.
  */
 

@@ -6,8 +6,48 @@ fetch('/api/status').then(function(r) { return r.json(); }).then(function(d) {
   }
 }).catch(function() {});
 
+// ── Jeton d'administration (optionnel) ─────────────────────────────────
+// Si le firmware est compilé avec GATEWAYLAB_AUTH_TOKEN, les actions sensibles (réseaux Wi-Fi,
+// restauration, redémarrage, mise à jour) exigent le jeton dans l'en-tête X-Auth-Token. Il est
+// demandé une fois, puis gardé pour l'onglet seulement (sessionStorage).
+var authRequired = false;
+
+function storedToken() {
+  try { return sessionStorage.getItem('glToken') || ''; } catch (e) { return ''; }
+}
+
+function forgetToken() {
+  try { sessionStorage.removeItem('glToken'); } catch (e) {}
+}
+
+// Options fetch avec l'en-tête du jeton (demandé au besoin). Sans jeton requis : inchangées.
+function authOpts(opts) {
+  opts = opts || {};
+  var token = '';
+  if (authRequired) {
+    token = storedToken();
+    if (!token) {
+      token = window.prompt("Jeton d'administration requis :") || '';
+      if (token) { try { sessionStorage.setItem('glToken', token); } catch (e) {} }
+    }
+  }
+  opts.headers = token ? { 'X-Auth-Token': token } : {};
+  return opts;
+}
+
+// Un 401 signifie « jeton absent ou faux » : l'oublier pour le redemander à la prochaine action.
+function checkAuth(r) {
+  if (r.status === 401) { forgetToken(); throw new Error('auth'); }
+  return r;
+}
+
+function netError(err) {
+  return err && err.message === 'auth' ? 'Jeton refusé.' : 'Erreur réseau.';
+}
+
 function refreshWifiStatus() {
   fetch('/api/wifi', { cache: 'no-store' }).then(function(r) { return r.json(); }).then(function(d) {
+    authRequired = !!d.authRequired;
     var badge = document.getElementById('status-badge');
     badge.textContent = d.connected ? 'Connecté' : 'Déconnecté';
     badge.className = 'badge ' + (d.connected ? 'badge-ok' : 'badge-warn');
@@ -43,7 +83,8 @@ function renderNetworks(networks) {
   list.querySelectorAll('.alias-edit').forEach(function(btn) {
     btn.addEventListener('click', function() {
       if (!confirm('Supprimer le réseau "' + btn.dataset.ssid + '" ?')) return;
-      fetch('/api/wifi?ssid=' + encodeURIComponent(btn.dataset.ssid), { method: 'DELETE' })
+      fetch('/api/wifi?ssid=' + encodeURIComponent(btn.dataset.ssid), authOpts({ method: 'DELETE' }))
+        .then(checkAuth)
         .then(function(r) { return r.json(); })
         .then(function() { refreshWifiStatus(); })
         .catch(function() {});
@@ -72,7 +113,8 @@ document.getElementById('wifi-form').addEventListener('submit', function(e) {
   fd.append('ssid', ssid);
   fd.append('password', password);
 
-  fetch('/api/wifi', { method: 'POST', body: fd })
+  fetch('/api/wifi', authOpts({ method: 'POST', body: fd }))
+    .then(checkAuth)
     .then(function(r) { return r.json(); })
     .then(function(d) {
       if (d.status === 'ok') {
@@ -85,9 +127,9 @@ document.getElementById('wifi-form').addEventListener('submit', function(e) {
         msg.textContent = 'Erreur : ' + (d.error || 'inconnue');
       }
     })
-    .catch(function() {
+    .catch(function(err) {
       msg.style.color = '#ef4444';
-      msg.textContent = 'Erreur réseau.';
+      msg.textContent = netError(err);
     });
 });
 
@@ -141,6 +183,30 @@ document.getElementById('monitor-enabled').addEventListener('change', saveMonito
 document.getElementById('monitor-interval').addEventListener('change', saveMonitor);
 
 // ── Sauvegarde / Restauration des paramètres ───────────────────────────
+// Sauvegarde : sans jeton configuré, le lien « Sauvegarde » télécharge les SSID seuls. Avec un
+// jeton, la sauvegarde complète (mots de passe WiFi inclus) est demandée avec l'en-tête du jeton.
+document.getElementById('backup-btn').addEventListener('click', function(e) {
+  if (!authRequired) return;   // comportement du lien : SSID seuls
+  e.preventDefault();
+  var msg = document.getElementById('restore-msg');
+  fetch('/api/system/backup?full=1', authOpts({ cache: 'no-store' }))
+    .then(checkAuth)
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'gatewaylab-settings.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
+    })
+    .catch(function(err) {
+      msg.style.display = 'block';
+      msg.textContent = netError(err);
+    });
+});
+
 function triggerRestore() {
   document.getElementById('restore-file').click();
 }
@@ -153,16 +219,23 @@ document.getElementById('restore-file').addEventListener('change', function() {
   reader.onload = function() {
     msg.style.display = 'block';
     msg.textContent = 'Restauration des paramètres en cours...';
-    fetch('/api/system/restore', { method: 'POST', body: reader.result })
+    fetch('/api/system/restore', authOpts({ method: 'POST', body: reader.result }))
+      .then(checkAuth)
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        msg.textContent = d.status === 'ok'
-          ? 'Paramètres restaurés (' + d.networksRestored + ' réseau(x) WiFi).'
-          : 'Erreur : ' + (d.error || 'inconnue');
+        if (d.status === 'ok') {
+          msg.textContent = 'Paramètres restaurés (' + d.networksRestored + ' réseau(x) WiFi).';
+          if (d.networksSkipped) {
+            msg.textContent += ' ' + d.networksSkipped + ' réseau(x) ignoré(s) : un jeton' +
+              " d'administration est requis pour restaurer des réseaux WiFi.";
+          }
+        } else {
+          msg.textContent = 'Erreur : ' + (d.error || 'inconnue');
+        }
         refreshLedBrightness();
         refreshMonitor();
       })
-      .catch(function() { msg.textContent = 'Erreur de connexion.'; });
+      .catch(function(err) { msg.textContent = err && err.message === 'auth' ? 'Jeton refusé.' : 'Erreur de connexion.'; });
   };
   reader.readAsText(input.files[0], 'UTF-8');
   input.value = '';
@@ -201,8 +274,11 @@ function refreshHealth() {
 
 document.getElementById('restart-btn').addEventListener('click', function() {
   if (!confirm('Redémarrer Gateway Lab maintenant ?')) return;
-  fetch('/api/system/restart', { method: 'POST' }).catch(function() {});
-  document.getElementById('health-msg').textContent = 'Redémarrage en cours…';
+  var hm = document.getElementById('health-msg');
+  fetch('/api/system/restart', authOpts({ method: 'POST' }))
+    .then(checkAuth)
+    .then(function() { hm.textContent = 'Redémarrage en cours…'; })
+    .catch(function(err) { hm.textContent = err && err.message === 'auth' ? 'Jeton refusé.' : 'Redémarrage en cours…'; });
 });
 
 // ── Mise à jour du firmware (ex page OTA) ──────────────────────────────
@@ -215,6 +291,15 @@ document.getElementById('ota-form').addEventListener('submit', function(e) {
   var submitBtn = e.target.querySelector('button[type="submit"]');
   if (!file) {
     msg.textContent = 'Aucun fichier sélectionné.';
+    return;
+  }
+
+  // Le jeton est demandé AVANT d'envoyer le binaire (plusieurs centaines de Ko) : refuser après
+  // le transfert ferait perdre du temps pour rien.
+  var otaHeaders = authOpts({}).headers;
+  if (authRequired && !otaHeaders['X-Auth-Token']) {
+    msg.style.color = '#ef4444';
+    msg.textContent = "Jeton d'administration requis.";
     return;
   }
 
@@ -237,6 +322,7 @@ document.getElementById('ota-form').addEventListener('submit', function(e) {
   };
   xhr.onload = function() {
     bar.style.width = '100%';
+    if (xhr.status === 401) forgetToken();
     if (xhr.status === 200 && xhr.responseText.indexOf('FAIL') === -1) {
       msg.style.color = '#10b981';
       msg.textContent = 'Firmware vérifié - redémarrage en cours…';
@@ -255,6 +341,7 @@ document.getElementById('ota-form').addEventListener('submit', function(e) {
     submitBtn.disabled = false;
   };
   xhr.open('POST', '/update');
+  if (otaHeaders['X-Auth-Token']) xhr.setRequestHeader('X-Auth-Token', otaHeaders['X-Auth-Token']);
   xhr.send(fd);
 });
 

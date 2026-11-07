@@ -18,3 +18,14 @@
 
 #define DEFAULT_WIFI_SSID     "MonWifi"
 #define DEFAULT_WIFI_PASSWORD "MonMotDePasse"
+
+// --- Protection de la carte (OPTIONNEL) ------------------------------------
+// Sans cette ligne, OTA, /update et reglages Wi-Fi sont ouverts a tout le reseau local
+// (un avertissement est ecrit dans le journal a chaque demarrage). Avec elle :
+//   - ArduinoOTA exige ce mot de passe (pio : --auth=<jeton> dans upload_flags) ;
+//   - /update, restauration, redemarrage et modification des reseaux Wi-Fi exigent
+//     l'en-tete HTTP X-Auth-Token ; l'interface web le demande une fois par onglet ;
+//   - la sauvegarde ?full=1 inclut les mots de passe Wi-Fi.
+// GATEWAYLAB_OTA_PASSWORD (facultatif) remplace le jeton pour ArduinoOTA seulement.
+// #define GATEWAYLAB_AUTH_TOKEN "une-longue-chaine-aleatoire"
+// #define GATEWAYLAB_OTA_PASSWORD "mot-de-passe-ota"

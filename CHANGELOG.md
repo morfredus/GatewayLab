@@ -7,6 +7,40 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ## [Non publié]
 
+## [1.11.0] - 2026-11-07
+
+### Security
+
+- Optional administration token: defining `GATEWAYLAB_AUTH_TOKEN` in `include/secrets.h` sets the
+  ArduinoOTA password (`GATEWAYLAB_OTA_PASSWORD` can override it) and requires the `X-Auth-Token` header
+  on `/update`, `/api/system/restore`, `/api/restore`, `/api/system/restart` and Wi-Fi network changes.
+  Without it the previous behaviour is kept and a warning is logged at every boot. The web interface asks
+  for the token once per tab.
+- `/api/system/backup` no longer returns Wi-Fi passwords by default (SSIDs only). Passwords are included
+  only with `?full=1` and a valid token. `/api/system/restore` ignores Wi-Fi networks unless a token is
+  configured and valid.
+- CSRF protection on every write route (web server and Wi-Fi portal): a request whose `Origin` differs
+  from `Host` gets `403 cross_origin_forbidden`. Clients without an `Origin` header are unaffected.
+
+### Fixed
+
+- The Wi-Fi configuration portal is no longer permanent: after a failed boot connection the known
+  networks are retried in the background (2, 5, then every 10 minutes, deferred while someone is connected
+  to the portal) and the board switches back to station mode when one reappears.
+- Wi-Fi reconnection now backs off progressively (30 s up to 5 min) instead of retrying every 30 s.
+- The portal network list is built with ArduinoJson, so SSIDs containing quotes or backslashes no longer
+  break the JSON.
+- `POST /api/restore` answers `409` while a scan is running (and `NetworkScanner::restoreFromJson`
+  refuses) instead of replacing the device list under the scan task.
+- Settings restore clamps the LED brightness to 0-100.
+- Web OTA: nothing is written when `Update.begin` fails, `Update.abort()` is called on any failure or
+  interrupted transfer, and the board no longer restarts after a failed update.
+
+### Added
+
+- `pio test -e native`: host-side unit test of the origin check and token comparison
+  (`src/utils/request_guard.h`).
+
 ## [1.10.2] - 2026-10-11
 
 ### Fixed

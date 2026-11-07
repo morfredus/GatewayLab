@@ -2315,6 +2315,13 @@ String NetworkScanner::backupToJson() const {
 }
 
 bool NetworkScanner::restoreFromJson(const String& json) {
+    // Remplacer _results pendant qu'une tache de scan/rescan la parcourt corromprait ses
+    // iterateurs et ses ecritures : refuser. Le serveur web repond alors 409 (il teste
+    // isScanRunning() avant l'appel) ; ce garde-fou protege les autres appelants.
+    if (_scanning) {
+        Log::w(TAG, "Restauration refusée - scan en cours");
+        return false;
+    }
     if (systemHealth.isDegraded()) {
         Log::w(TAG, "Restauration refusée - mode dégradé (%s)", systemHealth.reason().c_str());
         return false;

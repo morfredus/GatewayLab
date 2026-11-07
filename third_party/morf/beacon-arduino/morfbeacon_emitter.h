@@ -150,9 +150,11 @@ private:
         return o;
     }
 
+public:
     // Echappement JSON minimal : les champs sont des identifiants et des
     // libelles, jamais du texte libre, mais un guillemet suffirait a produire un
-    // datagramme invalide que le consommateur rejetterait en silence.
+    // datagramme invalide que le consommateur rejetterait en silence. Public
+    // car buildStatusJson() (fonction libre) construit aussi du JSON a la main.
     static String escape(const String& in) {
         String out;
         out.reserve(in.length());
@@ -166,6 +168,7 @@ private:
         return out;
     }
 
+private:
     WiFiUDP  _udp;
     uint32_t _startedMs  = 0;
     uint32_t _lastSendMs = 0;
@@ -197,20 +200,20 @@ inline String buildStatusJson(const Emitter& e,
                               const String& apiJson = String()) {
     const String host = WiFi.getHostname() ? String(WiFi.getHostname()) : String("esp32");
     String o = "{";
-    o += "\"app\":\""     + e.appName + "\"";
-    o += ",\"host\":\""   + host + "\"";
-    o += ",\"role\":\""   + (e.role.length() ? e.role : String("device")) + "\"";
-    o += ",\"version\":\"" + e.version + "\"";
-    o += ",\"state\":\""  + e.state + "\"";
+    o += "\"app\":\""     + Emitter::escape(e.appName) + "\"";
+    o += ",\"host\":\""   + Emitter::escape(host) + "\"";
+    o += ",\"role\":\""   + Emitter::escape(e.role.length() ? e.role : String("device")) + "\"";
+    o += ",\"version\":\"" + Emitter::escape(e.version) + "\"";
+    o += ",\"state\":\""  + Emitter::escape(e.state) + "\"";
     o += ",\"uptime_s\":" + String(millis() / 1000UL);
     if (metricsJson.length())
         o += ",\"metrics\":" + metricsJson;
     if (e.webUi) {
-        o += ",\"web_ui\":{\"path\":\"" + webUiPath + "\"";
-        o += ",\"label\":\"" + (webUiLabel.length() ? webUiLabel : e.appName) + "\"";
+        o += ",\"web_ui\":{\"path\":\"" + Emitter::escape(webUiPath) + "\"";
+        o += ",\"label\":\"" + Emitter::escape(webUiLabel.length() ? webUiLabel : e.appName) + "\"";
         o += ",\"port\":" + String(e.statusPort);
         if (webUiDesc.length())
-            o += ",\"description\":\"" + webUiDesc + "\"";
+            o += ",\"description\":\"" + Emitter::escape(webUiDesc) + "\"";
         o += "}";
     }
     if (apiJson.length())

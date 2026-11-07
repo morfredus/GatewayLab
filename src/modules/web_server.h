@@ -105,7 +105,12 @@ private:
     // (pagesServed pour les pages HTML, apiCalls pour /api/*) - voir boot_log.h.
     // [DEBOGAGE TEMPORAIRE] : simple wrapper autour de _server.on(), a retirer
     // (revenir a des appels directs _server.on()) une fois le debogage termine.
-    void _on(const char* path, HTTPMethod method, std::function<void()> handler);
+    //
+    // Garde-fous communs (modules/http_guard.h) : toute route autre que GET est refusee si
+    // l'en-tete Origin designe un autre hote (CSRF). needToken = true exige en plus le jeton
+    // d'administration (si GATEWAYLAB_AUTH_TOKEN est defini) : routes sensibles uniquement.
+    void _on(const char* path, HTTPMethod method, std::function<void()> handler,
+             bool needToken = false);
 
     void _handleRoot();             // Sert la page HTML principale
     void _handleApiStatus();        // Retourne l'état WiFi/système en JSON

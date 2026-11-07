@@ -10,6 +10,7 @@
 #include "web_server.h"
 #include "../../third_party/morf/beacon-arduino/morfbeacon_emitter.h"
 #include "ota_manager.h"         // Enregistrement de la route POST /update
+#include "http_guard.h"          // CSRF (Origin/Host) + jeton d'administration optionnel
 #include "wifi_manager.h"        // Gestion des reseaux WiFi enregistres (NVS)
 #include "status_led.h"          // Luminosite NeoPixel - reglable depuis /wifi (Systeme)
 #include "system_health.h"       // Etat memoire / mode degrade + redemarrage manuel
@@ -71,13 +72,18 @@ void WebServerModule::registerScanProvider(ScanProvider p) {
     _hasScan = true;
 }
 
-void WebServerModule::_on(const char* path, HTTPMethod method, std::function<void()> handler) {
+void WebServerModule::_on(const char* path, HTTPMethod method, std::function<void()> handler,
+                          bool needToken) {
     String p(path);
-    _server.on(path, method, [handler, p]() {
+    // Les lectures (GET) ne sont pas controlees ; toute ecriture l'est (CSRF), et le jeton
+    // en plus pour les routes sensibles.
+    const bool isWrite = (method != HTTP_GET);
+    _server.on(path, method, [handler, p, isWrite, needToken]() {
 #ifdef BOOT_LOG_ENABLED
         if (p.startsWith("/api/")) bootLog.noteApiCall();
         else                       bootLog.notePageServed();
 #endif
+        if (isWrite && !httpGuard::enforce(_server, needToken)) return;
         handler();
     });
 }
@@ -122,7 +128,8 @@ void WebServerModule::begin(uint16_t port) {
     _on("/api/history",HTTP_GET,  [this]() { _handleApiHistory(); });
     _on("/api/history",HTTP_DELETE, [this]() { _handleApiHistoryClear(); });
     _on("/api/backup", HTTP_GET,  [this]() { _handleApiBackup(); });
-    _on("/api/restore",HTTP_POST, [this]() { _handleApiRestore(); });
+    // Sensible : remplace tout l'inventaire -> jeton exige (si defini)
+    _on("/api/restore",HTTP_POST, [this]() { _handleApiRestore(); }, true);
     _on("/api/devices/export.csv", HTTP_GET, [this]() { _handleApiDevicesExportCsv(); });
     _on("/api/favorite", HTTP_POST,   [this]() { _handleApiSetFavorite(); });
     _on("/api/notes",    HTTP_POST,   [this]() { _handleApiAddNote(); });
@@ -130,10 +137,12 @@ void WebServerModule::begin(uint16_t port) {
     _on("/api/diagnostics", HTTP_GET, [this]() { _handleApiDiagnostics(); });
     _on("/wifi",       HTTP_GET,  [this]() { _server.send_P(200, "text/html", WIFI_PAGE); });
     _on("/api/wifi",   HTTP_GET,  [this]() { _handleApiWifiGet(); });
-    _on("/api/wifi",   HTTP_POST, [this]() { _handleApiWifiPost(); });
-    _on("/api/wifi",   HTTP_DELETE, [this]() { _handleApiWifiDelete(); });
+    // Sensibles : modifier les reseaux Wi-Fi enregistres = detourner la carte vers un autre
+    // reseau ou lui retirer l'acces -> jeton exige (si defini)
+    _on("/api/wifi",   HTTP_POST, [this]() { _handleApiWifiPost(); }, true);
+    _on("/api/wifi",   HTTP_DELETE, [this]() { _handleApiWifiDelete(); }, true);
     _on("/api/system/backup",  HTTP_GET,  [this]() { _handleApiSystemBackup(); });
-    _on("/api/system/restore", HTTP_POST, [this]() { _handleApiSystemRestore(); });
+    _on("/api/system/restore", HTTP_POST, [this]() { _handleApiSystemRestore(); }, true);
     _on("/api/mobility",       HTTP_POST, [this]() { _handleApiSetMobility(); });
     _on("/api/topology/parent", HTTP_POST, [this]() { _handleApiSetTopologyParent(); });
     _on("/api/topology/root",   HTTP_GET,  [this]() { _handleApiTopologyRootGet(); });
@@ -153,7 +162,7 @@ void WebServerModule::begin(uint16_t port) {
     _on("/api/system/restart", HTTP_POST, [this]() {
         _server.send(200, "application/json", "{\"ok\":true}");
         systemHealth.restartNow();
-    });
+    }, true);
     _on("/api/led/brightness", HTTP_GET,  [this]() {
         String j = "{\"brightness\":";
         j += statusLed.getBrightness();
@@ -191,6 +200,10 @@ void WebServerModule::begin(uint16_t port) {
 
     // Délégation des routes OTA à OtaManager (/update GET + POST)
     otaMgr.registerRoutes(_server);
+
+    // En-tetes Origin / X-Auth-Token a conserver (avant begin), puis etat de l'authentification
+    httpGuard::attach(_server);
+    httpGuard::logStatus();
 
     _server.begin();
     Log::i(TAG, "Serveur démarré sur le port %u", (unsigned)port);
@@ -412,6 +425,13 @@ void WebServerModule::_handleApiRestore() {
         return;
     }
 
+    // Restaurer remplace la liste d'equipements pendant qu'une tache de scan la parcourt :
+    // 409 (conflit, a retenter plus tard) plutot qu'une course sur les donnees.
+    if (_scan.isScanning && _scan.isScanning()) {
+        _server.send(409, "application/json; charset=utf-8", "{\"error\":\"scan en cours\"}");
+        return;
+    }
+
     bool ok = _scan.restoreFromJson(body);
     _server.send(ok ? 200 : 400, "application/json; charset=utf-8",
                  ok ? "{\"status\":\"ok\"}" : "{\"error\":\"JSON invalide\"}");
@@ -420,7 +440,8 @@ void WebServerModule::_handleApiRestore() {
 // ---------------------------------------------------------------------------
 // Handler : sauvegarde des parametres de fonctionnement du projet (distincte
 // de /api/backup, qui sauvegarde l'inventaire des equipements) - reseaux
-// WiFi enregistres (SSID + mot de passe), luminosite NeoPixel, nom mDNS
+// WiFi enregistres (SSID ; mots de passe seulement avec ?full=1 et le jeton
+// d'administration), luminosite NeoPixel, nom mDNS
 // (informatif : fixe a la compilation via MDNS_HOSTNAME, non restaurable).
 // ---------------------------------------------------------------------------
 void WebServerModule::_handleApiSystemBackup() {
@@ -432,11 +453,18 @@ void WebServerModule::_handleApiSystemBackup() {
         doc["monitorEnabled"] = _scan.getMonitorEnabled();
     if (_hasScan && _scan.getMonitorInterval)
         doc["monitorIntervalMinutes"] = _scan.getMonitorInterval();
+    // Les mots de passe Wi-Fi ne sortent QUE sur demande explicite (?full=1) ET avec un jeton
+    // d'administration valide : sans cela, n'importe quel appareil du reseau local pourrait
+    // les telecharger. Par defaut (et sans jeton configure) : SSID seuls.
+    const bool full = _server.arg("full") == "1";
+    if (full && httpGuard::authEnabled() && !httpGuard::enforce(_server, true)) return;
+    const bool withPasswords = full && httpGuard::authEnabled();
+    doc["passwordsIncluded"] = withPasswords;
     JsonArray arr = doc["wifiNetworks"].to<JsonArray>();
     for (const auto& c : wifiMgr.savedNetworks()) {
         JsonObject o = arr.add<JsonObject>();
-        o["ssid"]     = c.ssid;
-        o["password"] = c.password;
+        o["ssid"] = c.ssid;
+        if (withPasswords) o["password"] = c.password;
     }
 
     String json;
@@ -466,24 +494,32 @@ void WebServerModule::_handleApiSystemRestore() {
         return;
     }
 
+    // Luminosite bornee 0-100 (comme POST /api/led/brightness) : une valeur de 300 serait
+    // tronquee en uint8_t par setBrightness() et donnerait une luminosite aleatoire.
     int brightness = doc["ledBrightness"] | -1;
-    if (brightness >= 0) statusLed.setBrightness(brightness);
+    if (brightness >= 0) statusLed.setBrightness((uint8_t)constrain(brightness, 0, 100));
 
     if (_hasScan && _scan.setMonitorEnabled && !doc["monitorEnabled"].isNull())
         _scan.setMonitorEnabled(doc["monitorEnabled"].as<bool>());
     if (_hasScan && _scan.setMonitorInterval && !doc["monitorIntervalMinutes"].isNull())
         _scan.setMonitorInterval(doc["monitorIntervalMinutes"].as<int>());
 
-    int restored = 0;
+    // Ecrire des reseaux Wi-Fi (mots de passe compris) revient a pouvoir detourner la carte
+    // vers un reseau choisi par l'appelant : reserve aux requetes authentifiees par le jeton
+    // d'administration. Sans jeton configure, ces entrees sont ignorees (et comptees).
+    const bool mayWriteWifi = httpGuard::authEnabled() && httpGuard::tokenValid(_server);
+    int restored = 0, skipped = 0;
     JsonArray arr = doc["wifiNetworks"].as<JsonArray>();
     for (JsonObject o : arr) {
         String ssid     = o["ssid"]     | "";
         String password = o["password"] | "";
         if (ssid.isEmpty()) continue;
+        if (!mayWriteWifi) { skipped++; continue; }
         if (wifiMgr.addNetwork(ssid, password)) restored++;
     }
 
-    String resp = "{\"status\":\"ok\",\"networksRestored\":" + String(restored) + "}";
+    String resp = "{\"status\":\"ok\",\"networksRestored\":" + String(restored) +
+                  ",\"networksSkipped\":" + String(skipped) + "}";
     _server.send(200, "application/json; charset=utf-8", resp);
 }
 
@@ -582,6 +618,7 @@ void WebServerModule::_handleApiWifiGet() {
     doc["ssid"]       = wifiMgr.ssid();
     doc["ip"]         = wifiMgr.localIP();
     doc["rssi"]       = wifiMgr.rssi();
+    doc["authRequired"] = httpGuard::authEnabled();   // l'interface demande le jeton si besoin
     JsonArray arr = doc["networks"].to<JsonArray>();
     for (const auto& c : wifiMgr.savedNetworks()) {
         JsonObject o = arr.add<JsonObject>();

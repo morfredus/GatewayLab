@@ -2,7 +2,7 @@
 
 *Read in another language: **English** (this document) · [Français](README.fr.md).*
 
-![Version](https://img.shields.io/badge/version-1.10.2-blue)
+![Version](https://img.shields.io/badge/version-1.11.0-blue)
 ![Platform](https://img.shields.io/badge/platform-ESP32--S3-orange)
 ![Framework](https://img.shields.io/badge/framework-Arduino%20%2F%20PlatformIO-00979D)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -60,6 +60,32 @@ Simplified view of the gateway, the detected access points and the attached devi
 WiFi configuration, automatic monitoring, status NeoPixel, backup/restore, OTA and system state.
 
 ![System](docs/pictures/Gateway_Lab_Systeme.png)
+
+---
+
+## Securing the board (optional token)
+
+By default the board accepts firmware updates and Wi-Fi changes from anyone on the local network.
+To protect them, add this line to `include/secrets.h` (never committed):
+
+```cpp
+#define GATEWAYLAB_AUTH_TOKEN "a-long-random-string"
+```
+
+With the token defined:
+
+- the web firmware update (`/update`), Wi-Fi network changes, settings restore, inventory restore and
+  device restart require the `X-Auth-Token` header (the web interface asks for the token once per tab);
+- ArduinoOTA uses the same string as its password (add `--auth=a-long-random-string` to the
+  `upload_flags` of the PlatformIO environment for wireless uploads); a separate
+  `GATEWAYLAB_OTA_PASSWORD` can override it for ArduinoOTA only;
+- the settings backup contains Wi-Fi passwords only when asked with `?full=1` and a valid token.
+
+Without the token the previous behaviour is kept, a warning is written to the log at every boot, the
+settings backup lists SSIDs only (no passwords) and a settings restore ignores Wi-Fi networks.
+Whatever the configuration, every write request (POST, PUT, PATCH, DELETE) whose `Origin` header
+differs from the `Host` header is refused with `403 cross_origin_forbidden`, so a web page visited from
+the LAN cannot act on the board. Scripts and tools that send no `Origin` header are not affected.
 
 ---
 

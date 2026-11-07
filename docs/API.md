@@ -174,6 +174,8 @@ Télécharge un export JSON complet de l'inventaire, des alias et de l'historiqu
 ## POST /api/restore
 
 Restaure l'inventaire depuis un export JSON précédemment généré par `/api/backup`.
+Route sensible (jeton d'administration exigé s'il est configuré). Répond `409` tant
+qu'un scan est en cours : réessayer à la fin du scan.
 
 ## GET /api/devices/export.csv
 
@@ -194,7 +196,8 @@ BOM UTF-8 en tête pour un affichage correct des accents dans Excel.
 
 Télécharge une sauvegarde JSON des **paramètres de fonctionnement du
 projet** - distincte de `/api/backup` (qui sauvegarde l'inventaire des
-équipements) : réseaux WiFi enregistrés (SSID + mot de passe), luminosité
+équipements) : réseaux WiFi enregistrés (SSID seulement par défaut ; mots de
+passe uniquement avec `?full=1` et un jeton d'administration valide), luminosité
 NeoPixel, état et fréquence de la surveillance automatique du réseau
 (`monitorEnabled`, `monitorIntervalMinutes` - Patch 1), et nom mDNS à titre
 informatif (fixé à la compilation via `MDNS_HOSTNAME`, non restaurable).
@@ -206,7 +209,18 @@ Restaure les paramètres de fonctionnement depuis un export JSON généré par
 `/api/system/backup`. Les réseaux WiFi du fichier sont ajoutés ou mis à jour
 (jamais supprimés automatiquement) ; la luminosité NeoPixel et l'état/fréquence
 de la surveillance automatique sont appliqués immédiatement si présents dans
-le fichier.
+le fichier. La luminosité est bornée à 0-100. Route sensible (jeton exigé s'il est
+configuré) ; sans jeton configuré, les réseaux WiFi du fichier sont ignorés
+(`networksSkipped` dans la réponse).
+
+## Protection des écritures (CSRF et jeton)
+
+Toute requête d'écriture (POST, PUT, PATCH, DELETE) dont l'en-tête `Origin` diffère de l'en-tête
+`Host` reçoit `403 {"error":"cross_origin_forbidden"}`. Sans en-tête `Origin` (curl, scripts),
+la requête passe. Si `GATEWAYLAB_AUTH_TOKEN` est défini dans `include/secrets.h`, les routes sensibles
+(`POST /update`, `POST /api/system/restore`, `POST /api/restore`, `POST /api/system/restart`,
+`POST` et `DELETE /api/wifi`) exigent en plus l'en-tête `X-Auth-Token` et répondent
+`401 {"error":"auth_required"}` sinon. Voir le README.
 
 ## GET /api/system/health
 
