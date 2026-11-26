@@ -2,7 +2,7 @@
 
 *Lire dans une autre langue : [English](README.md) · **Français** (ce document).*
 
-![Version](https://img.shields.io/badge/version-1.11.0-blue)
+![Version](https://img.shields.io/badge/version-1.12.0-blue)
 ![Platform](https://img.shields.io/badge/platform-ESP32--S3-orange)
 ![Framework](https://img.shields.io/badge/framework-Arduino%20%2F%20PlatformIO-00979D)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -139,6 +139,15 @@ Guide détaillé : [INSTALLATION.md](INSTALLATION.md) · Guide développeur : [d
 Détail du pipeline web et de la structure du projet : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
+
+## Intégration continue
+
+Des workflows GitHub Actions vivent dans `.github/workflows/` (générés par le script morfTools
+`gen-ci-workflows.py`) :
+
+- **`ci.yml`** : à chaque pull request (et push sur `main`/`dev`), compile et lance les tests sous
+  PlatformIO (le firmware, plus les tests natifs s'il y en a). Les changements de documentation seule l'ignorent et un run périmé est annulé
+  par un commit plus récent.
 
 ## Licence
 
