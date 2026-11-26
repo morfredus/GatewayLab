@@ -5,6 +5,12 @@ Format : [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.12.1] - 2026-11-26
+
+### Fixed
+
+- CI: the custom board `esp32-s3-devkitc-1-n16r8v` is now versioned in `boards/` (PlatformIO picks it up from the project root). It only existed in the developer's `~/.platformio/boards`, so a clean checkout (the GitHub Actions build) failed with "Unknown board ID".
+
 ## [1.12.0] - 2026-11-26
 
 ### Added
